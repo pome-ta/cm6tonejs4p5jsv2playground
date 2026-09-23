@@ -1,0 +1,310 @@
+export default class SpectrumAnalyzer {
+  #p;
+  #audioContext;
+  #fft;
+
+  #labelsLayer;
+  #gridLayer;
+  #spectrumLayer;
+
+  #labelsSize;
+  #labelsPosition;
+  #gridSize;
+  #gridPosition;
+
+  isLinear = false;
+  // todo: マージン設定方法要検討
+  ratio = 0.96;
+
+  // --- specs
+  #sampleRate;
+  #binsSize;
+  #minFreq;
+  #maxFreq;
+  // todo: どこで定義するか要検討
+  maxDb = +6;
+  minDb = -60;
+  dbStep = 6;
+
+  #xyListOld;
+
+  // blackmanOverdrive = (1 / 0.42) * (1 / 0.5);
+  // todo: モノの換算で2倍とする？
+  blackmanOverdrive = 1 / (0.42 * 0.5);
+
+  constructor(mainInstance, isLinear = false) {
+    this.#p = mainInstance;
+    this.#audioContext = mainInstance.getAudioContext();
+    this.#fft = null;
+
+    this.#labelsLayer = null;
+    this.#gridLayer = null;
+    this.#spectrumLayer = null;
+
+    this.isLinear = isLinear;
+  }
+
+  setup(fft) {
+    this.#fft = fft;
+    this.#setBaseAttributes();
+    this.#hookWindowResized();
+  }
+
+  drawSpectrum(spectrum) {
+    const start = window.performance.now();
+    this.#drawBaseGraphics();
+    /*
+    if (this.#p.frameCount % 9 !== 0) {
+      // 描画悪あがき
+      this.#p.image(this.#spectrumLayer, ...this.#gridPosition);
+      return;
+    }
+    */
+
+    this.#spectrumLayer.clear();
+
+    const [pgw, pgh] = this.#gridSize;
+    const [pgx, pgy] = this.#gridPosition;
+
+    const xyList = Array.from(spectrum, (amplitude, index) => {
+      const bin = index * this.#minFreq;
+
+      const x = this.#p.map(
+        Math.log10(bin ? bin : 1e-12),
+        Math.log10(this.#minFreq),
+        Math.log10(this.#maxFreq),
+        0,
+        pgw,
+      );
+
+      const amp = amplitude ? amplitude * this.blackmanOverdrive : 1e-10;
+      const logDb = 20 * Math.log10(amp);
+      const y = this.#p.map(logDb, this.minDb, this.maxDb, pgh, 0);
+      return [x, y];
+    });
+
+    // xxx: 今後の場合分け用?
+
+    //this.#spectrumLayer.noFill();
+    this.#spectrumLayer.noStroke();
+    this.#spectrumLayer.fill(0, 255, 255, 64);
+    this.#spectrumLayer.beginShape();
+    this.#spectrumLayer.vertex(0, pgh);
+
+    xyList.forEach((xy) => {
+      this.#spectrumLayer.vertex(...xy);
+    });
+
+    this.#spectrumLayer.vertex(pgw, pgh);
+    this.#spectrumLayer.endShape();
+
+    this.#spectrumLayer.noFill();
+    if (this.#xyListOld?.length) {
+      this.#spectrumLayer.stroke(255, 0, 255, 192);
+      this.#spectrumLayer.beginShape();
+      //this.#spectrumLayer.vertex(0, pgh);
+
+      this.#xyListOld.forEach((xy) => {
+        this.#spectrumLayer.vertex(...xy);
+      });
+
+      //this.#spectrumLayer.vertex(pgw, pgh);
+      this.#spectrumLayer.endShape();
+    }
+
+    this.#spectrumLayer.stroke(0, 255, 255, 192);
+    // this.#spectrumLayer.stroke(0);
+    this.#spectrumLayer.beginShape();
+    //this.#spectrumLayer.vertex(0, pgh);
+
+    xyList.forEach((xy) => {
+      this.#spectrumLayer.vertex(...xy);
+    });
+
+    //this.#spectrumLayer.vertex(pgw, pgh);
+    this.#spectrumLayer.endShape();
+
+    this.#xyListOld = xyList;
+    this.#p.image(this.#spectrumLayer, ...this.#gridPosition);
+
+    if (this.#p.frameCount >= 60 * 2 && this.#p.frameCount < 60 * 6) {
+      const end = window.performance.now();
+      //console.log(end - start);
+      this.timelog[this.cnt] = end - start;
+      this.cnt = this.cnt + 1;
+    } else if (this.cnt === 240) {
+      const average =
+        [...this.timelog].reduce((sum, num) => sum + num, 0) /
+        this.timelog.length;
+      const logmax = Math.max(...this.timelog);
+      const logmin = Math.min(...this.timelog);
+      console.log(`--- end`);
+      console.log(this.timelog);
+      console.log(`ave: ${average}`);
+      console.log(`max: ${logmax}`);
+      console.log(`min: ${logmin}`);
+      this.cnt = this.cnt + 1;
+    }
+  }
+
+  #setBaseAttributes() {
+    this.#setSpecs();
+    this.#setSize();
+    this.#createBase();
+    this.#drawBaseGraphics();
+  }
+
+  #setSpecs() {
+    this.#sampleRate = this.#audioContext.sampleRate;
+    const nyquist = this.#sampleRate / 2;
+    this.#binsSize = this.#fft.fftSize;
+    const bandWidth = nyquist / this.#binsSize;
+
+    this.#minFreq = bandWidth;
+    this.#maxFreq = nyquist;
+
+    this.#xyListOld = [];
+    this.cnt = 0;
+    this.timelog = new Array(240);
+  }
+
+  #setSize() {
+    this.#labelsLayer?.remove();
+    this.#gridLayer?.remove();
+    this.#spectrumLayer?.remove();
+
+    this.#labelsLayer = this.#p.createGraphics(
+      this.#p.windowWidth * this.ratio,
+      this.#p.windowHeight * this.ratio,
+    );
+
+    this.#gridLayer = this.#p.createGraphics(
+      this.#labelsLayer.width * this.ratio,
+      this.#labelsLayer.height * this.ratio,
+    );
+
+    this.#spectrumLayer = this.#p.createGraphics(
+      this.#gridLayer.width,
+      this.#gridLayer.height,
+    );
+
+    this.#labelsSize = [this.#labelsLayer.width, this.#labelsLayer.height];
+    this.#labelsPosition = [
+      (this.#p.windowWidth - this.#labelsLayer.width) / 2,
+      (this.#p.windowHeight - this.#labelsLayer.height) / 2,
+    ];
+
+    this.#gridSize = [this.#gridLayer.width, this.#gridLayer.height];
+    this.#gridPosition = [
+      (this.#p.windowWidth - this.#gridLayer.width) / 2,
+      (this.#p.windowHeight - this.#gridLayer.height) / 2,
+    ];
+  }
+
+  #createBase() {
+    this.#labelsLayer.clear();
+    this.#gridLayer.clear();
+
+    const [lw, lh] = this.#labelsSize;
+    const [lx, ly] = this.#labelsPosition;
+    const [gw, gh] = this.#gridSize;
+    const [gx, gy] = this.#gridPosition;
+
+    const xDistance = (lw - gw) / 2;
+    const yDistance = (lh - gh) / 2;
+
+    const minLog = Math.log10(this.#minFreq);
+    const maxLog = Math.log10(this.#maxFreq);
+
+    // x: hz set
+    const decades = Array.from(
+      { length: Math.floor(maxLog) - Math.floor(minLog) + 1 },
+      (_, d) => d + Math.floor(minLog),
+    );
+
+    const ticks = [...Array(9)].map((_, i) => i + 1);
+
+    const digits = Math.floor(Math.log10(this.#minFreq));
+    // 最低(20)hz 用
+    const minimumFreq = Math.floor(this.#minFreq / 10 ** digits) * 10 ** digits;
+
+    const majorColor = 100;
+    const minorColor = 50;
+    const baseColor = 25;
+    const textColor = 25;
+
+    this.#labelsLayer.textFont('monospace');
+    this.#labelsLayer.textSize(8);
+    this.#labelsLayer.textAlign(this.#p.CENTER, this.#p.BOTTOM);
+    this.#labelsLayer.fill(textColor);
+
+    // x: hz
+    decades.forEach((d, idx) => {
+      ticks.forEach((i) => {
+        const freq = i * 10 ** d;
+
+        if (freq < minimumFreq || freq >= this.#maxFreq) {
+          return;
+        }
+
+        const x = this.#p.map(Math.log10(freq), minLog, maxLog, 0, gw);
+        const isMajor = i === 1;
+
+        if (i % 2 === 0 || isMajor) {
+          this.#gridLayer.stroke(isMajor ? majorColor : minorColor);
+          this.#gridLayer.strokeWeight(isMajor ? 1 : 0.8);
+
+          const ty = isMajor ? lh - yDistance / 2 : lh;
+          this.#labelsLayer.text(
+            freq >= 1000 ? `${freq / 1000}k` : `${freq}`,
+            x + xDistance,
+            ty,
+          );
+        } else {
+          this.#gridLayer.stroke(baseColor);
+          this.#gridLayer.strokeWeight(0.4);
+        }
+
+        this.#gridLayer.line(x, 0, x, gh);
+      });
+    });
+
+    // y: db
+    const dbTicks = Array.from(
+      { length: Math.floor((this.maxDb - this.minDb) / this.dbStep) + 1 },
+      (_, i) => this.minDb + i * this.dbStep,
+    );
+
+    this.#labelsLayer.textAlign(this.#p.RIGHT, this.#p.BOTTOM);
+    dbTicks.forEach((db) => {
+      if (db <= this.minDb || db >= this.maxDb) {
+        return;
+      }
+      const y = this.#p.map(db, this.minDb, this.maxDb, gh, 0);
+      const isMajor = db % 12 === 0;
+
+      this.#gridLayer.stroke(isMajor ? 100 : 50);
+      this.#gridLayer.strokeWeight(db === 0 ? 2 : isMajor ? 1 : 0.8);
+      this.#gridLayer.line(0, y, gw, y);
+      this.#labelsLayer.text(`${db}`, lw, y + yDistance);
+    });
+  }
+
+  #drawBaseGraphics() {
+    this.#p.image(this.#labelsLayer, ...this.#labelsPosition);
+    this.#p.image(this.#gridLayer, ...this.#gridPosition);
+  }
+
+  #hookWindowResized() {
+    const originalWindowResized = this.#p.windowResized;
+    this.#p.windowResized = (...args) => {
+      if (typeof originalWindowResized !== 'function') {
+        return;
+      }
+      //console.log('前class');
+      originalWindowResized.apply(this.#p, args);
+      //console.log('後class');
+      this.#setBaseAttributes();
+    };
+  }
+}
