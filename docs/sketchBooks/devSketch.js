@@ -4,10 +4,10 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 92;
+const BPM = 100;
 
 // --- offline buffers
-// --- kick
+// --- --- kick
 const kickBuffer = await Tone.Offline((context) => {
   context.transport.bpm.value = BPM;
   const synth = new Tone.Synth({
@@ -32,7 +32,7 @@ const kickBuffer = await Tone.Offline((context) => {
   );
 }, 1.5);
 
-// --- snare
+// --- --- snare
 const snareBuffer = await Tone.Offline((context) => {
   context.transport.bpm.value = BPM;
   const whiteNoise = new Tone.NoiseSynth({
@@ -75,7 +75,7 @@ const snareBuffer = await Tone.Offline((context) => {
   );
 }, 1.5);
 
-// --- hihat
+// --- --- hihat
 const hihatBuffer = await Tone.Offline((context) => {
   context.transport.bpm.value = BPM;
   const metalSynth = new Tone.MetalSynth({
@@ -115,6 +115,7 @@ const sketch = (p) => {
   const masterCh = new Tone.Channel().toDestination();
   const emitter = new Tone.Emitter();
 
+  // --- drumKit
   const kick = 'kick',
     snare = 'snare',
     hihat = 'hihat';
@@ -164,6 +165,14 @@ const sketch = (p) => {
     // probability: 0.88,
   });
 
+  const drumCh = new Tone.Channel();
+  drumKit.chain(
+    ...[
+      //
+      drumCh,
+    ].filter((n) => n),
+  );
+
   // --- bass
   // const bassSynth = new Tone.MonoSynth({
   const bassSynth = new Tone.Synth({
@@ -177,7 +186,22 @@ const sketch = (p) => {
     },
   });
   const bassGain = new Tone.Gain(1);
+  const bassSeq = new Tone.Sequence({
+    callback: (time, note) => {
+      bassSynth.triggerAttack(note, time);
+    },
+    events: ['A5', , , 'G4'],
+    subdivision: '4n',
+  });
 
+  const bassCh = new Tone.Channel(-16);
+  bassSynth.chain(
+    ...[
+      //
+      bassGain,
+      bassCh,
+    ].filter((n) => n),
+  );
   /*
   const sideChain = (a, b) => {
     console.log(a);
@@ -209,15 +233,6 @@ const sketch = (p) => {
   };
   */
 
-  const bassSeq = new Tone.Sequence({
-    callback: (time, note) => {
-      bassSynth.triggerAttack(note, time);
-    },
-    events: ['A5', , , 'G4'],
-    subdivision: '4n',
-  });
-  //console.log(bassSynth)
-
   // メトロノーム
   const clickSynth = new Tone.MembraneSynth();
   const clickSeq = new Tone.Sequence({
@@ -227,28 +242,10 @@ const sketch = (p) => {
     events: ['A5', 'A4', 'A4', 'A4'],
     subdivision: '4n',
   });
-
-  // --- mixer
-  const drumCh = new Tone.Channel();
-  drumKit.chain(
-    ...[
-      //
-      drumCh,
-    ].filter((n) => n),
-  );
-
-  const bassCh = new Tone.Channel(-16);
-  bassSynth.chain(
-    ...[
-      //
-      bassGain,
-      bassCh,
-    ].filter((n) => n),
-  );
-
   const clickCh = new Tone.Channel(-4);
   clickSynth.chain(clickCh);
 
+  // ---  master mixer
   const fanInNodes = [
     //
     drumCh,
@@ -258,12 +255,21 @@ const sketch = (p) => {
   Tone.fanIn(...fanInNodes.filter((n) => n), masterCh);
 
   // --- emitter
-  const drumSeqs = [
-    //
-    kickSeq,
-    snareSeq,
-    hihatSeq,
-  ];
+  emitter.once('startOnceCallSeqs', () => {
+    //transport.start();
+    transport.scheduleOnce((time) => {
+      [
+        //
+        kickSeq,
+        snareSeq,
+        hihatSeq,
+      ].forEach((drumSeq) => {
+        drumSeq.start(time);
+      });
+      //clickSeq.start(time);
+      // bassSeq.start(time);
+    }, transport.context.now());
+  });
 
   // --- Sketch
   let cnvs;
@@ -274,7 +280,8 @@ const sketch = (p) => {
   const tapIndicator = new TapIndicator(p);
   const spectrumAnalyzer = new SpectrumAnalyzer(p, 2048);
 
-  p.setup = async () => {
+  //p.setup = async () => {
+  p.setup = () => {
     // put setup code here
     cnvs = p.createCanvas(w, h);
 
@@ -312,19 +319,9 @@ const sketch = (p) => {
 
     //sideChain(bassGain, drumKit.player(kick));
 
-    emitter.once('startOnceCall', () => {
-      //transport.start();
-      transport.scheduleOnce((time) => {
-        drumSeqs.forEach((seq) => {
-          seq.start(time);
-        });
-        //clickSeq.start(time);
-        bassSeq.start(time);
-      }, transport.context.now());
-    });
     // xxx: インクルード要検討
     transport.start();
-    emitter.emit('startOnceCall');
+    emitter.emit('startOnceCallSeqs');
 
     tapIndicator.setup();
     spectrumAnalyzer.targetNodes(masterCh);
