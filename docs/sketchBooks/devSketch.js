@@ -4,16 +4,13 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 100;
+const BPM = 126;
 
 // --- offline buffers
-// --- --- kick
 const kickBuffer = await Tone.Offline((context) => {
   context.transport.bpm.value = BPM;
   const synth = new Tone.Synth({
     oscillator: { type: 'sine', phase: 270 },
-    // oscillator: { type: 'sine', },
-    // oscillator: { type: 'pulse', width: 0 },
     envelope: {
       attack: 0,
       decay: 1.75,
@@ -32,7 +29,6 @@ const kickBuffer = await Tone.Offline((context) => {
   );
 }, 1.5);
 
-// --- --- snare
 const snareBuffer = await Tone.Offline((context) => {
   context.transport.bpm.value = BPM;
   const whiteNoise = new Tone.NoiseSynth({
@@ -75,7 +71,6 @@ const snareBuffer = await Tone.Offline((context) => {
   );
 }, 1.5);
 
-// --- --- hihat
 const hihatBuffer = await Tone.Offline((context) => {
   context.transport.bpm.value = BPM;
   const metalSynth = new Tone.MetalSynth({
@@ -108,7 +103,6 @@ const sketch = (p) => {
   document.addEventListener('pointerup', async () => await Tone.start(), {
     once: true,
   });
-
   const transport = Tone.getTransport();
   transport.bpm.value = BPM;
 
@@ -190,7 +184,7 @@ const sketch = (p) => {
     callback: (time, note) => {
       bassSynth.triggerAttack(note, time);
     },
-    events: ['A5', , , 'G4'],
+    events: ['A2', , , 'G2'],
     subdivision: '4n',
   });
 
@@ -202,36 +196,20 @@ const sketch = (p) => {
       bassCh,
     ].filter((n) => n),
   );
-  /*
+
   const sideChain = (a, b) => {
-    console.log(a);
-    console.log(b);
-    // kickの出力からエンベロープ(振幅)を抽出
-
-    // smoothingがattack/releaseの追従速度を決める
-    
-    const follower = new Tone.Follower(0.05);
+    const follower = new Tone.Follower(0.75);
     b.connect(follower);
-    
+    const duckScale = new Tone.Scale({
+      min: 1.0, // kickが鳴っていない時: 素通し
+      max: 0.0, // kickが最大音量の時: 最大ダッキング
+    });
 
-    // followerの出力(0〜1程度)を反転してduck量にスケール
-    // followerが大きい(kickが鳴っている)ほどbassGainのgainを下げたい
-
-    // 入力0→output 1(素通し), 入力1→output 0.2(圧縮時)
-    const duckScale = new Tone.Scale(1, 0.2);
-    // followerの値を反転してScaleに渡す
-    const invert = new Tone.Negate();
-    // 0〜1 に戻すためのオフセット
-    const offset = new Tone.Add(1);
-    
-
-    follower.chain(invert, offset, duckScale);
-    //duckScale.connect(bassGain.gain);
+    follower.connect(duckScale);
     duckScale.connect(a.gain);
-    //console.log(a.gain)
-    
   };
-  */
+
+  sideChain(bassGain, drumKit.player(kick));
 
   // メトロノーム
   const clickSynth = new Tone.MembraneSynth();
@@ -267,7 +245,7 @@ const sketch = (p) => {
         drumSeq.start(time);
       });
       //clickSeq.start(time);
-      // bassSeq.start(time);
+      bassSeq.start(time);
     }, transport.context.now());
   });
 
@@ -284,40 +262,6 @@ const sketch = (p) => {
   p.setup = () => {
     // put setup code here
     cnvs = p.createCanvas(w, h);
-
-    const sideChain = (a, b) => {
-      console.log(a);
-      console.log(b);
-      // kickの出力からエンベロープ(振幅)を抽出
-
-      // smoothingがattack/releaseの追従速度を決める
-
-      const follower = new Tone.Follower(0.1);
-      b.connect(follower);
-
-      // followerの出力(0〜1程度)を反転してduck量にスケール
-      // followerが大きい(kickが鳴っている)ほどbassGainのgainを下げたい
-
-      // 入力0→output 1(素通し), 入力1→output 0.2(圧縮時)
-      const duckScale = new Tone.Scale(1, -0.2);
-      // followerの値を反転してScaleに渡す
-      const invert = new Tone.Negate();
-      // 0〜1 に戻すためのオフセット
-      const offset = new Tone.Add(1);
-
-      follower.chain(invert, offset, duckScale);
-      //duckScale.connect(bassGain.gain);
-      duckScale.connect(a.gain);
-      //console.log(a.gain)
-    };
-    /*
-    drumKit.add(kick, kickBuffer);
-    drumKit.player(kick).fadeIn = 0;
-    drumKit.add(snare, snareBuffer);
-    drumKit.add(hihat, hihatBuffer);
-    */
-
-    //sideChain(bassGain, drumKit.player(kick));
 
     // xxx: インクルード要検討
     transport.start();
