@@ -130,9 +130,9 @@ const sketch = (p) => {
     },
     events: [
       [1, 1, 1, 1],
-      [1, 1, 1, 1],
-      [1, 1, 1, 1],
-      [1, 1, 1, [1, 1]],
+      // [1, 1, 1, 1],
+      // [1, 1, 1, 1],
+      // [1, 1, 1, [1, 1]],
     ],
     subdivision: '1n',
   });
@@ -168,10 +168,10 @@ const sketch = (p) => {
   );
 
   // --- bass
-  const bassSynth = new Tone.MonoSynth({
-  // const bassSynth = new Tone.Synth({
-    // oscillator: { type: 'pulse', width: 0 },
-    oscillator: { type: 'pwm', modulationFrequency: '4t' },
+  // const bassSynth = new Tone.MonoSynth({
+  const bassSynth = new Tone.Synth({
+    oscillator: { type: 'pulse', width: 0 },
+    // oscillator: { type: 'pwm', modulationFrequency: '4t' },
     envelope: {
       attack: '1i',
       decay: 0.0,
@@ -179,36 +179,36 @@ const sketch = (p) => {
       release: '1i',
       attackCurve: 'exponential',
     },
-    filter: {
-      Q: 0,
-      rolloff: -12, // -12, -24, -48, -96
-      type: 'lowpass',
-      // type: 'highpass',
-    },
-    filterEnvelope: {
-      attack: 0.6,
-      baseFrequency: 600,
-      decay: 0.2,
-      exponent: 2,
-      octaves: 3,
-      release: 2,
-      sustain: 0.5,
-    },
+    // filter: {
+    //   Q: 0,
+    //   rolloff: -12, // -12, -24, -48, -96
+    //   type: 'lowpass',
+    //   // type: 'highpass',
+    // },
+    // filterEnvelope: {
+    //   attack: 0.6,
+    //   baseFrequency: 600,
+    //   decay: 0.2,
+    //   exponent: 2,
+    //   octaves: 3,
+    //   release: 2,
+    //   sustain: 0.5,
+    // },
   });
   const bassGain = new Tone.Gain(1);
   const bassSeq = new Tone.Sequence({
     callback: (time, note) => {
       bassSynth.triggerAttack(note, time);
     },
-    events: [
-      'A1', null, null, null, null, null, null, ['G1', 'C1'],
-      'A1', null, null, null, null, null, null, ['G1', null, 'C4'],
-    ],
-    // events: ['A2', null, null, 'G2'],
+    // events: [
+    //   'A1', null, null, null, null, null, null, ['G1', 'C1'],
+    //   'A1', null, null, null, null, null, null, ['G1', null, 'C4'],
+    // ],
+    events: ['A2', null, null, 'G2'],
     subdivision: '2n',
   });
 
-  const bassCh = new Tone.Channel(-4);
+  const bassCh = new Tone.Channel(-8);
   bassSynth.chain(
     ...[
       //
@@ -310,6 +310,3 @@ const sketch = (p) => {
 };
 
 new p5(sketch);
-
-
-

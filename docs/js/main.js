@@ -242,7 +242,7 @@ const details = DomFactory.create('details', {
   ],
   appendChildren: [summary, wrapSummary],
 });
-
+/*
 // --- 共通設定の定義(マジックナンバーや重複文字列の排除) ---
 const FONT_FAMILY = 'Consolas, Menlo, Monaco, source-code-pro, Courier New, monospace';
 const COLOR_NORMAL = 'var(--accessory-button-color-normal, #e0e0e0)';
@@ -341,14 +341,15 @@ const modeToggleContainer = DomFactory.create('div', {
     },
   ],
 });
-
+*/
 const headerControlWrap = DomFactory.create('div', {
   setStyles: {
     display: 'grid',
     'grid-template-columns': 'auto 1fr auto',
     'align-items': 'center',
   },
-  appendChildren: [callButton, details, modeToggleContainer],
+  //appendChildren: [callButton, details, modeToggleContainer],
+  appendChildren: [callButton, details,],
 });
 
 const headerHandleEvent = function () {
