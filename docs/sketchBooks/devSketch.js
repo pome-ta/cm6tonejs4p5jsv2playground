@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 195;
+const BPM = 90;
 
 // --- offline buffers
 const kickBuffer = await Tone.Offline((context) => {
@@ -22,72 +22,6 @@ const kickBuffer = await Tone.Offline((context) => {
   synth.triggerAttackRelease('A4', '8n');
   synth.frequency.rampTo('C2', 0.25);
   synth.chain(
-    ...[
-      //,
-      new Tone.Channel(8).toDestination(),
-    ].filter((n) => n),
-  );
-}, 1.5);
-
-const snareBuffer = await Tone.Offline((context) => {
-  context.transport.bpm.value = BPM;
-  const whiteNoise = new Tone.NoiseSynth({
-    noise: { type: 'white' },
-    envelope: {
-      attack: 0.0,
-      decay: 1.0,
-      sustain: 0.0,
-      release: '1i',
-    },
-  });
-
-  const chebyshev = new Tone.Chebyshev({
-    order: 32,
-    oversample: 'none',
-  });
-  const bandpass = new Tone.Filter({
-    type: 'bandpass',
-    frequency: 585,
-    Q: 5.2,
-    rolloff: -12, // -12, -24, -48, -96
-    gain: 64,
-  });
-  const peaking = new Tone.Filter({
-    type: 'peaking',
-    frequency: 1580,
-    Q: 0.1,
-    rolloff: -48, // -12, -24, -48, -96
-    gain: 10,
-  });
-  whiteNoise.triggerAttackRelease('24i');
-  whiteNoise.chain(
-    ...[
-      chebyshev,
-      bandpass,
-      peaking,
-      //,
-      new Tone.Channel(2).toDestination(),
-    ].filter((n) => n),
-  );
-}, 1.5);
-
-const hihatBuffer = await Tone.Offline((context) => {
-  context.transport.bpm.value = BPM;
-  const metalSynth = new Tone.MetalSynth({
-    envelope: {
-      attack: 0.0,
-      decay: 1.9,
-      sustain: 0.0,
-      release: 0.01,
-      attackCurve: 'exponential',
-    },
-    harmonicity: 4.1,
-    modulationIndex: 32,
-    octaves: 1.75,
-    resonance: 1400,
-  });
-  metalSynth.triggerAttackRelease(980, '3i');
-  metalSynth.chain(
     ...[
       //,
       new Tone.Channel(8).toDestination(),
@@ -115,6 +49,7 @@ const sketch = (p) => {
     },
     onload: () => {
       //
+      kickSampler.hoge = 'fuga';
     },
     onerror: (error) => {
       console.error('sample load error:', error);
@@ -125,7 +60,7 @@ const sketch = (p) => {
   });
 
   // --- kick
-  const sKickSeq = new Tone.Sequence({
+  const kickSeq = new Tone.Sequence({
     callback: (time, _signal) => {
       kickSampler.triggerAttack('C1', time);
     },
@@ -147,143 +82,6 @@ const sketch = (p) => {
     ].filter((n) => n),
   );
 
-  const kick = 'kick',
-    snare = 'snare',
-    hihat = 'hihat';
-  const drumKit = new Tone.Players({
-    //
-    kick: kickBuffer,
-    snare: snareBuffer,
-    hihat: hihatBuffer,
-  });
-  drumKit.fadeIn = '1i';
-  drumKit.fadeOut = '2i';
-  drumKit.player(kick).fadeIn = 0;
-
-  // --- kick
-  const pKickSeq = new Tone.Sequence({
-    callback: (time, _signal) => {
-      drumKit.player(kick).start(time);
-    },
-    events: [
-      [1, null, [1, 1], null],
-      [1, [, [, 1]], [1, 1], null],
-
-      // [1, 1, 1, 1],
-      // [1, 1, 1, 1],
-      // [1, 1, 1, [1, 1]],
-    ],
-    subdivision: '1n',
-  });
-
-  // --- snare
-  const snareSeq = new Tone.Sequence({
-    callback: (time, _signal) => {
-      drumKit.player(snare).start(time);
-    },
-    events: [, 1],
-    subdivision: '4n',
-    //humanize: 0.005,
-    // probability: 0.88,
-  });
-
-  // --- hihat
-  const hihatSeq = new Tone.Sequence({
-    callback: (time, _signal) => {
-      drumKit.player(hihat).start(time);
-    },
-    events: [1, 1, 1, [1, 1]],
-    subdivision: '16n',
-    humanize: 0.005,
-    // probability: 0.88,
-  });
-
-  const drumCh = new Tone.Channel();
-  drumKit.chain(
-    ...[
-      //
-      drumCh,
-    ].filter((n) => n),
-  );
-
-  // --- bass
-  const bassSynth = new Tone.MonoSynth({
-    // const bassSynth = new Tone.Synth({
-    // oscillator: { type: 'pulse', width: 0 },
-    oscillator: { type: 'pwm', modulationFrequency: '4t' },
-    envelope: {
-      attack: '1i',
-      decay: 0.0,
-      sustain: 1.0,
-      release: '1i',
-      attackCurve: 'exponential',
-    },
-    filter: {
-      Q: 0,
-      rolloff: -12, // -12, -24, -48, -96
-      type: 'lowpass',
-      // type: 'highpass',
-    },
-    filterEnvelope: {
-      attack: 0.6,
-      baseFrequency: 600,
-      decay: 0.2,
-      exponent: 2,
-      octaves: 3,
-      release: 2,
-      sustain: 0.5,
-    },
-  });
-  const bassGain = new Tone.Gain(1);
-  const bassSeq = new Tone.Sequence({
-    callback: (time, note) => {
-      bassSynth.triggerAttack(note, time);
-    },
-    events: [
-      'A1',
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      ['G1', 'C1'],
-      'A1',
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      ['G1', null, 'C4'],
-    ],
-    // events: ['A2', null, null, 'G2'],
-    subdivision: '2n',
-  });
-
-  const bassCh = new Tone.Channel(-4);
-  bassSynth.chain(
-    ...[
-      //
-      bassGain,
-      bassCh,
-    ].filter((n) => n),
-  );
-
-  const sideChain = (a, b) => {
-    const follower = new Tone.Follower('4n');
-    b.connect(follower);
-    const duckScale = new Tone.Scale({
-      min: 1.0, // kickが鳴っていない時: 素通し
-      max: -0.75, // kickが最大音量の時: 最大ダッキング
-    });
-
-    follower.connect(duckScale);
-    duckScale.connect(a.gain);
-  };
-
-  //sideChain(bassGain, drumKit.player(kick));
-
   // メトロノーム
   const clickSynth = new Tone.MembraneSynth();
   const clickSeq = new Tone.Sequence({
@@ -300,8 +98,6 @@ const sketch = (p) => {
   const fanInNodes = [
     //
     kickCh,
-    drumCh,
-    bassCh,
     clickCh,
   ];
   Tone.fanIn(...fanInNodes.filter((n) => n), masterCh);
@@ -310,17 +106,8 @@ const sketch = (p) => {
   emitter.once('startOnceCallSeqs', () => {
     //transport.start();
     transport.scheduleOnce((time) => {
-      [
-        //
-        // pKickSeq,
-        sKickSeq,
-        //snareSeq,
-        //hihatSeq,
-      ].forEach((drumSeq) => {
-        drumSeq.start(time);
-      });
+      kickSeq.start(time);
       //clickSeq.start(time);
-      // bassSeq.start(time);
     }, transport.context.now());
     // }, 0);
   });
