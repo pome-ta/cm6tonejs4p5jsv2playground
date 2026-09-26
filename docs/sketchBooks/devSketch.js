@@ -14,13 +14,13 @@ const kickBuffer = await Tone.Offline((context) => {
     envelope: {
       attack: 0,
       decay: 2.75,
-      sustain: 0.7,
+      sustain: 0.5,
       release: '32i',
       attackCurve: 'exponential',
     },
   });
-  synth.triggerAttackRelease('A4', '8n');
-  synth.frequency.rampTo('C2', 0.25);
+  synth.triggerAttackRelease('A2', '8n');
+  synth.frequency.rampTo('C1', `64i`);
   synth.chain(
     ...[
       //,
@@ -48,8 +48,16 @@ const sketch = (p) => {
       C1: kickBuffer, // C1:24
     },
     onload: () => {
-      //
-      kickSampler.hoge = 'fuga';
+      kickSampler.seq = new Tone.Sequence({
+        callback: (time, _signal) => {
+          kickSampler.triggerAttack('C1', time);
+        },
+        events: [
+          [1, null, [1, 1], null],
+          [1, [, [, 1]], [1, 1], null],
+        ],
+        subdivision: '1n',
+      });
     },
     onerror: (error) => {
       console.error('sample load error:', error);
@@ -60,6 +68,7 @@ const sketch = (p) => {
   });
 
   // --- kick
+  /*
   const kickSeq = new Tone.Sequence({
     callback: (time, _signal) => {
       kickSampler.triggerAttack('C1', time);
@@ -67,13 +76,10 @@ const sketch = (p) => {
     events: [
       [1, null, [1, 1], null],
       [1, [, [, 1]], [1, 1], null],
-
-      // [1, 1, 1, 1],
-      // [1, 1, 1, 1],
-      // [1, 1, 1, [1, 1]],
     ],
     subdivision: '1n',
   });
+  */
   const kickCh = new Tone.Channel();
   kickSampler.chain(
     ...[
@@ -106,7 +112,7 @@ const sketch = (p) => {
   emitter.once('startOnceCallSeqs', () => {
     //transport.start();
     transport.scheduleOnce((time) => {
-      kickSeq.start(time);
+      kickSampler.seq.start(time);
       //clickSeq.start(time);
     }, transport.context.now());
     // }, 0);
