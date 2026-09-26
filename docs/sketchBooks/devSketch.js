@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 130;
+const BPM = 90;
 
 // --- offline buffers
 const kickBuffer = await Tone.Offline((context) => {
@@ -20,7 +20,7 @@ const kickBuffer = await Tone.Offline((context) => {
       attackCurve: 'exponential',
     },
   });
-  synth.triggerAttackRelease('A3', '8n.');
+  synth.triggerAttackRelease('A3', '8t');
   synth.frequency.rampTo('C2', `24i`);
   synth.chain(
     ...[
@@ -29,6 +29,30 @@ const kickBuffer = await Tone.Offline((context) => {
     ].filter((n) => n),
   );
 }, 2.0);
+
+const hihatBuffer = await Tone.Offline((context) => {
+  context.transport.bpm.value = BPM;
+  const metalSynth = new Tone.MetalSynth({
+    envelope: {
+      attack: 0.0,
+      decay: 1.9,
+      sustain: 0.0,
+      release: 0.01,
+      attackCurve: 'exponential',
+    },
+    harmonicity: 4.1,
+    modulationIndex: 32,
+    octaves: 1.75,
+    resonance: 1400,
+  });
+  metalSynth.triggerAttackRelease(980, '3i');
+  metalSynth.chain(
+    ...[
+      //,
+      new Tone.Channel(8).toDestination(),
+    ].filter((n) => n),
+  );
+}, 1.5);
 
 const sketch = (p) => {
   // --- Tone.js
@@ -43,6 +67,13 @@ const sketch = (p) => {
 
   const masterCh = new Tone.Channel().toDestination();
   const emitter = new Tone.Emitter();
+
+  const drumKit = {
+    kick: {
+      ch: null,
+      seq: null,
+    },
+  };
 
   const kickSampler = new Tone.Sampler({
     urls: {
