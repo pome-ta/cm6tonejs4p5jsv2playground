@@ -47,18 +47,7 @@ const sketch = (p) => {
     urls: {
       C1: kickBuffer, // C1:24
     },
-    onload: () => {
-      kickSampler.seq = new Tone.Sequence({
-        callback: (time, _signal) => {
-          kickSampler.triggerAttack('C1', time);
-        },
-        events: [
-          [1, null, [1, 1], null],
-          [1, [, [, 1]], [1, 1], null],
-        ],
-        subdivision: '1n',
-      });
-    },
+    onload: () => {},
     onerror: (error) => {
       console.error('sample load error:', error);
     },
@@ -68,7 +57,6 @@ const sketch = (p) => {
   });
 
   // --- kick
-  /*
   const kickSeq = new Tone.Sequence({
     callback: (time, _signal) => {
       kickSampler.triggerAttack('C1', time);
@@ -79,7 +67,7 @@ const sketch = (p) => {
     ],
     subdivision: '1n',
   });
-  */
+
   const kickCh = new Tone.Channel();
   kickSampler.chain(
     ...[
@@ -112,7 +100,7 @@ const sketch = (p) => {
   emitter.once('startOnceCallSeqs', () => {
     //transport.start();
     transport.scheduleOnce((time) => {
-      kickSampler.seq.start(time);
+      kickSeq.start(time);
       //clickSeq.start(time);
     }, transport.context.now());
     // }, 0);
