@@ -4,30 +4,31 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 90;
+const BPM = 130;
 
 // --- offline buffers
 const kickBuffer = await Tone.Offline((context) => {
   context.transport.bpm.value = BPM;
   const synth = new Tone.Synth({
     oscillator: { type: 'sine', phase: 270 },
+    // oscillator: { type: 'sine', },
     envelope: {
-      attack: 0,
+      attack: 0.0,
       decay: 2.75,
       sustain: 0.5,
       release: '32i',
       attackCurve: 'exponential',
     },
   });
-  synth.triggerAttackRelease('A2', '8n');
-  synth.frequency.rampTo('C1', `64i`);
+  synth.triggerAttackRelease('A3', '8n.');
+  synth.frequency.rampTo('C2', `24i`);
   synth.chain(
     ...[
       //,
       new Tone.Channel(8).toDestination(),
     ].filter((n) => n),
   );
-}, 1.5);
+}, 2.0);
 
 const sketch = (p) => {
   // --- Tone.js
@@ -51,19 +52,21 @@ const sketch = (p) => {
     onerror: (error) => {
       console.error('sample load error:', error);
     },
-    attack: 0,
+    attack: 0.0,
     release: '2i',
     curve: 'exponential',
   });
 
   // --- kick
   const kickSeq = new Tone.Sequence({
-    callback: (time, _signal) => {
-      kickSampler.triggerAttack('C1', time);
+    callback: (time, velocity) => {
+      kickSampler.triggerAttack('F0', time, velocity);
     },
     events: [
-      [1, null, [1, 1], null],
-      [1, [, [, 1]], [1, 1], null],
+      // [1, null, [1, 0.75], null],
+      // [1, [, [, 0.55]], [1, 1], null],
+      [1, 1, 1, 1],
+      [1, 1, 1, [1, 0.5]],
     ],
     subdivision: '1n',
   });
