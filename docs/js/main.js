@@ -79,6 +79,7 @@ document.addEventListener(touchEnded, () => {
 
 function reloadSandbox(targetSandbox) {
   const toStringDoc = editor.viewState.state.doc.toString();
+  console.log(toStringDoc === editor.state.doc.toString());
   targetSandbox.src = createIframeURL(toStringDoc);
 }
 
@@ -171,6 +172,26 @@ window.addEventListener('message', (event) => {
 /* --- accessory */
 const callButton = DomFactory.create('button', {
   textContent: '🔄',
+  setStyles: {
+    'font-family': 'Consolas, Menlo, Monaco, source-code-pro, Courier New, monospace',
+    padding: '0.5rem 1rem',
+    cursor: 'pointer',
+  },
+  addEventListeners: [
+    {
+      type: touchBegan,
+      listener: {
+        handleEvent() {
+          reloadSandbox(sandbox);
+        },
+      },
+    },
+  ],
+});
+
+
+const updateButton = DomFactory.create('button', {
+  textContent: '🔊',
   setStyles: {
     'font-family': 'Consolas, Menlo, Monaco, source-code-pro, Courier New, monospace',
     padding: '0.5rem 1rem',
@@ -349,7 +370,7 @@ const headerControlWrap = DomFactory.create('div', {
     'align-items': 'center',
   },
   //appendChildren: [callButton, details, modeToggleContainer],
-  appendChildren: [callButton, details,],
+  appendChildren: [updateButton,details, callButton],
 });
 
 const headerHandleEvent = function () {
