@@ -79,7 +79,7 @@ document.addEventListener(touchEnded, () => {
 
 function reloadSandbox(targetSandbox) {
   const toStringDoc = editor.viewState.state.doc.toString();
-  console.log(toStringDoc === editor.state.doc.toString());
+  //console.log(toStringDoc === editor.state.doc.toString());
   targetSandbox.src = createIframeURL(toStringDoc);
 }
 

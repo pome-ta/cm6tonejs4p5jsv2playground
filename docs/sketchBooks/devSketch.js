@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 90;
+const BPM = 125;
 
 // --- offline buffers
 const kickBuffer = await Tone.Offline((context) => {
@@ -13,15 +13,15 @@ const kickBuffer = await Tone.Offline((context) => {
     oscillator: { type: 'sine', phase: 270 },
     // oscillator: { type: 'sine', },
     envelope: {
-      attack: 0.0,
+      attack: 6e-4,
       decay: 2.75,
-      sustain: 0.5,
-      release: '32i',
+      sustain: 0.25,
+      release: '64i',
       attackCurve: 'exponential',
     },
   });
   synth.triggerAttackRelease('A3', '8t');
-  synth.frequency.rampTo('C2', `24i`);
+  synth.frequency.rampTo('C1', `24i`);
   synth.chain(
     ...[
       //,
@@ -68,13 +68,7 @@ const sketch = (p) => {
   const masterCh = new Tone.Channel().toDestination();
   const emitter = new Tone.Emitter();
 
-  const drumKit = {
-    kick: {
-      ch: null,
-      seq: null,
-    },
-  };
-
+  const kickCh = new Tone.Channel();
   const kickSampler = new Tone.Sampler({
     urls: {
       C1: kickBuffer, // C1:24
@@ -86,9 +80,13 @@ const sketch = (p) => {
     attack: 0.0,
     release: '2i',
     curve: 'exponential',
-  });
+  }).chain(
+    ...[
+      //
+      kickCh,
+    ].filter((n) => n),
+  );
 
-  // --- kick
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       kickSampler.triggerAttack('F0', time, velocity);
@@ -101,14 +99,38 @@ const sketch = (p) => {
     ],
     subdivision: '1n',
   });
+  
 
-  const kickCh = new Tone.Channel();
-  kickSampler.chain(
+  const hihatCh = new Tone.Channel(-4);
+  const hihatSampler = new Tone.Sampler({
+    urls: {
+      A4: hihatBuffer,
+    },
+    onload: () => {},
+    onerror: (error) => {
+      console.error('sample load error:', error);
+    },
+    attack: '1i',
+    release: '2i',
+    curve: 'exponential',
+  }).chain(
     ...[
       //
-      kickCh,
+      hihatCh,
     ].filter((n) => n),
   );
+
+  const hihatSeq = new Tone.Sequence({
+    callback: (time, velocity) => {
+      hihatSampler.triggerAttack('A4', time, velocity);
+    },
+    events: [
+      // [1, null, [1, 0.75], null],
+      // [1, [, [, 0.55]], [1, 1], null],
+      [null, 1, ],
+    ],
+    subdivision: '4n',
+  });
 
   // メトロノーム
   const clickSynth = new Tone.MembraneSynth();
@@ -126,6 +148,7 @@ const sketch = (p) => {
   const fanInNodes = [
     //
     kickCh,
+    hihatCh,
     clickCh,
   ];
   Tone.fanIn(...fanInNodes.filter((n) => n), masterCh);
@@ -135,7 +158,9 @@ const sketch = (p) => {
     //transport.start();
     transport.scheduleOnce((time) => {
       kickSeq.start(time);
-      //clickSeq.start(time);
+      hihatSeq.start(time);
+      
+      // clickSeq.start(time);
     }, transport.context.now());
     // }, 0);
   });
