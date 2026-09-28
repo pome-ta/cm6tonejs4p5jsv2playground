@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 125;
+const BPM = 112;
 
 // --- offline buffers
 const kickBuffer = await Tone.Offline((context) => {
@@ -13,7 +13,7 @@ const kickBuffer = await Tone.Offline((context) => {
     oscillator: { type: 'sine', phase: 270 },
     // oscillator: { type: 'sine', },
     envelope: {
-      attack: 6e-4,
+      attack: 5e-4,
       decay: 2.75,
       sustain: 0.25,
       release: '64i',
@@ -40,16 +40,16 @@ const hihatBuffer = await Tone.Offline((context) => {
       release: 0.01,
       attackCurve: 'exponential',
     },
-    harmonicity: 4.1,
-    modulationIndex: 32,
-    octaves: 1.75,
-    resonance: 1400,
+    harmonicity: 1.7,
+    modulationIndex: 8,
+    octaves: 2.27,
+    resonance: 670,
   });
-  metalSynth.triggerAttackRelease(980, '3i');
+  metalSynth.triggerAttackRelease(720, '3i');
   metalSynth.chain(
     ...[
       //,
-      new Tone.Channel(8).toDestination(),
+      new Tone.Channel().toDestination(),
     ].filter((n) => n),
   );
 }, 1.5);
@@ -95,20 +95,17 @@ const sketch = (p) => {
       // [1, null, [1, 0.75], null],
       // [1, [, [, 0.55]], [1, 1], null],
       [1, 1, 1, 1],
-      [1, 1, 1, [1, 0.5]],
+      // [1, 1, 1, 1],
+      // [1, 1, 1, 1],
+      // [1, 1, 1, [1, 0.5]],
     ],
     subdivision: '1n',
   });
-  
 
   const hihatCh = new Tone.Channel(-4);
   const hihatSampler = new Tone.Sampler({
     urls: {
       A4: hihatBuffer,
-    },
-    onload: () => {},
-    onerror: (error) => {
-      console.error('sample load error:', error);
     },
     attack: '1i',
     release: '2i',
@@ -122,12 +119,13 @@ const sketch = (p) => {
 
   const hihatSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      hihatSampler.triggerAttack('A4', time, velocity);
+      hihatSampler.triggerAttack('A5', time, velocity);
     },
     events: [
       // [1, null, [1, 0.75], null],
       // [1, [, [, 0.55]], [1, 1], null],
-      [null, 1, ],
+      [null, 1],
+
     ],
     subdivision: '4n',
   });
@@ -159,7 +157,7 @@ const sketch = (p) => {
     transport.scheduleOnce((time) => {
       kickSeq.start(time);
       hihatSeq.start(time);
-      
+
       // clickSeq.start(time);
     }, transport.context.now());
     // }, 0);
