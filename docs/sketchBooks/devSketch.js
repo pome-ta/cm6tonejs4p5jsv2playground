@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 100;
+const BPM = 125;
 
 // --- offline buffers
 const kickBuffer = await Tone.Offline((context) => {
@@ -13,7 +13,7 @@ const kickBuffer = await Tone.Offline((context) => {
     oscillator: { type: 'sine', phase: 270 },
     // oscillator: { type: 'sine', },
     envelope: {
-      attack: 6e-5,
+      attack: 6e-4,
       decay: 2.75,
       sustain: 1.0,
       release: '64i',
@@ -26,7 +26,7 @@ const kickBuffer = await Tone.Offline((context) => {
   synth.chain(
     ...[
       //,
-      new Tone.Channel(8).toDestination(),
+      new Tone.Channel().toDestination(),
     ].filter((n) => n),
   );
 }, 2.0);
@@ -38,7 +38,7 @@ const hihatBuffer = await Tone.Offline((context) => {
       attack: 0.0,
       decay: 1.9,
       sustain: 0.0,
-      release: 1e-4,
+      release: 1e-3,
       attackCurve: 'exponential',
     },
     harmonicity: 2.7,
@@ -69,7 +69,8 @@ const sketch = (p) => {
   const masterCh = new Tone.Channel().toDestination();
   const emitter = new Tone.Emitter();
 
-  const kickCh = new Tone.Channel();
+  const kickCh = new Tone.Channel(8);
+  const kickComp = new Tone.Compressor(-23.0, 18);
   const kickSampler = new Tone.Sampler({
     urls: {
       C1: kickBuffer, // C1:24
@@ -84,6 +85,7 @@ const sketch = (p) => {
   }).chain(
     ...[
       //
+      kickComp,
       kickCh,
     ].filter((n) => n),
   );
@@ -103,7 +105,14 @@ const sketch = (p) => {
     subdivision: '1n',
   });
 
-  const hihatCh = new Tone.Channel(-8);
+  const hihatCh = new Tone.Channel(-12);
+  const hihatFilter = new Tone.Filter({
+    type: 'lowpass',
+    frequency: 8800,
+    Q: 1.0,
+    rolloff: -12, // -12, -24, -48, -96
+    gain: 1,
+  });
   const hihatSampler = new Tone.Sampler({
     urls: {
       A4: hihatBuffer,
@@ -114,6 +123,7 @@ const sketch = (p) => {
   }).chain(
     ...[
       //
+      // hihatFilter,
       hihatCh,
     ].filter((n) => n),
   );
@@ -125,12 +135,13 @@ const sketch = (p) => {
     events: [
       // [1, null, [1, 0.75], null],
       // [1, [, [, 0.55]], [1, 1], null],
-      [0.75, 0.64, 1.0, 0.5],
-      [0.75, 0.64, 1.0, 0.5],
-      [0.75, 0.64, 1.0, 0.5],
-      [0.3, 0.75, 0.64, 1.0,],
+      [1.0, 0.45, 0.85, 0.35],
+      [0.92, 0.64, 0.75, 0.55],
+      [1.0, 0.45, 0.75, 0.55],
+      [0.92, 0.64, 0.85, 0.45],
     ],
     subdivision: '4n',
+    humanize: 0.005,
   });
 
   // メトロノーム
