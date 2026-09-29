@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 112;
+const BPM = 100;
 
 // --- offline buffers
 const kickBuffer = await Tone.Offline((context) => {
@@ -13,15 +13,16 @@ const kickBuffer = await Tone.Offline((context) => {
     oscillator: { type: 'sine', phase: 270 },
     // oscillator: { type: 'sine', },
     envelope: {
-      attack: 5e-4,
+      attack: 6e-5,
       decay: 2.75,
-      sustain: 0.25,
+      sustain: 1.0,
       release: '64i',
       attackCurve: 'exponential',
     },
   });
-  synth.triggerAttackRelease('A3', '8t');
+  synth.triggerAttackRelease('A3', '16t');
   synth.frequency.rampTo('C1', `24i`);
+  // synth.frequency.rampTo('C2', `72i`);
   synth.chain(
     ...[
       //,
@@ -37,22 +38,22 @@ const hihatBuffer = await Tone.Offline((context) => {
       attack: 0.0,
       decay: 1.9,
       sustain: 0.0,
-      release: 0.01,
+      release: 1e-4,
       attackCurve: 'exponential',
     },
-    harmonicity: 1.7,
-    modulationIndex: 8,
-    octaves: 2.27,
-    resonance: 670,
+    harmonicity: 2.7,
+    modulationIndex: 5,
+    octaves: 0.27,
+    resonance: 270,
   });
-  metalSynth.triggerAttackRelease(720, '3i');
+  metalSynth.triggerAttackRelease(1200, '3i');
   metalSynth.chain(
     ...[
       //,
       new Tone.Channel().toDestination(),
     ].filter((n) => n),
   );
-}, 1.5);
+}, 0.5);
 
 const sketch = (p) => {
   // --- Tone.js
@@ -89,7 +90,7 @@ const sketch = (p) => {
 
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      kickSampler.triggerAttack('F0', time, velocity);
+      kickSampler.triggerAttack('A0', time, velocity);
     },
     events: [
       // [1, null, [1, 0.75], null],
@@ -102,7 +103,7 @@ const sketch = (p) => {
     subdivision: '1n',
   });
 
-  const hihatCh = new Tone.Channel(-4);
+  const hihatCh = new Tone.Channel(-8);
   const hihatSampler = new Tone.Sampler({
     urls: {
       A4: hihatBuffer,
@@ -124,8 +125,10 @@ const sketch = (p) => {
     events: [
       // [1, null, [1, 0.75], null],
       // [1, [, [, 0.55]], [1, 1], null],
-      [null, 1],
-
+      [0.75, 0.64, 1.0, 0.5],
+      [0.75, 0.64, 1.0, 0.5],
+      [0.75, 0.64, 1.0, 0.5],
+      [0.3, 0.75, 0.64, 1.0,],
     ],
     subdivision: '4n',
   });
