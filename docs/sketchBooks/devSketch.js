@@ -46,8 +46,8 @@ const sketch = (p) => {
 
   const fmPolyCh = new Tone.Channel();
   const fmPolySynth = new Tone.PolySynth(Tone.FMSynth, {
-    harmonicity: 2.0,
-    modulationIndex: 12.0,
+    harmonicity: 2.048,
+    modulationIndex: 1.75,
     oscillator: { type: 'sine' },
     // oscillator: { type: 'sawtooth' },
     // oscillator: { type: 'triangle' },
@@ -60,21 +60,21 @@ const sketch = (p) => {
       attack: 1e-2,
       decay: 0.5,
       sustain: 0.25,
-      release: `24i`,
+      release: `64i`,
     },
     // modulation: { type: 'pulse', width: 0.0 },
     // modulation: { type: 'square'},
     // modulation: { type: 'sawtooth' },
-    // modulation: { type: 'triangle' },
+    modulation: { type: 'triangle' },
     // modulation: { type: 'fmsawtooth' },
-    modulation: { type: 'sine' },
+    // modulation: { type: 'sine' },
 
     modulationEnvelope: {
       //
-      attack: 1e-2,
-      decay: 0.9,
-      sustain: 0.2,
-      release: 1.5,
+      attack: 5e-4,
+      decay: 0.2,
+      sustain: 0.15,
+      release: '32i',
     },
   }).chain(
     ...[
@@ -86,22 +86,23 @@ const sketch = (p) => {
   const fmPolySeq = new Tone.Sequence({
     callback: (time, value) => {
       value.notes.forEach((note, idx) => {
-        const computedTime = toTime('8n');
+        // const computedTime = toTime('16n.');
+        const computedTime = toTime({ '4n': 1 });
         // const durationSeconds = idx * toTime({ '8n': 1, '16t': 1 });
-        const durationSeconds = idx * toTime({ '16n': 1 });
+        const durationSeconds = idx * toTime({ '8t': 1.64 });
         fmPolySynth.triggerAttackRelease(note, computedTime, time + durationSeconds);
       });
     },
     events: [
-      { notes: ['C4', 'E4', 'G4', 'B4'] },
+      { notes: ['C6', 'E4', 'G4', 'B4'] },
       { notes: ['C3', 'E3', 'G3', 'B3'] },
-      { notes: ['G3', 'B3', 'D4', 'F4'] },
-      { notes: ['A3', 'C3', 'E3', 'G3'] },
-
-      { notes: ['C5', 'E5', 'G5', 'B5'] },
-      { notes: ['C4', 'E4', 'G4', 'B4'] },
       { notes: ['G4', 'B4', 'D5', 'F5'] },
-      { notes: ['A5', 'C4', 'E4', 'G4'] },
+      { notes: ['A4', 'C3', 'E4', 'G4'] },
+
+      { notes: ['C5', 'E4', 'G5', 'B3'] },
+      { notes: ['C4', 'E4', 'G4', 'B4'] },
+      { notes: ['G3', 'B3', 'D4', 'F4'] },
+      { notes: ['A5', 'C4', 'E3', 'G3'] },
     ],
     subdivision: '2n',
   });
