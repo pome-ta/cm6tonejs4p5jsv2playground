@@ -46,20 +46,22 @@ const sketch = (p) => {
 
   const fmPolyCh = new Tone.Channel();
   const fmPolySynth = new Tone.PolySynth(Tone.FMSynth, {
-    harmonicity: 1.0,
+    harmonicity: 2.0,
     modulationIndex: 5.0,
     oscillator: { type: 'sine' },
     envelope: {
       //
-      attack: 1e-5,
+      attack: 1e-2,
       decay: 0.5,
       sustain: 0.3,
       release: 0.8,
     },
-    modulation: { type: 'pulse', width: 0 },
+    // modulation: { type: 'pulse', width: 0.0 },
+    // modulation: { type: 'square'},
+    modulation: { type: 'sine' },
     modulationEnvelope: {
       //
-      attack: 1e-3,
+      attack: 1e-4,
       decay: 0.3,
       sustain: 0.2,
       release: 0.5,
@@ -100,7 +102,7 @@ const sketch = (p) => {
   emitter.once('startOnceCallSeqs', () => {
     //transport.start();
     transport.scheduleOnce((time) => {
-      clickSeq.start(time);
+      // clickSeq.start(time);
       fmPolySeq.start(time);
     }, transport.context.now());
     // }, 0);
