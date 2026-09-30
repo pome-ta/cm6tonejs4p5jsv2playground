@@ -47,7 +47,7 @@ const sketch = (p) => {
   const fmPolyCh = new Tone.Channel();
   const fmPolySynth = new Tone.PolySynth(Tone.FMSynth, {
     harmonicity: 2.0,
-    modulationIndex: 5.0,
+    modulationIndex: 12.0,
     oscillator: { type: 'sine' },
     // oscillator: { type: 'sawtooth' },
     // oscillator: { type: 'triangle' },
@@ -59,19 +59,22 @@ const sketch = (p) => {
       //
       attack: 1e-2,
       decay: 0.5,
-      sustain: 0.3,
-      release: 0.8,
+      sustain: 0.25,
+      release: `24i`,
     },
     // modulation: { type: 'pulse', width: 0.0 },
     // modulation: { type: 'square'},
+    // modulation: { type: 'sawtooth' },
+    // modulation: { type: 'triangle' },
+    // modulation: { type: 'fmsawtooth' },
     modulation: { type: 'sine' },
 
     modulationEnvelope: {
       //
-      attack: 1e-4,
-      decay: 0.3,
+      attack: 1e-2,
+      decay: 0.9,
       sustain: 0.2,
-      release: 0.5,
+      release: 1.5,
     },
   }).chain(
     ...[
@@ -83,8 +86,9 @@ const sketch = (p) => {
   const fmPolySeq = new Tone.Sequence({
     callback: (time, value) => {
       value.notes.forEach((note, idx) => {
-        const computedTime = toTime('8t');
-        const durationSeconds = idx * toTime(`128i`);
+        const computedTime = toTime('8n');
+        // const durationSeconds = idx * toTime({ '8n': 1, '16t': 1 });
+        const durationSeconds = idx * toTime({ '16n': 1 });
         fmPolySynth.triggerAttackRelease(note, computedTime, time + durationSeconds);
       });
     },
@@ -92,7 +96,12 @@ const sketch = (p) => {
       { notes: ['C4', 'E4', 'G4', 'B4'] },
       { notes: ['C3', 'E3', 'G3', 'B3'] },
       { notes: ['G3', 'B3', 'D4', 'F4'] },
-      { notes: ['A3', 'C3', 'E3', 'D3'] },
+      { notes: ['A3', 'C3', 'E3', 'G3'] },
+
+      { notes: ['C5', 'E5', 'G5', 'B5'] },
+      { notes: ['C4', 'E4', 'G4', 'B4'] },
+      { notes: ['G4', 'B4', 'D5', 'F5'] },
+      { notes: ['A5', 'C4', 'E4', 'G4'] },
     ],
     subdivision: '2n',
   });
@@ -109,7 +118,7 @@ const sketch = (p) => {
   emitter.once('startOnceCallSeqs', () => {
     //transport.start();
     transport.scheduleOnce((time) => {
-      // clickSeq.start(time);
+      clickSeq.start(time);
       fmPolySeq.start(time);
     }, transport.context.now());
     // }, 0);
