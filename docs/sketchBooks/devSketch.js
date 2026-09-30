@@ -46,35 +46,35 @@ const sketch = (p) => {
 
   const fmPolyCh = new Tone.Channel();
   const fmPolySynth = new Tone.PolySynth(Tone.FMSynth, {
-    harmonicity: 2.048,
-    modulationIndex: 1.75,
+    harmonicity: 5.0,
+    modulationIndex: 13.0,
+
     oscillator: { type: 'sine' },
     // oscillator: { type: 'sawtooth' },
     // oscillator: { type: 'triangle' },
     // oscillator: { type: 'square' },
     // oscillator: { type: 'fmsawtooth' },
-    // oscillator: { type: 'pulse', width: 0.0 },
+    // oscillator: { type: 'pulse', width: 0.3 },
 
     envelope: {
       //
       attack: 1e-2,
-      decay: 0.5,
-      sustain: 0.25,
-      release: `64i`,
+      decay: 4.2,
+      sustain: 0.0,
+      release: `8i`,
     },
-    // modulation: { type: 'pulse', width: 0.0 },
+    // modulation: { type: 'pulse', width: 0.07 },
     // modulation: { type: 'square'},
     // modulation: { type: 'sawtooth' },
-    modulation: { type: 'triangle' },
+    // modulation: { type: 'triangle' },
     // modulation: { type: 'fmsawtooth' },
-    // modulation: { type: 'sine' },
-
+    modulation: { type: 'sine' },
     modulationEnvelope: {
       //
       attack: 5e-4,
-      decay: 0.2,
+      decay: 2.9,
       sustain: 0.15,
-      release: '32i',
+      release: '128i',
     },
   }).chain(
     ...[
@@ -87,14 +87,14 @@ const sketch = (p) => {
     callback: (time, value) => {
       value.notes.forEach((note, idx) => {
         // const computedTime = toTime('16n.');
-        const computedTime = toTime({ '4n': 1 });
+        const computedTime = toTime({ '16n': 1 });
         // const durationSeconds = idx * toTime({ '8n': 1, '16t': 1 });
-        const durationSeconds = idx * toTime({ '8t': 1.64 });
+        const durationSeconds = idx * toTime({ '8t': 1 });
         fmPolySynth.triggerAttackRelease(note, computedTime, time + durationSeconds);
       });
     },
     events: [
-      { notes: ['C6', 'E4', 'G4', 'B4'] },
+      { notes: ['C4', 'E4', 'G4', 'B4'] },
       { notes: ['C3', 'E3', 'G3', 'B3'] },
       { notes: ['G4', 'B4', 'D5', 'F5'] },
       { notes: ['A4', 'C3', 'E4', 'G4'] },
@@ -104,7 +104,7 @@ const sketch = (p) => {
       { notes: ['G3', 'B3', 'D4', 'F4'] },
       { notes: ['A5', 'C4', 'E3', 'G3'] },
     ],
-    subdivision: '2n',
+    subdivision: '4n',
   });
 
   // ---  master mixer
@@ -119,7 +119,7 @@ const sketch = (p) => {
   emitter.once('startOnceCallSeqs', () => {
     //transport.start();
     transport.scheduleOnce((time) => {
-      clickSeq.start(time);
+      // clickSeq.start(time);
       fmPolySeq.start(time);
     }, transport.context.now());
     // }, 0);
