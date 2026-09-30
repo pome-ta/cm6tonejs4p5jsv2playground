@@ -49,12 +49,6 @@ const sketch = (p) => {
     harmonicity: 2.0,
     modulationIndex: 5.0,
     oscillator: { type: 'sine' },
-    // oscillator: { type: 'sawtooth' },
-    // oscillator: { type: 'triangle' },
-    // oscillator: { type: 'square' },
-    // oscillator: { type: 'fmsawtooth' },
-    // oscillator: { type: 'pulse', width: 0.0 },
-
     envelope: {
       //
       attack: 1e-2,
@@ -65,7 +59,6 @@ const sketch = (p) => {
     // modulation: { type: 'pulse', width: 0.0 },
     // modulation: { type: 'square'},
     modulation: { type: 'sine' },
-
     modulationEnvelope: {
       //
       attack: 1e-4,
@@ -85,14 +78,14 @@ const sketch = (p) => {
       value.notes.forEach((note, idx) => {
         const computedTime = toTime('8t');
         const durationSeconds = idx * toTime(`128i`);
-        fmPolySynth.triggerAttackRelease(note, computedTime, time + durationSeconds);
+        fmPolySynth.triggerAttackRelease(note, computedTime + durationSeconds, time + durationSeconds);
       });
     },
     events: [
       { notes: ['C4', 'E4', 'G4', 'B4'] },
       { notes: ['C3', 'E3', 'G3', 'B3'] },
       { notes: ['G3', 'B3', 'D4', 'F4'] },
-      { notes: ['A3', 'C3', 'E3', 'D3'] },
+      { notes: ['F3', 'A3', 'C3', 'E3'] },
     ],
     subdivision: '2n',
   });
