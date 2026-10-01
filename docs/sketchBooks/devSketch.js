@@ -47,7 +47,7 @@ const sketch = (p) => {
   const fmPolyCh = new Tone.Channel();
   const fmPolySynth = new Tone.PolySynth(Tone.FMSynth, {
     harmonicity: 5.0,
-    modulationIndex: 13.0,
+    modulationIndex: 2.0,
 
     oscillator: { type: 'sine' },
     // oscillator: { type: 'sawtooth' },
@@ -59,7 +59,7 @@ const sketch = (p) => {
     envelope: {
       //
       attack: 1e-2,
-      decay: 4.2,
+      decay: 0.37,
       sustain: 0.0,
       release: `8i`,
     },
@@ -87,22 +87,24 @@ const sketch = (p) => {
     callback: (time, value) => {
       value.notes.forEach((note, idx) => {
         // const computedTime = toTime('16n.');
-        const computedTime = toTime({ '16n': 1 });
+        const computedTime = toTime({ '8n': 1 });
         // const durationSeconds = idx * toTime({ '8n': 1, '16t': 1 });
-        const durationSeconds = idx * toTime({ '8t': 1 });
+        const durationSeconds = idx * toTime({ '16n.': 1.25 });
         fmPolySynth.triggerAttackRelease(note, computedTime, time + durationSeconds);
       });
     },
     events: [
       { notes: ['C4', 'E4', 'G4', 'B4'] },
       { notes: ['C3', 'E3', 'G3', 'B3'] },
-      { notes: ['G4', 'B4', 'D5', 'F5'] },
+      // { notes: ['G4', 'B4', 'D5', 'F5'] },
+      { notes: ['G3', 'B3', 'D4', 'F4'] },
       { notes: ['A4', 'C3', 'E4', 'G4'] },
-
+      /*
       { notes: ['C5', 'E4', 'G5', 'B3'] },
       { notes: ['C4', 'E4', 'G4', 'B4'] },
       { notes: ['G3', 'B3', 'D4', 'F4'] },
-      { notes: ['A5', 'C4', 'E3', 'G3'] },
+      { notes: ['A4', 'C4', 'E3', 'G3'] },
+      */
     ],
     subdivision: '4n',
   });
