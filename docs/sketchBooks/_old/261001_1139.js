@@ -6,11 +6,6 @@ import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
 const BPM = 105;
 
-function ftRand(bias, spread = 1.0) {
-  const maxDist = Math.min(bias, 1.0 - bias) * spread;
-  return bias + (Math.random() * 2 - 1) * maxDist;
-}
-
 const sketch = (p) => {
   // --- Tone.js
   const ctx = p.getAudioContext();
@@ -64,9 +59,9 @@ const sketch = (p) => {
     envelope: {
       //
       attack: 1e-2,
-      decay: 1.37,
-      sustain: 0.8,
-      release: `32i`,
+      decay: 0.37,
+      sustain: 0.0,
+      release: `8i`,
     },
     // modulation: { type: 'pulse', width: 0.07 },
     // modulation: { type: 'square'},
@@ -92,19 +87,26 @@ const sketch = (p) => {
     callback: (time, value) => {
       value.notes.forEach((note, idx) => {
         // const computedTime = toTime('16n.');
-        const computedTime = toTime({ '8n.': 1.25 });
+        const computedTime = toTime({ '8n': 1 });
         // const durationSeconds = idx * toTime({ '8n': 1, '16t': 1 });
-        const durationSeconds = idx * toTime({ '16t': 1.0 }) * (1 + ftRand(0.125));
-        fmPolySynth.triggerAttackRelease(note, computedTime, time + durationSeconds, ftRand(0.8));
+        const durationSeconds = idx * toTime({ '16n.': 1.25 });
+        fmPolySynth.triggerAttackRelease(note, computedTime, time + durationSeconds);
       });
     },
     events: [
-      { notes: ['G3', 'B3', 'D4', 'E4'] },
-      { notes: ['Ab3', 'C4', 'Eb3', 'G4'] },
-      { notes: ['G3', 'B3', 'C4', 'E4'] },
-      { notes: ['F3', 'A3', 'C4', 'E4'] },
+      { notes: ['C4', 'E4', 'G4', 'B4'] },
+      { notes: ['C3', 'E3', 'G3', 'B3'] },
+      // { notes: ['G4', 'B4', 'D5', 'F5'] },
+      { notes: ['G3', 'B3', 'D4', 'F4'] },
+      { notes: ['A4', 'C3', 'E4', 'G4'] },
+      /*
+      { notes: ['C5', 'E4', 'G5', 'B3'] },
+      { notes: ['C4', 'E4', 'G4', 'B4'] },
+      { notes: ['G3', 'B3', 'D4', 'F4'] },
+      { notes: ['A4', 'C4', 'E3', 'G3'] },
+      */
     ],
-    subdivision: '2n',
+    subdivision: '4n',
   });
 
   // ---  master mixer
@@ -119,7 +121,7 @@ const sketch = (p) => {
   emitter.once('startOnceCallSeqs', () => {
     //transport.start();
     transport.scheduleOnce((time) => {
-      clickSeq.start(time);
+      // clickSeq.start(time);
       fmPolySeq.start(time);
     }, transport.context.now());
     // }, 0);
