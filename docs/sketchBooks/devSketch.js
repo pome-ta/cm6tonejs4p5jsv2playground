@@ -90,6 +90,8 @@ const sketch = (p) => {
 
   const fmPolySeq = new Tone.Sequence({
     callback: (time, value) => {
+      fmPolySynth.triggerAttackRelease(value.notes, '2n', time, ftRand(0.8));
+      /*
       value.notes.forEach((note, idx) => {
         // const computedTime = toTime('16n.');
         const computedTime = toTime({ '8n.': 1.25 });
@@ -97,12 +99,51 @@ const sketch = (p) => {
         const durationSeconds = idx * toTime({ '16t': 1.0 }) * (1 + ftRand(0.125));
         fmPolySynth.triggerAttackRelease(note, computedTime, time + durationSeconds, ftRand(0.8));
       });
+      */
     },
     events: [
-      { notes: ['G3', 'B3', 'D4', 'E4'] },
-      { notes: ['Ab3', 'C4', 'Eb3', 'G4'] },
-      { notes: ['G3', 'B3', 'C4', 'E4'] },
-      { notes: ['F3', 'A3', 'C4', 'E4'] },
+      
+{ notes: ['G3', 'B3', 'D4', 'E4'] },   // Cmaj9
+{ notes: ['Ab3', 'C4', 'Eb4', 'G4'] }, // Fm9
+{ notes: ['A3', 'C4', 'E4', 'G4'] },   // Am7
+{ notes: ['Ab3', 'C4', 'D4', 'F4'] },  // Dm7b5 / color
+
+      /*
+      { notes: ['G3', 'B3', 'D4', 'E4'] }, // Cmaj9
+      // { notes: ['G3', 'B3', 'C4', 'E4'] }, // Am9
+      // { notes: ['G#3', 'B3', 'D4', 'F4'] }, // E7b9
+      // { notes: ['G#3', 'B3', 'D4', 'F4'] }, // E7b9
+      // { notes: ['A3', 'D#4', 'E4', 'F4'] }, // B7#11
+      { notes: ['F3', 'A3', 'C4', 'G4'] }, // Dm11
+      { notes: ['A3', 'C4', 'E4', 'G4'] }, // Fmaj9
+      { notes: ['Gb3', 'Bb3', 'C4', 'F4'] }, // Ab13
+      */
+
+      /*
+      { notes: ['G3', 'B3', 'D4', 'E4'] }, // Cmaj9
+      { notes: ['G3', 'B3', 'C4', 'E4'] }, // Am9
+      { notes: ['F3', 'A3', 'C4', 'G4'] }, // Dm11
+      // { notes: ['F3', 'Ab3', 'Bb3', 'B3'] }, // Db13
+      { notes: ['Ab3', 'C4', 'Eb4', 'G4'] }, // Fm9
+
+
+      
+      { notes: ['G3', 'B3', 'D4', 'E4'] }, // Cmaj9
+      { notes: ['G#3', 'B3', 'D4', 'F4'] }, // E7b9
+      { notes: ['G3', 'B3', 'C4', 'E4'] }, // Am9
+      { notes: ['Gb3', 'Bb3', 'C4', 'F4'] }, // Ab13
+
+      { notes: ['G3', 'B3', 'D4', 'E4'] }, // Cmaj9
+      { notes: ['F3', 'Ab3', 'C4', 'G4'] }, // Db7#11
+      { notes: ['A3', 'C4', 'E4', 'G4'] }, // Fmaj9
+      { notes: ['Ab3', 'C4', 'Eb4', 'G4'] }, // Fm9
+
+      { notes: ['G3', 'B3', 'D4', 'E4'] }, // Cmaj9
+      { notes: ['A3', 'D#4', 'E4', 'F4'] }, // B7#11
+      { notes: ['A3', 'C4', 'D4', 'F4'] }, // Bbmaj9
+      { notes: ['Gb3', 'C4', 'D4', 'G4'] }, // Ab7#11
+      */
+      
     ],
     subdivision: '2n',
   });
