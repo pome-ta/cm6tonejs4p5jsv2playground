@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 105;
+const BPM = 90;
 
 function ftRand(bias, spread = 1.0) {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -88,64 +88,40 @@ const sketch = (p) => {
     ].filter((n) => n),
   );
 
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      let j = Math.floor(Math.random() * (i + 1)); // 0 から i のランダムなインデックス
+      [array[i], array[j]] = [array[j], array[i]]; // 要素を入れ替えます
+    }
+  }
+
   const fmPolySeq = new Tone.Sequence({
     callback: (time, value) => {
-      fmPolySynth.triggerAttackRelease(value.notes, '2n', time, ftRand(0.8));
-      /*
+      // fmPolySynth.triggerAttackRelease(value.notes, '8n', time);
+      const computedTime = toTime({ '8t': 1.0 });
+
       value.notes.forEach((note, idx) => {
         // const computedTime = toTime('16n.');
-        const computedTime = toTime({ '8n.': 1.25 });
+
         // const durationSeconds = idx * toTime({ '8n': 1, '16t': 1 });
-        const durationSeconds = idx * toTime({ '16t': 1.0 }) * (1 + ftRand(0.125));
-        fmPolySynth.triggerAttackRelease(note, computedTime, time + durationSeconds, ftRand(0.8));
+        const durationSeconds = idx * toTime({ '16t': 1.0 });
+        fmPolySynth.triggerAttackRelease(note, computedTime, time + durationSeconds, ftRand(0.75));
       });
-      */
     },
     events: [
-      
-{ notes: ['G3', 'B3', 'D4', 'E4'] },   // Cmaj9
-{ notes: ['Ab3', 'C4', 'Eb4', 'G4'] }, // Fm9
-{ notes: ['A3', 'C4', 'E4', 'G4'] },   // Am7
-{ notes: ['Ab3', 'C4', 'D4', 'F4'] },  // Dm7b5 / color
+      { notes: ['A3', 'C4', 'E3', 'G4'] },
+      { notes: ['D3', 'F3', 'A4', 'C4'] },
+      { notes: ['G3', 'B3', 'D3', 'F4'] },
+      { notes: ['C4', 'E3', 'G4', 'B3'] },
 
       /*
-      { notes: ['G3', 'B3', 'D4', 'E4'] }, // Cmaj9
-      // { notes: ['G3', 'B3', 'C4', 'E4'] }, // Am9
-      // { notes: ['G#3', 'B3', 'D4', 'F4'] }, // E7b9
-      // { notes: ['G#3', 'B3', 'D4', 'F4'] }, // E7b9
-      // { notes: ['A3', 'D#4', 'E4', 'F4'] }, // B7#11
-      { notes: ['F3', 'A3', 'C4', 'G4'] }, // Dm11
-      { notes: ['A3', 'C4', 'E4', 'G4'] }, // Fmaj9
-      { notes: ['Gb3', 'Bb3', 'C4', 'F4'] }, // Ab13
+      { notes: ['A3', 'C5', 'E3', 'G5'] },
+      { notes: ['D3', 'F3', 'A5', 'C5'] },
+      { notes: ['G3', 'B3', 'D3', 'F5'] },
+      { notes: ['C5', 'E3', 'G5', 'B3'] },
       */
-
-      /*
-      { notes: ['G3', 'B3', 'D4', 'E4'] }, // Cmaj9
-      { notes: ['G3', 'B3', 'C4', 'E4'] }, // Am9
-      { notes: ['F3', 'A3', 'C4', 'G4'] }, // Dm11
-      // { notes: ['F3', 'Ab3', 'Bb3', 'B3'] }, // Db13
-      { notes: ['Ab3', 'C4', 'Eb4', 'G4'] }, // Fm9
-
-
-      
-      { notes: ['G3', 'B3', 'D4', 'E4'] }, // Cmaj9
-      { notes: ['G#3', 'B3', 'D4', 'F4'] }, // E7b9
-      { notes: ['G3', 'B3', 'C4', 'E4'] }, // Am9
-      { notes: ['Gb3', 'Bb3', 'C4', 'F4'] }, // Ab13
-
-      { notes: ['G3', 'B3', 'D4', 'E4'] }, // Cmaj9
-      { notes: ['F3', 'Ab3', 'C4', 'G4'] }, // Db7#11
-      { notes: ['A3', 'C4', 'E4', 'G4'] }, // Fmaj9
-      { notes: ['Ab3', 'C4', 'Eb4', 'G4'] }, // Fm9
-
-      { notes: ['G3', 'B3', 'D4', 'E4'] }, // Cmaj9
-      { notes: ['A3', 'D#4', 'E4', 'F4'] }, // B7#11
-      { notes: ['A3', 'C4', 'D4', 'F4'] }, // Bbmaj9
-      { notes: ['Gb3', 'C4', 'D4', 'G4'] }, // Ab7#11
-      */
-      
     ],
-    subdivision: '2n',
+    subdivision: '4n',
   });
 
   // ---  master mixer
