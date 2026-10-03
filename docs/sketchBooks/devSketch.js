@@ -4,7 +4,50 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 100;
+const BPM = 96;
+
+// --- offline buffers
+const kickBuffer = await Tone.Offline((context) => {
+  context.transport.bpm.value = BPM;
+  const synth = new Tone.Synth({
+    oscillator: { type: 'sine', phase: 270 },
+    envelope: {
+      attack: 5e-4,
+      decay: 2.75,
+      sustain: 1.0,
+      release: '64i',
+      attackCurve: 'exponential',
+    },
+  });
+  synth.triggerAttackRelease('A3', '16t');
+  synth.frequency.rampTo('C1', `24i`);
+
+  synth.chain(...[new Tone.Channel().toDestination()].filter((n) => n));
+}, 2.0);
+
+const hihatBuffer = await Tone.Offline((context) => {
+  context.transport.bpm.value = BPM;
+  const metalSynth = new Tone.MetalSynth({
+    envelope: {
+      attack: 0.0,
+      decay: 1.9,
+      sustain: 0.0,
+      release: 1e-3,
+      attackCurve: 'exponential',
+    },
+    harmonicity: 2.7,
+    modulationIndex: 5,
+    octaves: 0.27,
+    resonance: 270,
+  });
+  metalSynth.triggerAttackRelease(1200, '3i');
+  metalSynth.chain(
+    ...[
+      //,
+      new Tone.Channel().toDestination(),
+    ].filter((n) => n),
+  );
+}, 0.5);
 
 function ftRand(bias, spread = 1.0) {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -49,33 +92,103 @@ const sketch = (p) => {
   const clickCh = new Tone.Channel(-4);
   clickSynth.chain(clickCh);
 
+  const kickCh = new Tone.Channel();
+  const kickComp = new Tone.Compressor({
+    threshold: -45,
+    ratio: 20,
+    attack: 0.2,
+    release: 5e-2,
+    knee: 40,
+  });
+  const kickSampler = new Tone.Sampler({
+    urls: {
+      C1: kickBuffer, // C1:24
+    },
+    onload: () => {},
+    onerror: (error) => {
+      console.error('sample load error:', error);
+    },
+    attack: 0.0,
+    release: '2i',
+    curve: 'exponential',
+  }).chain(
+    ...[
+      //
+      // kickComp,
+      kickCh,
+    ].filter((n) => n),
+  );
+
+  const kickSeq = new Tone.Sequence({
+    callback: (time, velocity) => {
+      kickSampler.triggerAttack('F0', time, velocity);
+    },
+    events: [
+      // [1, null, [1, 0.75], null],
+      // [1, [, [, 0.55]], [1, 0.8], null],
+      [1, 1, 1, 1],
+      [1, 1, 1, 1],
+      [1, 1, 1, 1],
+      [1, 1, 1, [1, ftRand(0.125)]],
+    ],
+    subdivision: '1n',
+  });
+  const hihatCh = new Tone.Channel(-4);
+  const hihatFilter = new Tone.Filter({
+    type: 'lowpass',
+    frequency: 5800,
+    Q: 2.0,
+    rolloff: -12, // -12, -24, -48, -96
+    gain: 1,
+  });
+  const hihatSampler = new Tone.Sampler({
+    urls: {
+      A4: hihatBuffer,
+    },
+    attack: '1i',
+    release: '2i',
+    curve: 'exponential',
+  }).chain(
+    ...[
+      //
+      hihatFilter,
+      hihatCh,
+    ].filter((n) => n),
+  );
+
+  const hihatSeq = new Tone.Sequence({
+    callback: (time, velocity) => {
+      hihatSampler.triggerAttack('A5', time, velocity);
+    },
+    events: [
+      [null, ftRand(0.95), null, ftRand(0.75)],
+      [null, ftRand(0.95), ftRand(0.125), ftRand(0.85)],
+    ],
+    subdivision: '2n',
+    humanize: 0.005,
+  });
+
   const fmPolyCh = new Tone.Channel();
+  const fmPolyComp = new Tone.Compressor({
+    threshold: -45,
+    ratio: 20,
+    attack: 0.2,
+    release: 5e-2,
+    knee: 40,
+  });
   const fmPolySynth = new Tone.PolySynth(Tone.FMSynth, {
     harmonicity: 5.0,
     modulationIndex: 2.0,
 
     oscillator: { type: 'sine' },
-    // oscillator: { type: 'sawtooth' },
-    // oscillator: { type: 'triangle' },
-    // oscillator: { type: 'square' },
-    // oscillator: { type: 'fmsawtooth' },
-    // oscillator: { type: 'pulse', width: 0.3 },
-
     envelope: {
-      //
       attack: 1e-2,
       decay: 1.37,
       sustain: 0.8,
       release: `32i`,
     },
-    // modulation: { type: 'pulse', width: 0.07 },
-    // modulation: { type: 'square'},
-    // modulation: { type: 'sawtooth' },
-    // modulation: { type: 'triangle' },
-    // modulation: { type: 'fmsawtooth' },
     modulation: { type: 'sine' },
     modulationEnvelope: {
-      //
       attack: 5e-4,
       decay: 2.9,
       sustain: 0.15,
@@ -84,28 +197,15 @@ const sketch = (p) => {
   }).chain(
     ...[
       //
+      // fmPolyComp,
       fmPolyCh,
     ].filter((n) => n),
   );
 
-  function shuffle([...targetArray]) {
-    for (let i = targetArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [targetArray[i], targetArray[j]] = [targetArray[j], targetArray[i]];
-    }
-    return targetArray;
-  }
-
   const fmPolySeq = new Tone.Sequence({
     callback: (time, value) => {
-      // fmPolySynth.triggerAttackRelease(value.notes, '8n', time);
       const computedTime = toTime({ '8t': 1.0 });
-
       value.notes.forEach((note, idx) => {
-        // shuffle(value.notes).forEach((note, idx) => {
-        // const computedTime = toTime('16n.');
-
-        // const durationSeconds = idx * toTime({ '8n': 1, '16t': 1 });
         const durationSeconds = idx * toTime({ '16t': 1.0 });
         fmPolySynth.triggerAttackRelease(note, computedTime, time + durationSeconds, ftRand(0.85));
       });
@@ -132,11 +232,14 @@ const sketch = (p) => {
       { notes: ['C3', 'E4', 'G3', 'B4'] },
     ],
     subdivision: '2n',
+    humanize: 0.05,
   });
 
   // ---  master mixer
   const fanInNodes = [
     //
+    kickCh,
+    hihatCh,
     fmPolyCh,
     clickCh,
   ];
@@ -144,12 +247,12 @@ const sketch = (p) => {
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
-    //transport.start();
     transport.scheduleOnce((time) => {
-      clickSeq.start(time);
+      // clickSeq.start(time);
+      kickSeq.start(time);
+      hihatSeq.start(time);
       fmPolySeq.start(time);
     }, transport.context.now());
-    // }, 0);
   });
 
   // --- Sketch
@@ -184,7 +287,6 @@ const sketch = (p) => {
   };
 
   p.windowResized = (e) => {
-    console.log('windowResized');
     w = p.windowWidth;
     h = p.windowHeight;
     cnvs = p.resizeCanvas(w, h);
