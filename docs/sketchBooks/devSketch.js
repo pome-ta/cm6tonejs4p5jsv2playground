@@ -5,7 +5,7 @@ import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
 const BPM = 96;
-
+/*
 // --- offline buffers
 const kickBuffer = await Tone.Offline((context) => {
   context.transport.bpm.value = BPM;
@@ -24,30 +24,9 @@ const kickBuffer = await Tone.Offline((context) => {
 
   synth.chain(...[new Tone.Channel().toDestination()].filter((n) => n));
 }, 2.0);
+*/
 
-const hihatBuffer = await Tone.Offline((context) => {
-  context.transport.bpm.value = BPM;
-  const metalSynth = new Tone.MetalSynth({
-    envelope: {
-      attack: 0.0,
-      decay: 1.9,
-      sustain: 0.0,
-      release: 1e-3,
-      attackCurve: 'exponential',
-    },
-    harmonicity: 2.7,
-    modulationIndex: 5,
-    octaves: 0.27,
-    resonance: 270,
-  });
-  metalSynth.triggerAttackRelease(1200, '3i');
-  metalSynth.chain(
-    ...[
-      //,
-      new Tone.Channel().toDestination(),
-    ].filter((n) => n),
-  );
-}, 0.5);
+
 
 function ftRand(bias, spread = 1.0) {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -101,9 +80,11 @@ const sketch = (p) => {
     knee: 40,
   });
   const kickSampler = new Tone.Sampler({
+    /*
     urls: {
       C1: kickBuffer, // C1:24
     },
+    */
     onload: () => {},
     onerror: (error) => {
       console.error('sample load error:', error);
@@ -119,9 +100,43 @@ const sketch = (p) => {
     ].filter((n) => n),
   );
 
+
+
+  // --- offline kick buffer
+  
+  Tone.Offline((context) => {
+    context.transport.bpm.value = BPM;
+    
+    const synth = new Tone.Synth({
+      oscillator: { type: 'sine', phase: 270 },
+      envelope: {
+        attack: 5e-4,
+        decay: 2.75,
+        sustain: 1.0,
+        release: '64i',
+        attackCurve: 'exponential',
+      },
+    });
+    synth.triggerAttackRelease('A3', '16t');
+    synth.frequency.rampTo('C1', `24i`);
+    console.log('buffer');
+    //console.log(context);
+
+    synth.chain(...[new Tone.Channel().toDestination()].filter((n) => n));
+    
+  }, 2.0);
+  //console.log(kickbuffer);
+
+  /*
+  kickbuffer.then((buffer) => {
+    //console.log(buffer); // ToneAudioBuffer
+  });
+  */
+  
+
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      kickSampler.triggerAttack('F0', time, velocity);
+      //kickSampler.triggerAttack('F0', time, velocity);
     },
     events: [
       // [1, null, [1, 0.75], null],
@@ -132,40 +147,6 @@ const sketch = (p) => {
       [1, 1, 1, [1, ftRand(0.125)]],
     ],
     subdivision: '1n',
-  });
-  const hihatCh = new Tone.Channel(-4);
-  const hihatFilter = new Tone.Filter({
-    type: 'lowpass',
-    frequency: 5800,
-    Q: 2.0,
-    rolloff: -12, // -12, -24, -48, -96
-    gain: 1,
-  });
-  const hihatSampler = new Tone.Sampler({
-    urls: {
-      A4: hihatBuffer,
-    },
-    attack: '1i',
-    release: '2i',
-    curve: 'exponential',
-  }).chain(
-    ...[
-      //
-      hihatFilter,
-      hihatCh,
-    ].filter((n) => n),
-  );
-
-  const hihatSeq = new Tone.Sequence({
-    callback: (time, velocity) => {
-      hihatSampler.triggerAttack('A5', time, velocity);
-    },
-    events: [
-      [null, ftRand(0.95), null, ftRand(0.75)],
-      [null, ftRand(0.95), ftRand(0.125), ftRand(0.85)],
-    ],
-    subdivision: '2n',
-    humanize: 0.005,
   });
 
   const fmPolyCh = new Tone.Channel();
@@ -239,7 +220,6 @@ const sketch = (p) => {
   const fanInNodes = [
     //
     kickCh,
-    hihatCh,
     fmPolyCh,
     clickCh,
   ];
@@ -250,7 +230,6 @@ const sketch = (p) => {
     transport.scheduleOnce((time) => {
       // clickSeq.start(time);
       kickSeq.start(time);
-      hihatSeq.start(time);
       fmPolySeq.start(time);
     }, transport.context.now());
   });
@@ -264,10 +243,12 @@ const sketch = (p) => {
   const tapIndicator = new TapIndicator(p);
   const spectrumAnalyzer = new SpectrumAnalyzer(p, 2048);
 
-  //p.setup = async () => {
-  p.setup = () => {
+  p.setup = async () => {
+    //p.setup = () => {
     // put setup code here
     cnvs = p.createCanvas(w, h);
+
+    
 
     // xxx: インクルード要検討
     transport.start();
