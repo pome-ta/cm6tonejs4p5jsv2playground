@@ -1,4 +1,4 @@
-// --- # example: mono82 AudioWorklet
+// --- # example: Tone.Sampler mono82 AudioWorklet
 // [GitHub - kasaitakara/mono82: Simple music sequencer for everyone · GitHub](https://github.com/kasaitakara/mono82)
 import * as Tone from 'tone';
 
