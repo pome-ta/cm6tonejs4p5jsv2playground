@@ -5,7 +5,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 130;
+const BPM = 90;
 
 // [mono82/js/audio.js at main · kasaitakara/mono82 · GitHub](https://github.com/kasaitakara/mono82/blob/main/js/audio.js)
 const processorSource = `
@@ -236,7 +236,9 @@ async function renderToBuffer(layer, sound, performanceData) {
       await context.addAudioWorkletModule(blobUrl);
       URL.revokeObjectURL(blobUrl);
 
-      noiseBufferCache = ensureNoiseBuffer(context, { buffer: noiseBufferCache });
+      noiseBufferCache = ensureNoiseBuffer(context, {
+        buffer: noiseBufferCache,
+      });
       scheduleSound(context, layer, sound, performanceData);
     },
     totalDuration,
@@ -365,7 +367,10 @@ const initRhythmPreset = {
 };
 
 // --- offline buffers
-const kickBuffer = await renderToBuffer(kickPreset.category, kickPreset.sound, { gain: 100, note: 0 });
+const kickBuffer = await renderToBuffer(kickPreset.category, kickPreset.sound, {
+  gain: 100,
+  note: 0,
+});
 const snareBuffer = await renderToBuffer(snarePreset.category, snarePreset.sound, { gain: 100, note: 0 });
 const hihatBuffer = await renderToBuffer(hihatPreset.category, hihatPreset.sound, { gain: 100, note: 0 });
 const initRhythmBuffer = await renderToBuffer(initRhythmPreset.category, initRhythmPreset.sound, {
@@ -418,6 +423,13 @@ const sketch = (p) => {
 
   // --- kick
   const kickCh = new Tone.Channel();
+  const kickComp = new Tone.Compressor({
+    threshold: -35,
+    ratio: 10,
+    attack: 0.1,
+    release: 5e-3,
+    knee: 40,
+  });
   const kickSampler = new Tone.Sampler({
     urls: {
       A4: kickBuffer,
@@ -433,7 +445,7 @@ const sketch = (p) => {
   }).chain(
     ...[
       //
-
+      kickComp,
       kickCh,
     ].filter((n) => n),
   );
@@ -443,18 +455,28 @@ const sketch = (p) => {
       kickSampler.triggerAttack('A4', time, velocity);
     },
     events: [
-      // [1, null, [1, 0.75], null],
-      // [1, [, [, 0.55]], [1, 0.8], null],
-      [1, 1, 1, 1],
-      [1, 1, 1, 1],
-      [1, 1, 1, 1],
-      [1, 1, 1, [1, ftRand(0.525)]],
+      [1, [null, [null, ftRand(0.225)]], [1, ftRand(0.825)], [null, [null, ftRand(0.525)]]],
+      [1, null, [1, ftRand(0.825)], [null, [null, ftRand(0.525)]]],
+      [1, [null, [null, ftRand(0.525)]], [1, ftRand(0.825)], null],
+      [
+        [1, [null, ftRand(0.225)]],
+        [null, [null, ftRand(0.525)]],
+        [1, ftRand(0.825)],
+        [null, [null, ftRand(0.325)]],
+      ],
     ],
     subdivision: '1n',
   });
 
   // --- snare
   const snareCh = new Tone.Channel();
+  const snareComp = new Tone.Compressor({
+    threshold: -25,
+    ratio: 10,
+    attack: 0.1,
+    release: 5e-3,
+    knee: 40,
+  });
   const snareSampler = new Tone.Sampler({
     urls: {
       A4: snareBuffer,
@@ -465,21 +487,27 @@ const sketch = (p) => {
       console.error('sample load error:', error);
     },
     attack: 0.0,
-    release: '2i',
+    release: '4i',
     curve: 'exponential',
   }).chain(
     ...[
       //
+      snareComp,
       snareCh,
     ].filter((n) => n),
   );
 
   const snareSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      snareSampler.triggerAttack('A4', time, velocity);
+      snareSampler.triggerAttack('Ab4', time, velocity);
     },
-    events: [[null, 1, null, 1]],
-    subdivision: '2n',
+    events: [
+      [null, 1, null, 1],
+      [null, 1, null, 1],
+      [null, 1, null, [1, null, null, ftRand(0.325)]],
+      [null, 1, null, 1],
+    ],
+    subdivision: '1n',
   });
 
   // --- hihat
@@ -505,10 +533,67 @@ const sketch = (p) => {
 
   const hihatSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      hihatSampler.triggerAttack('A4', time, velocity);
+      hihatSampler.triggerAttack('B4', time, velocity);
     },
-    events: [[null, 1, null, 1]],
+    events: [
+      //
+      [1, ftRand(0.725), 1, ftRand(0.825)],
+      [1, ftRand(0.725), 1, ftRand(0.825)],
+      [1, ftRand(0.725), 1, ftRand(0.825)],
+      [1, ftRand(0.725), 1, ftRand(0.825)],
+      //
+      [1, ftRand(0.725), 1, ftRand(0.825)],
+      [1, ftRand(0.725), 1, ftRand(0.825)],
+      [1, ftRand(0.725), [ftRand(0.825), ftRand(0.625), ftRand(0.525), ftRand(0.825)], ftRand(0.825)],
+      [1, ftRand(0.725), 1, ftRand(0.825)],
+      //
+      [1, ftRand(0.725), 1, ftRand(0.825)],
+      [1, ftRand(0.725), 1, ftRand(0.825)],
+      [1, ftRand(0.725), 1, ftRand(0.825)],
+      [1, ftRand(0.725), 1, ftRand(0.825)],
+      //
+      [1, ftRand(0.725), 1, ftRand(0.825)],
+      [1, ftRand(0.725), 1, ftRand(0.825)],
+      [1, ftRand(0.725), 1, ftRand(0.825)],
+      [1, ftRand(0.725), 1, ftRand(0.825)],
+    ],
     subdivision: '4n',
+    humanize: 0.002,
+  });
+
+  // --- initRhythm
+  const initRhythmCh = new Tone.Channel(-4);
+  const initRhythmSampler = new Tone.Sampler({
+    urls: {
+      A4: initRhythmBuffer,
+    },
+
+    onload: () => {},
+    onerror: (error) => {
+      console.error('sample load error:', error);
+    },
+    attack: 0.0,
+    release: '2i',
+    curve: 'exponential',
+  }).chain(
+    ...[
+      //
+      initRhythmCh,
+    ].filter((n) => n),
+  );
+
+  const initRhythmSeq = new Tone.Sequence({
+    callback: (time, velocity) => {
+      initRhythmSampler.triggerAttack('A4', time, velocity);
+    },
+    events: [
+      [null, ftRand(0.225), null, [null, ftRand(0.425)]],
+      [null, null, null, [null, null, null, ftRand(0.225)]],
+      [null, [null, null, null, ftRand(0.225)], null, null],
+      [null, null, null, [null, null, null, ftRand(0.225)]],
+    ],
+    subdivision: '2t',
+    probability: 0.48,
   });
 
   // ---  master mixer
@@ -517,6 +602,7 @@ const sketch = (p) => {
     kickCh,
     snareCh,
     hihatCh,
+    initRhythmCh,
 
     clickCh,
   ];
@@ -529,6 +615,7 @@ const sketch = (p) => {
       kickSeq.start(time);
       snareSeq.start(time);
       hihatSeq.start(time);
+      // initRhythmSeq.start(time);
     }, transport.context.now());
   });
 
