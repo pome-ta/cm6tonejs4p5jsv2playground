@@ -1,4 +1,4 @@
-// --- # example: Tone.Sampler mono82 AudioWorklet add
+// --- # example: kick
 // [GitHub - kasaitakara/mono82: Simple music sequencer for everyone · GitHub](https://github.com/kasaitakara/mono82)
 import * as Tone from 'tone';
 
@@ -279,104 +279,35 @@ const kickPreset = {
   },
 };
 
-const snarePreset = {
-  id: 'factory-rhythm-snare',
-  category: 'rhythm',
-  name: 'snare',
-  sound: {
-    gain: 130,
-    noiseMix: 19,
-    note: 0,
-    attack: 1,
-    holdDecay: 7,
-    filterCutoff: 30,
-    filterResonance: 0,
-    lfo1: {
-      target: 'pitch',
-      wave: 'sine',
-      depth: 0,
-      rate: 25,
-      syncMode: 'free',
-    },
-    lfo2: {
-      target: 'pitch',
-      wave: 'sine',
-      depth: 0,
-      rate: 25,
-      syncMode: 'free',
-    },
-  },
-};
-
-const hihatPreset = {
-  id: 'factory-rhythm-hat',
-  category: 'rhythm',
-  name: 'hat',
-  sound: {
-    gain: 14,
-    noiseMix: 100,
-    note: 0,
-    attack: 1,
-    holdDecay: 8,
-    filterCutoff: 50,
-    filterResonance: 25,
-    lfo1: {
-      target: 'pitch',
-      wave: 'sine',
-      depth: 0,
-      rate: 25,
-      syncMode: 'free',
-    },
-    lfo2: {
-      target: 'pitch',
-      wave: 'sine',
-      depth: 0,
-      rate: 25,
-      syncMode: 'free',
-    },
-  },
-};
-
-const initRhythmPreset = {
-  id: 'factory-rhythm-init',
-  category: 'rhythm',
-  name: 'initialize rhythm',
-  sound: {
-    gain: 70,
-    noiseMix: 0,
-    note: 12,
-    attack: 1,
-    holdDecay: 11,
-    filterCutoff: 0,
-    filterResonance: 0,
-    lfo1: {
-      target: 'pitch',
-      wave: 'sine',
-      depth: 0,
-      rate: 25,
-      syncMode: 'free',
-    },
-    lfo2: {
-      target: 'pitch',
-      wave: 'sine',
-      depth: 0,
-      rate: 25,
-      syncMode: 'free',
-    },
-  },
-};
-
 // --- offline buffers
-const kickBuffer = await renderToBuffer(kickPreset.category, kickPreset.sound, {
+const monoKickBuffer = await renderToBuffer(kickPreset.category, kickPreset.sound, {
   gain: 100,
   note: 0,
 });
-const snareBuffer = await renderToBuffer(snarePreset.category, snarePreset.sound, { gain: 100, note: 0 });
-const hihatBuffer = await renderToBuffer(hihatPreset.category, hihatPreset.sound, { gain: 100, note: 0 });
-const initRhythmBuffer = await renderToBuffer(initRhythmPreset.category, initRhythmPreset.sound, {
-  gain: 100,
-  note: 0,
-});
+
+const orgnKickBuffer = await Tone.Offline((context) => {
+  context.transport.bpm.value = BPM;
+  const synth = new Tone.Synth({
+    oscillator: { type: 'sine', phase: 270 },
+    // oscillator: { type: 'sine', },
+    envelope: {
+      attack: 5e-4,
+      decay: 2.75,
+      sustain: 1.0,
+      release: '64i',
+      attackCurve: 'exponential',
+    },
+  });
+  synth.triggerAttackRelease('A3', '16t');
+  synth.frequency.rampTo('C1', `24i`);
+  // synth.frequency.rampTo('C2', `72i`);
+  synth.chain(
+    ...[
+      //,
+      new Tone.Channel().toDestination(),
+    ].filter((n) => n),
+  );
+}, 2.0);
 
 function ftRand(bias, spread = 1.0) {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -421,18 +352,11 @@ const sketch = (p) => {
   const clickCh = new Tone.Channel(-4);
   clickSynth.chain(clickCh);
 
-  // --- kick
-  const kickCh = new Tone.Channel();
-  const kickComp = new Tone.Compressor({
-    threshold: -35,
-    ratio: 10,
-    attack: 0.1,
-    release: 5e-3,
-    knee: 40,
-  });
-  const kickSampler = new Tone.Sampler({
+  // --- mono
+  const momoKickCh = new Tone.Channel();
+  const momoKickSampler = new Tone.Sampler({
     urls: {
-      A4: kickBuffer,
+      A4: monoKickBuffer,
     },
 
     onload: () => {},
@@ -445,164 +369,51 @@ const sketch = (p) => {
   }).chain(
     ...[
       //
-      kickComp,
-      kickCh,
+      momoKickCh,
     ].filter((n) => n),
   );
 
-  const kickSeq = new Tone.Sequence({
+  const momoKickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      kickSampler.triggerAttack('A4', time, velocity);
+      momoKickSampler.triggerAttack('A4', time, velocity);
     },
-    events: [
-      [1, [null, [null, ftRand(0.225)]], [1, ftRand(0.825)], [null, [null, ftRand(0.525)]]],
-      [1, null, [1, ftRand(0.825)], [null, [null, ftRand(0.525)]]],
-      [1, [null, [null, ftRand(0.525)]], [1, ftRand(0.825)], null],
-      [
-        [1, [null, ftRand(0.225)]],
-        [null, [null, ftRand(0.525)]],
-        [1, ftRand(0.825)],
-        [null, [null, ftRand(0.325)]],
-      ],
-    ],
+    events: [null, 1, null, 1],
     subdivision: '1n',
   });
 
-  // --- snare
-  const snareCh = new Tone.Channel();
-  const snareComp = new Tone.Compressor({
-    threshold: -25,
-    ratio: 10,
-    attack: 0.1,
-    release: 5e-3,
-    knee: 40,
-  });
-  const snareSampler = new Tone.Sampler({
+  // --- orgn
+  const orgnKickCh = new Tone.Channel();
+  const orgnKickSampler = new Tone.Sampler({
     urls: {
-      A4: snareBuffer,
+      C1: orgnKickBuffer, // C1:24
     },
-
     onload: () => {},
     onerror: (error) => {
       console.error('sample load error:', error);
     },
     attack: 0.0,
-    release: '4i',
+    release: '2i',
     curve: 'exponential',
   }).chain(
     ...[
       //
-      snareComp,
-      snareCh,
+      orgnKickCh,
     ].filter((n) => n),
   );
 
-  const snareSeq = new Tone.Sequence({
+  const orgnKickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      snareSampler.triggerAttack('Ab4', time, velocity);
+      orgnKickSampler.triggerAttack('F0', time, velocity);
     },
-    events: [
-      [null, 1, null, 1],
-      [null, 1, null, 1],
-      [null, 1, null, [1, null, null, ftRand(0.325)]],
-      [null, 1, null, 1],
-    ],
+    events: [null, 1, null, 1],
     subdivision: '1n',
-  });
-
-  // --- hihat
-  const hihatCh = new Tone.Channel();
-  const hihatSampler = new Tone.Sampler({
-    urls: {
-      A4: hihatBuffer,
-    },
-
-    onload: () => {},
-    onerror: (error) => {
-      console.error('sample load error:', error);
-    },
-    attack: 0.0,
-    release: '2i',
-    curve: 'exponential',
-  }).chain(
-    ...[
-      //
-      hihatCh,
-    ].filter((n) => n),
-  );
-
-  const hihatSeq = new Tone.Sequence({
-    callback: (time, velocity) => {
-      hihatSampler.triggerAttack('B4', time, velocity);
-    },
-    events: [
-      //
-      [1, ftRand(0.725), 1, ftRand(0.825)],
-      [1, ftRand(0.725), 1, ftRand(0.825)],
-      [1, ftRand(0.725), 1, ftRand(0.825)],
-      [1, ftRand(0.725), 1, ftRand(0.825)],
-      //
-      [1, ftRand(0.725), 1, ftRand(0.825)],
-      [1, ftRand(0.725), 1, ftRand(0.825)],
-      [1, ftRand(0.725), [ftRand(0.825), ftRand(0.625), ftRand(0.525), ftRand(0.825)], ftRand(0.825)],
-      [1, ftRand(0.725), 1, ftRand(0.825)],
-      //
-      [1, ftRand(0.725), 1, ftRand(0.825)],
-      [1, ftRand(0.725), 1, ftRand(0.825)],
-      [1, ftRand(0.725), 1, ftRand(0.825)],
-      [1, ftRand(0.725), 1, ftRand(0.825)],
-      //
-      [1, ftRand(0.725), 1, ftRand(0.825)],
-      [1, ftRand(0.725), 1, ftRand(0.825)],
-      [1, ftRand(0.725), 1, ftRand(0.825)],
-      [1, ftRand(0.725), 1, ftRand(0.825)],
-    ],
-    subdivision: '4n',
-    humanize: 0.002,
-  });
-
-  // --- initRhythm
-  const initRhythmCh = new Tone.Channel(-4);
-  const initRhythmSampler = new Tone.Sampler({
-    urls: {
-      A4: initRhythmBuffer,
-    },
-
-    onload: () => {},
-    onerror: (error) => {
-      console.error('sample load error:', error);
-    },
-    attack: 0.0,
-    release: '2i',
-    curve: 'exponential',
-  }).chain(
-    ...[
-      //
-      initRhythmCh,
-    ].filter((n) => n),
-  );
-
-  const initRhythmSeq = new Tone.Sequence({
-    callback: (time, velocity) => {
-      initRhythmSampler.triggerAttack('A4', time, velocity);
-    },
-    events: [
-      [null, ftRand(0.225), null, [null, ftRand(0.425)]],
-      [null, null, null, [null, null, null, ftRand(0.225)]],
-      [null, [null, null, null, ftRand(0.225)], null, null],
-      [null, null, null, [null, null, null, ftRand(0.225)]],
-    ],
-    subdivision: '2t',
-    probability: 0.48,
   });
 
   // ---  master mixer
   const fanInNodes = [
     //
-    kickCh,
-    snareCh,
-    hihatCh,
-    initRhythmCh,
+    momoKickCh,
+    orgnKickCh,
 
     clickCh,
   ];
@@ -612,10 +423,8 @@ const sketch = (p) => {
   emitter.once('startOnceCallSeqs', () => {
     transport.scheduleOnce((time) => {
       // clickSeq.start(time);
-      kickSeq.start(time);
-      snareSeq.start(time);
-      hihatSeq.start(time);
-      // initRhythmSeq.start(time);
+      momoKickSeq.start(time);
+      orgnKickSeq.start(time);
     }, transport.context.now());
   });
 
