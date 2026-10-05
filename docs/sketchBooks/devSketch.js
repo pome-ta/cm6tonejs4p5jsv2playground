@@ -290,6 +290,8 @@ const orgnKickBuffer = await Tone.Offline((context) => {
   const synth = new Tone.Synth({
     oscillator: { type: 'sine', phase: 270 },
     // oscillator: { type: 'sine', },
+
+    /*
     envelope: {
       attack: 5e-4,
       decay: 2.75,
@@ -297,9 +299,19 @@ const orgnKickBuffer = await Tone.Offline((context) => {
       release: '64i',
       attackCurve: 'exponential',
     },
+    */
+    envelope: {
+      attack: 1e-3,
+      // decay: 0.143,
+      decay: 1.0,
+      sustain: 0.0,
+      release: 0.0,
+      attackCurve: 'exponential',
+    },
   });
-  synth.triggerAttackRelease('A3', '16t');
-  synth.frequency.rampTo('C1', `24i`);
+  //synth.triggerAttackRelease('A3', '16t');
+  synth.triggerAttack('A3', 0);
+  synth.frequency.rampTo('C#1', 0.083);
   // synth.frequency.rampTo('C2', `72i`);
   synth.chain(
     ...[
@@ -377,15 +389,16 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       momoKickSampler.triggerAttack('A4', time, velocity);
     },
+    //events: [1, null, 1, null],
     events: [null, 1, null, 1],
-    subdivision: '1n',
+    subdivision: '4n',
   });
 
   // --- orgn
   const orgnKickCh = new Tone.Channel();
   const orgnKickSampler = new Tone.Sampler({
     urls: {
-      C1: orgnKickBuffer, // C1:24
+      A4: orgnKickBuffer, // C1:24
     },
     onload: () => {},
     onerror: (error) => {
@@ -403,10 +416,11 @@ const sketch = (p) => {
 
   const orgnKickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      orgnKickSampler.triggerAttack('F0', time, velocity);
+      orgnKickSampler.triggerAttack('A4', time, velocity);
     },
-    events: [null, 1, null, 1],
-    subdivision: '1n',
+    //events: [null, 1, null, 1],
+    events: [1, null, 1, null],
+    subdivision: '4n',
   });
 
   // ---  master mixer
@@ -422,7 +436,7 @@ const sketch = (p) => {
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
     transport.scheduleOnce((time) => {
-      // clickSeq.start(time);
+      //clickSeq.start(time);
       momoKickSeq.start(time);
       orgnKickSeq.start(time);
     }, transport.context.now());
