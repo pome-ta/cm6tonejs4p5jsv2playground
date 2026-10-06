@@ -5,29 +5,7 @@ import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
 const BPM = 100;
-
-const kickBuffer = await Tone.Offline((context) => {
-  context.transport.bpm.value = BPM;
-  const synth = new Tone.Synth({
-    oscillator: { type: 'sine', phase: 270 },
-    envelope: {
-      attack: 6e-4,
-      decay: 10.25,
-      sustain: 0.0,
-      release: 0.0,
-      attackCurve: 'exponential',
-    },
-  });
-  synth.triggerAttack('A3');
-  synth.frequency.rampTo('C#1', 0.083);
-  synth.chain(
-    ...[
-      //,
-      new Tone.Channel().toDestination(),
-    ].filter((n) => n),
-  );
-}, 1.25);
-
+//await Tone.loaded();
 function ftRand(bias, spread = 1.0) {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
   return bias + (Math.random() * 2 - 1) * maxDist;
@@ -73,10 +51,13 @@ const sketch = (p) => {
   clickSynth.chain(clickCh);
 
   const kickCh = new Tone.Channel();
+  console.log('sm');
   const kickSampler = new Tone.Sampler({
+    /*
     urls: {
       A3: kickBuffer, // C1:24
     },
+    */
     attack: 0.0,
     release: '2i',
     curve: 'exponential',
@@ -86,15 +67,48 @@ const sketch = (p) => {
       kickCh,
     ].filter((n) => n),
   );
+    emitter.once('kickBuff',async (smplr) => {
+    console.log('em');
+        //transport.scheduleOnce((time) => {
+  //document.addEventListener('DOMContentLoaded', async () => {
+    const kickBuffer = await Tone.Offline((context) => {
+      context.transport.bpm.value = BPM;
+      const synth = new Tone.Synth({
+        oscillator: { type: 'sine', phase: 270 },
+        envelope: {
+          attack: 6e-4,
+          decay: 10.25,
+          sustain: 0.0,
+          release: 0.0,
+          attackCurve: 'exponential',
+        },
+      });
+      synth.triggerAttack('A3');
+      synth.frequency.rampTo('C#1', 0.083);
+      synth.chain(
+        ...[
+          //,
+          new Tone.Channel().toDestination(),
+        ].filter((n) => n),
+      );
+    }, 1.25);
+    smplr.add('A3', kickBuffer);
+        //}, 0);
+  });
+  
+  emitter.emit('kickBuff', kickSampler);
+  
 
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       kickSampler.triggerAttack('A3', time, velocity);
     },
-    events: [1, 1, 1, 1],
+    //[1, 1, 1, 1],
+    events: [1, 1, 1, [1, ftRand(0.125)]],
     subdivision: '4n',
   });
 
+  /*
   const a = Tone.Offline((context) => {
     context.transport.bpm.value = BPM;
     const synth = new Tone.Synth({
@@ -121,6 +135,29 @@ const sketch = (p) => {
   a.then((buffer) => {
     console.log(buffer); // ToneAudioBuffer
   });
+  */
+  /*
+  Tone.Offline((context) => {
+    context.transport.bpm.value = BPM;
+
+    const synth = new Tone.Synth({
+      oscillator: { type: 'sine', phase: 270 },
+      envelope: {
+        attack: 5e-4,
+        decay: 2.75,
+        sustain: 1.0,
+        release: '64i',
+        attackCurve: 'exponential',
+      },
+    });
+    synth.triggerAttackRelease('A3', '16t');
+    synth.frequency.rampTo('C1', `24i`);
+    console.log('buffer');
+    //console.log(context);
+
+    synth.chain(...[new Tone.Channel().toDestination()].filter((n) => n));
+  }, 2.0);
+  */
 
   // ---  master mixer
   const fanInNodes = [
@@ -132,8 +169,9 @@ const sketch = (p) => {
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
+    //await Tone.loaded();
     transport.scheduleOnce((time) => {
-      // clickSeq.start(time);
+      clickSeq.start(time);
       kickSeq.start(time);
     }, transport.context.now());
   });
