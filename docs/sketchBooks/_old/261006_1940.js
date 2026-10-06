@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 125;
+const BPM = 100;
 
 function ftRand(bias, spread = 1.0) {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -49,7 +49,6 @@ const sketch = (p) => {
   const clickCh = new Tone.Channel(-4);
   clickSynth.chain(clickCh);
 
-  // --- kick
   const kickCh = new Tone.Channel();
   const kickSampler = new Tone.Sampler({
     attack: 0.0,
@@ -62,7 +61,8 @@ const sketch = (p) => {
     ].filter((n) => n),
   );
   const setKickBuffer = async (smplr) => {
-    const buffer = await Tone.Offline(() => {
+    const buffer = await Tone.Offline((context) => {
+      context.transport.bpm.value = BPM;
       const synth = new Tone.Synth({
         oscillator: { type: 'sine', phase: 270 },
         envelope: {
@@ -98,112 +98,10 @@ const sketch = (p) => {
     subdivision: '1n',
   });
 
-  // --- snare
-  const snareCh = new Tone.Channel();
-  const snareSampler = new Tone.Sampler({
-    attack: 0.0,
-    release: '2i',
-    curve: 'exponential',
-  }).chain(
-    ...[
-      //
-      snareCh,
-    ].filter((n) => n),
-  );
-  const snareNote = 'C3';
-  const setSnareBuffer = async (smplr) => {
-    const buffer = await Tone.Offline((context) => {
-      context.transport.bpm.value = BPM;
-
-      const whiteNoise = new Tone.NoiseSynth({
-        noise: { type: 'white' },
-        envelope: {
-          attack: 1e-3,
-          decay: 0.15,
-          sustain: 0.0,
-          release: 0.0,
-        },
-      });
-      const bandpass = new Tone.Filter({
-        type: 'bandpass',
-        frequency: 1900,
-        Q: 1.0,
-        rolloff: -12, // -12, -24, -48, -96
-        gain: 1.0,
-      });
-
-      const membraneSynth = new Tone.MembraneSynth({
-        oscillator: { type: 'sine' },
-        // oscillator: { type: 'sine', phase: 270 },
-        envelope: {
-          //
-          attack: 1e-3,
-          decay: 0.25,
-          sustain: 0.0,
-          release: 0.0,
-        },
-        pitchDecay: 0.02,
-        octaves: 1.25,
-      });
-
-      // membraneSynth.triggerAttack(snareNote);
-      whiteNoise.triggerAttack();
-      membraneSynth.triggerAttackRelease(snareNote, '4i');
-
-      //Tone.fanIn(...snareNodes.filter((n) => n), new Tone.Channel().toDestination());
-
-      const snareChannel = new Tone.Channel();
-
-      membraneSynth.chain(
-        ...[
-          //
-          //new Tone.Channel().toDestination(),
-          snareChannel,
-        ].filter((n) => n),
-      );
-      whiteNoise.chain(
-        ...[
-          //
-          bandpass,
-          //new Tone.Channel().toDestination(),
-          snareChannel,
-        ].filter((n) => n),
-      );
-
-      Tone.fanIn(snareChannel, Tone.getDestination());
-
-      /*
-      membraneSynth.chain(
-        ...[
-          //
-          new Tone.Channel().toDestination(),
-        ].filter((n) => n),
-      );
-      whiteNoise.chain(
-        ...[
-          //
-          bandpass,
-          new Tone.Channel().toDestination(),
-        ].filter((n) => n),
-      );
-      */
-    }, 1.25);
-    smplr.add(snareNote, buffer);
-  };
-
-  const snareSeq = new Tone.Sequence({
-    callback: (time, velocity) => {
-      snareSampler.triggerAttack(snareNote, time, velocity);
-    },
-    events: [[null, 1]],
-    subdivision: '2n',
-  });
-
   // ---  master mixer
   const fanInNodes = [
     //
     kickCh,
-    snareCh,
     clickCh,
   ];
   Tone.fanIn(...fanInNodes.filter((n) => n), masterCh);
@@ -212,8 +110,7 @@ const sketch = (p) => {
   emitter.once('startOnceCallSeqs', () => {
     transport.scheduleOnce((time) => {
       // clickSeq.start(time);
-      // kickSeq.start(time);
-      snareSeq.start(time);
+      kickSeq.start(time);
     }, transport.context.now());
   });
 
@@ -232,7 +129,6 @@ const sketch = (p) => {
     cnvs = p.createCanvas(w, h);
 
     await setKickBuffer(kickSampler);
-    await setSnareBuffer(snareSampler);
 
     // xxx: インクルード要検討
     transport.start();
