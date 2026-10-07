@@ -24,7 +24,7 @@ const sketch = (p) => {
 
   const toTime = (t) => new Tone.TimeClass(transport.context, t).toSeconds();
 
-  const masterCh = new Tone.Channel().toDestination();
+  const masterVol = new Tone.Volume().toDestination();
   const emitter = new Tone.Emitter();
 
   // メトロノーム
@@ -46,11 +46,11 @@ const sketch = (p) => {
     events: ['A5', 'A4', 'A4', 'A4'],
     subdivision: '4n',
   });
-  const clickCh = new Tone.Channel(-4);
-  clickSynth.chain(clickCh);
+  const clickVol = new Tone.Volume(-4);
+  clickSynth.chain(clickVol);
 
   // --- kick
-  const kickCh = new Tone.Channel();
+  const kickVol = new Tone.Volume();
   const kickSampler = new Tone.Sampler({
     attack: 0.0,
     release: '2i',
@@ -58,7 +58,7 @@ const sketch = (p) => {
   }).chain(
     ...[
       //
-      kickCh,
+      kickVol,
     ].filter((n) => n),
   );
   const setKickBuffer = async (smplr) => {
@@ -78,7 +78,10 @@ const sketch = (p) => {
       synth.chain(
         ...[
           //,
-          new Tone.Channel().toDestination(),
+          new Tone.Volume(),
+
+          //,
+          Tone.getDestination(),
         ].filter((n) => n),
       );
     }, 1.25);
@@ -99,7 +102,7 @@ const sketch = (p) => {
   });
 
   // --- snare
-  const snareCh = new Tone.Channel();
+  const snareVol = new Tone.Volume();
   const snareSampler = new Tone.Sampler({
     attack: 0.0,
     release: '2i',
@@ -107,7 +110,7 @@ const sketch = (p) => {
   }).chain(
     ...[
       //
-      snareCh,
+      snareVol,
     ].filter((n) => n),
   );
   const snareNote = 'C4';
@@ -115,7 +118,7 @@ const sketch = (p) => {
     const buffer = await Tone.Offline((context) => {
       context.transport.bpm.value = BPM;
 
-      const bandpass = new Tone.Filter({
+      const snappyBandpass = new Tone.Filter({
         type: 'bandpass',
         frequency: 1900,
         Q: 1.0,
@@ -123,17 +126,32 @@ const sketch = (p) => {
         // gain: 1.0,  // "peaking"/"lowshelf"/"highshelf"
       });
 
-      const highpass = new Tone.Filter({
+      const snappyHighpass = new Tone.Filter({
         type: 'highpass',
-        frequency: 873,
+        frequency: 673,
         Q: 1.0,
         rolloff: -12, // -12, -24, -48, -96
+      });
+
+      const snareHighpass = new Tone.Filter({
+        type: 'highpass',
+        frequency: 4000,
+        Q: 1.0,
+        rolloff: -12, // -12, -24, -48, -96
+      });
+
+      const snareComp = new Tone.Compressor({
+        threshold: -75, // -100-0 : -24
+        ratio: 20, // 1-20 : 12
+        attack: 0.01,
+        release: 3e-5,
+        knee: 40, // 0-40 : 30
       });
 
       const whiteNoise = new Tone.NoiseSynth({
         noise: { type: 'white' },
         envelope: {
-          attack: 1e-4,
+          attack: 2e-3,
           decay: 0.15,
           sustain: 0.0,
           release: 0.0,
@@ -147,44 +165,50 @@ const sketch = (p) => {
           //
           attack: 1e-3,
           decay: 0.25,
-          sustain: 0.0,
-          release: 0.0,
+          sustain: 0.1,
+          release: `4i`,
         },
         pitchDecay: 0.02,
         octaves: 1.25,
       });
 
       // membraneSynth.triggerAttack(snareNote);
-      membraneSynth.triggerAttackRelease(snareNote, '4i');
-      whiteNoise.triggerAttack();
+      membraneSynth.triggerAttackRelease(snareNote, '128i');
+      // whiteNoise.triggerAttack();
 
-      const snareChannel = new Tone.Channel();
+      const snareVolume = new Tone.Volume();
 
       whiteNoise.chain(
         ...[
           //
-          highpass,
-          bandpass,
-          // highpass,
-          snareChannel,
+          snappyHighpass,
+          snappyBandpass,
+          new Tone.Volume(),
+          snareVolume,
         ].filter((n) => n),
       );
       membraneSynth.chain(
         ...[
           //
-          snareChannel,
+          new Tone.Volume(),
+          snareVolume,
         ].filter((n) => n),
       );
 
-      snareChannel.chain(
+      snareVolume.chain(
         ...[
           //
-          // highpass,
-          // bandpass,
+          // snareHighpass,
+          // snareComp,
+          // snareHighpass,
+          new Tone.Volume(),
+
+          //,
+          Tone.getDestination(),
         ].filter((n) => n),
       );
 
-      Tone.fanIn(snareChannel, Tone.getDestination());
+      //Tone.fanIn(snareChannel, Tone.getDestination());
     }, 1.75);
     smplr.add(snareNote, buffer);
   };
@@ -200,18 +224,18 @@ const sketch = (p) => {
   // ---  master mixer
   const fanInNodes = [
     //
-    kickCh,
-    snareCh,
-    clickCh,
+    kickVol,
+    snareVol,
+    clickVol,
   ];
-  Tone.fanIn(...fanInNodes.filter((n) => n), masterCh);
+  Tone.fanIn(...fanInNodes.filter((n) => n), masterVol);
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
     transport.scheduleOnce((time) => {
       // clickSeq.start(time);
       kickSeq.start(time);
-      snareSeq.start(time);
+      // snareSeq.start(time);
     }, transport.context.now());
   });
 
@@ -237,7 +261,7 @@ const sketch = (p) => {
     emitter.emit('startOnceCallSeqs');
 
     tapIndicator.setup();
-    spectrumAnalyzer.targetNodes(masterCh);
+    spectrumAnalyzer.targetNodes(masterVol);
 
     // p.noLoop();
     // p.frameRate(1);
