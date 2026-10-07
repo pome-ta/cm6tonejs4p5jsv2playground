@@ -1,4 +1,4 @@
-// --- # example: name space
+// --- # example: async load
 import * as Tone from 'tone';
 
 import TapIndicator from 'modules/TapIndicator.js';
