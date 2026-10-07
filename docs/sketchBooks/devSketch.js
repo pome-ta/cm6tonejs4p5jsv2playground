@@ -110,31 +110,39 @@ const sketch = (p) => {
       snareCh,
     ].filter((n) => n),
   );
-  const snareNote = 'C3';
+  const snareNote = 'C4';
   const setSnareBuffer = async (smplr) => {
     const buffer = await Tone.Offline((context) => {
       context.transport.bpm.value = BPM;
 
-      const whiteNoise = new Tone.NoiseSynth({
-        noise: { type: 'white' },
-        envelope: {
-          attack: 1e-3,
-          decay: 0.15,
-          sustain: 0.0,
-          release: 0.0,
-        },
-      });
       const bandpass = new Tone.Filter({
         type: 'bandpass',
         frequency: 1900,
         Q: 1.0,
         rolloff: -12, // -12, -24, -48, -96
-        gain: 1.0,
+        // gain: 1.0,  // "peaking"/"lowshelf"/"highshelf"
+      });
+
+      const highpass = new Tone.Filter({
+        type: 'highpass',
+        frequency: 873,
+        Q: 1.0,
+        rolloff: -12, // -12, -24, -48, -96
+      });
+
+      const whiteNoise = new Tone.NoiseSynth({
+        noise: { type: 'white' },
+        envelope: {
+          attack: 1e-4,
+          decay: 0.15,
+          sustain: 0.0,
+          release: 0.0,
+        },
       });
 
       const membraneSynth = new Tone.MembraneSynth({
-        oscillator: { type: 'sine' },
-        // oscillator: { type: 'sine', phase: 270 },
+        // oscillator: { type: 'sine' },
+        oscillator: { type: 'sine', phase: 270 },
         envelope: {
           //
           attack: 1e-3,
@@ -147,27 +155,37 @@ const sketch = (p) => {
       });
 
       // membraneSynth.triggerAttack(snareNote);
-      whiteNoise.triggerAttack();
       membraneSynth.triggerAttackRelease(snareNote, '4i');
+      whiteNoise.triggerAttack();
 
       const snareChannel = new Tone.Channel();
 
+      whiteNoise.chain(
+        ...[
+          //
+          highpass,
+          bandpass,
+          // highpass,
+          snareChannel,
+        ].filter((n) => n),
+      );
       membraneSynth.chain(
         ...[
           //
           snareChannel,
         ].filter((n) => n),
       );
-      whiteNoise.chain(
+
+      snareChannel.chain(
         ...[
           //
-          bandpass,
-          snareChannel,
+          // highpass,
+          // bandpass,
         ].filter((n) => n),
       );
 
       Tone.fanIn(snareChannel, Tone.getDestination());
-    }, 1.25);
+    }, 1.75);
     smplr.add(snareNote, buffer);
   };
 
