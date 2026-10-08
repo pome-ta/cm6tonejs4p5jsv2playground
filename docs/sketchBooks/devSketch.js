@@ -121,31 +121,32 @@ const sketch = (p) => {
 
       const snappyBandpass = new Tone.Filter({
         type: 'bandpass',
-        frequency: 1900,
-        Q: 1.0,
+        // type: 'peaking',
+        frequency: 1800,
+        Q: 1.2,
         rolloff: -12, // -12, -24, -48, -96
         // gain: 1.0,  // "peaking"/"lowshelf"/"highshelf"
       });
 
       const snappyHighpass = new Tone.Filter({
         type: 'highpass',
-        frequency: 673,
+        frequency: 4000,
         Q: 1.0,
         rolloff: -12, // -12, -24, -48, -96
       });
 
       const snareHighpass = new Tone.Filter({
         type: 'highpass',
-        frequency: 4000,
-        Q: 1.0,
+        frequency: 673,
+        Q: 0.8,
         rolloff: -12, // -12, -24, -48, -96
       });
 
       const snareComp = new Tone.Compressor({
-        threshold: -75, // -100-0 : -24
-        ratio: 20, // 1-20 : 12
-        attack: 0.01,
-        release: 3e-5,
+        threshold: -30, // -100-0 : -24
+        ratio: 18, // 1-20 : 12
+        attack: 0.02,
+        release: 1e-3,
         knee: 40, // 0-40 : 30
       });
 
@@ -164,7 +165,7 @@ const sketch = (p) => {
         oscillator: { type: 'sine', phase: 270 },
         envelope: {
           //
-          attack: 1e-3,
+          attack: 2e-3,
           decay: 0.25,
           sustain: 0.0,
           release: 0.0,
@@ -173,16 +174,44 @@ const sketch = (p) => {
         octaves: 1.25,
       });
 
+      const synth = new Tone.MonoSynth({
+        // oscillator: { type: 'pulse', width: 0 },
+        // oscillator: { type: 'sine', phase: 270 },
+        oscillator: { type: 'sine', },
+        envelope: {
+          attack: 1e-2,
+          decay: 0.9,
+          sustain: 0.0,
+          release: 0.0,
+        },
+        filter: {
+          type: 'highpass',
+          Q: 2,
+          rolloff: -12,
+          frequency: 0,
+        },
+        filterEnvelope: {
+          attack: 0.0,
+          decay: 0.545,
+          sustain: 0.0,
+          release: 0.08,
+          baseFrequency: 673,
+          octaves: 2.3,
+        },
+      });
+
       // membraneSynth.triggerAttack(snareNote);
-      membraneSynth.triggerAttackRelease(snareNote, '4i');
-      whiteNoise.triggerAttack();
+      // membraneSynth.triggerAttackRelease(snareNote, '8i');
+      // synth.triggerAttackRelease(snareNote, '8i');
+      synth.triggerAttack(snareNote);
+      // whiteNoise.triggerAttack();
 
       const snareVolume = new Tone.Volume();
 
       whiteNoise.chain(
         ...[
           //
-          snappyHighpass,
+          // snappyHighpass,
           snappyBandpass,
           new Tone.Volume(),
           snareVolume,
@@ -196,12 +225,20 @@ const sketch = (p) => {
         ].filter((n) => n),
       );
 
+      synth.chain(
+        ...[
+          //
+          new Tone.Volume(),
+          snareVolume,
+        ].filter((n) => n),
+      );
+
       snareVolume.chain(
         ...[
           //
           // snareHighpass,
           // snareComp,
-          snareHighpass,
+          // snareHighpass,
           new Tone.Volume(),
           Tone.getDestination(),
         ].filter((n) => n),
@@ -231,7 +268,7 @@ const sketch = (p) => {
   emitter.once('startOnceCallSeqs', () => {
     transport.scheduleOnce((time) => {
       // clickSeq.start(time);
-      kickSeq.start(time);
+      // kickSeq.start(time);
       snareSeq.start(time);
     }, transport.context.now());
   });
