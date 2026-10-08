@@ -122,8 +122,8 @@ const sketch = (p) => {
       const snappyBandpass = new Tone.Filter({
         type: 'bandpass',
         // type: 'peaking',
-        frequency: 1800,
-        Q: 1.2,
+        frequency: 1250,
+        Q: 0.5,
         rolloff: -12, // -12, -24, -48, -96
         // gain: 1.0,  // "peaking"/"lowshelf"/"highshelf"
       });
@@ -150,8 +150,21 @@ const sketch = (p) => {
         knee: 40, // 0-40 : 30
       });
 
+      const whiteNoiseHighpass = new Tone.Filter({
+        type: 'highpass',
+        frequency: 1800,
+        Q: 1.0,
+        rolloff: -12, // -12, -24, -48, -96
+      });
+      const whiteNoiseLowpass = new Tone.Filter({
+        type: 'lowpass',
+        frequency: 8850,
+        Q: 1.0,
+        rolloff: -12, // -12, -24, -48, -96
+      });
+
       const whiteNoiseVolume = new Tone.Volume();
-      const whiteNoise = new Tone.NoiseSynth({
+      const whiteNoiseSynth = new Tone.NoiseSynth({
         noise: { type: 'white' },
         envelope: {
           attack: 2e-3,
@@ -162,16 +175,21 @@ const sketch = (p) => {
       }).chain(
         ...[
           //
+          // whiteNoiseLowpass,
           // snappyHighpass,
-          snappyBandpass,
+          whiteNoiseHighpass,
+          whiteNoiseLowpass,
+          // snappyHighpass,
+
           whiteNoiseVolume,
         ].filter((n) => n),
       );
 
-      const membraneSynthVolume = new Tone.Volume();
+      const membraneVolume = new Tone.Volume();
       const membraneSynth = new Tone.MembraneSynth({
         // oscillator: { type: 'sine' },
-        oscillator: { type: 'sine', phase: 270 },
+        // oscillator: { type: 'sine', phase: 270 },
+        oscillator: { type: 'triangle' },
         envelope: {
           //
           attack: 2e-3,
@@ -184,11 +202,12 @@ const sketch = (p) => {
       }).chain(
         ...[
           //
-          membraneSynthVolume,
+          // snappyBandpass,
+          membraneVolume,
         ].filter((n) => n),
       );
 
-      const monoSynthVolume = new Tone.Volume();
+      const monoVolume = new Tone.Volume();
       const monoSynth = new Tone.MonoSynth({
         // oscillator: { type: 'pulse', width: 0 },
         // oscillator: { type: 'sine', phase: 270 },
@@ -216,29 +235,74 @@ const sketch = (p) => {
       }).chain(
         ...[
           //
-          monoSynthVolume,
+          monoVolume,
         ].filter((n) => n),
       );
 
-      whiteNoise.triggerAttack();
-      membraneSynth.triggerAttack(snareNote);
+      const sineVolume = new Tone.Volume();
+      const sineSynth = new Tone.Synth({
+        // oscillator: { type: 'sine', phase: 270 },
+        oscillator: { type: 'sine' },
+        envelope: {
+          //
+          attack: 2e-3,
+          decay: 0.25,
+          sustain: 0.0,
+          release: 0.0,
+        },
+      }).chain(
+        ...[
+          //
+          // snappyBandpass,
+          sineVolume,
+        ].filter((n) => n),
+      );
+
+      const triangleVolume = new Tone.Volume();
+      const triangleSynth = new Tone.Synth({
+        // oscillator: { type: 'sine', phase: 270 },
+        // oscillator: { type: 'sine', },
+        oscillator: { type: 'triangle' },
+        envelope: {
+          //
+          attack: 2e-3,
+          decay: 0.25,
+          sustain: 0.0,
+          release: 0.0,
+        },
+      }).chain(
+        ...[
+          //
+          // snappyBandpass,
+          triangleVolume,
+        ].filter((n) => n),
+      );
+
+      whiteNoiseSynth.triggerAttack();
+      // sineSynth.triggerAttack(189);
+      // triangleSynth.triggerAttack(340);
+      membraneSynth.triggerAttack(189);
+      // membraneSynth.triggerAttack(340);
+      //membraneSynth.triggerAttack(snareNote);
       // membraneSynth.triggerAttackRelease(snareNote, '8i');
-      monoSynth.triggerAttack(snareNote);
+      // monoSynth.triggerAttack(snareNote);
       // monoSynth.triggerAttackRelease(snareNote, '8i');
 
       Tone.fanIn(
         ...[
           //
           whiteNoiseVolume,
-          membraneSynthVolume,
-          monoSynthVolume,
+          membraneVolume,
+          monoVolume,
+          sineVolume,
+          triangleVolume,
         ].filter((n) => n),
         new Tone.Volume().chain(
           ...[
             //
             // snareHighpass,
-            snareComp,
-            snareHighpass,
+            // snareComp,
+            //snareHighpass,
             new Tone.Volume(),
             Tone.getDestination(),
           ].filter((n) => n),
