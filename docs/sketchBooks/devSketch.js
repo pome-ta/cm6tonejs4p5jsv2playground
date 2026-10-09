@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 30;
+const BPM = 90;
 
 function ftRand(bias, spread = 1.0) {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -61,16 +61,28 @@ const sketch = (p) => {
   const KickNote = 'A4';
   const setKickBuffer = async (smplr, tone = 56) => {
     const buffer = await Tone.Offline(() => {
-      const sig = new Tone.Synth({
-        //oscillator: { type: 'sine', phase: 270 },
-        oscillator: { type: 'sine' },
-        envelope: {
-          attack: 6e-4,
-          decay: 30.0,
-          sustain: 0.6,
-          release: 0.0,
-        },
-      });
+      const sig = new Tone.Oscillator({
+        frequency: tone * 7,
+        // phase: 90,
+      }).start();
+      sig.volume.setTargetAtTime(-Infinity, 0.0, 5e-2);
+
+      sig.frequency.rampTo(tone * 1.35, 0.05, 0);
+      sig.frequency.rampTo(tone * 1.35, 0.6, "+0.05");
+      // sig.frequency.exponentialRampTo(tone * 1.35, 0.5);
+      // sig.frequency.linearRampTo(tone * 1.35, 0.5);
+      // sig.frequency.exponentialApproachValueAtTime(tone * 1.35, 0, 0.05);
+
+      // const sig = new Tone.Synth({
+      //   //oscillator: { type: 'sine', phase: 270 },
+      //   oscillator: { type: 'sine' },
+      //   envelope: {
+      //     attack: 6e-4,
+      //     decay: 30.0,
+      //     sustain: 1.0,
+      //     release: 0.0,
+      //   },
+      // });
 
       const sub = new Tone.Synth({
         //oscillator: { type: 'sine', phase: 270 },
@@ -110,7 +122,7 @@ const sketch = (p) => {
         },
       });
       //sig.triggerAttackRelease(KickNote, 3);
-      sig.triggerAttack(KickNote);
+      // sig.triggerAttack(KickNote);
       //synth.triggerAttack(KickNote);
       //synth.frequency.rampTo('C1', 0.043);
       sig.chain(
@@ -121,7 +133,7 @@ const sketch = (p) => {
           Tone.getDestination(),
         ].filter((n) => n),
       );
-    }, 2.75);
+    }, 30.0);
     smplr.add(KickNote, buffer);
   };
 
@@ -133,15 +145,14 @@ const sketch = (p) => {
     },
     events: [
       //[0,1]
-      1,
-      /*
+      // 1,
+
       [1, 1, 1, 1],
-      [1, 1, 1, 1],
-      [1, 1, 1, 1],
-      [1, 1, 1, [1, ftRand(0.125)]],
-      */
+      // [1, 1, 1, 1],
+      // [1, 1, 1, 1],
+      // [1, 1, 1, [1, ftRand(0.125)]],
     ],
-    subdivision: '1m',
+    subdivision: '1n',
   });
 
   // ---  master mixer
