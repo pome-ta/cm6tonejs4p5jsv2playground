@@ -65,12 +65,10 @@ const sketch = (p) => {
         //oscillator: { type: 'sine', phase: 270 },
         oscillator: { type: 'sine' },
         envelope: {
-          attack: 0.3,
-          attackCurve: [0, 1, 0, 1],
-          decay: 0,
-          release: 0.3,
-          releaseCurve: [1, 0, 1, 0],
-          sustain: 1,
+          attack: 6e-4,
+          decay: 30.0,
+          sustain: 0.6,
+          release: 0.0,
         },
       });
 
@@ -111,8 +109,8 @@ const sketch = (p) => {
           attackCurve: 'exponential',
         },
       });
-      sig.triggerAttackRelease(KickNote, 3);
-      //sig.triggerAttack(KickNote);
+      //sig.triggerAttackRelease(KickNote, 3);
+      sig.triggerAttack(KickNote);
       //synth.triggerAttack(KickNote);
       //synth.frequency.rampTo('C1', 0.043);
       sig.chain(
@@ -123,7 +121,7 @@ const sketch = (p) => {
           Tone.getDestination(),
         ].filter((n) => n),
       );
-    }, 30.75);
+    }, 2.75);
     smplr.add(KickNote, buffer);
   };
 
