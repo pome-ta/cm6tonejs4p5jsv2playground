@@ -66,6 +66,8 @@ const sketch = (p) => {
       const pdf2 = 1.35;
       const pdt11 = 0.05;
       const pdt12 = 0.6;
+      const pdt21 = 0.03;
+      const pdt22 = 0.6;
 
       const sig = new Tone.Synth({
         //oscillator: { type: 'sine', phase: 270 },
@@ -79,7 +81,7 @@ const sketch = (p) => {
       });
       sig.triggerAttack(tone * pdf1);
 
-      sig.volume.setTargetAtTime(-Infinity, 0.0, 5e-2);
+      sig.volume.setTargetAtTime(-Infinity, 0.0, 6e-2);
 
       sig.frequency.rampTo(tone * pdf2, pdt11, 0);
       sig.frequency.rampTo(tone, pdt12, `+${pdt11}`);
@@ -103,63 +105,100 @@ const sketch = (p) => {
       sub.triggerAttack(tone * pdf1);
 
       sub.volume.setTargetAtTime(-Infinity, 0.0, 5e-2);
-
       sub.frequency.rampTo(tone * pdf2, pdt11, 0);
       sub.frequency.rampTo(tone, pdt12, `+${pdt11}`);
-
-      /*
-      const sub = new Tone.Oscillator({
-        type: 'triangle',
-        frequency: tone * pdf1,
-        // phase: 90,
-      }).start();
-      sig.volume.setTargetAtTime(-Infinity, 0.0, 5e-2);
-
-      sig.frequency.rampTo(tone * pdf2, pdt11, 0);
-      sig.frequency.rampTo(tone, pdt12, `+${pdt11}`);
-      */
-
-      /*
-
 
       const punch = new Tone.Synth({
         //oscillator: { type: 'sine', phase: 270 },
         oscillator: { type: 'sine' },
         envelope: {
           attack: 6e-4,
-          // attack: 0.0,
-          decay: 0.35,
-          sustain: 0.0,
+          decay: 30.0,
+          sustain: 1.0,
           release: 0.0,
-          attackCurve: 'exponential',
         },
       });
-      */
+      punch.triggerAttack(tone * pdf1);
 
-      const synth = new Tone.Synth({
-        oscillator: { type: 'sine', phase: 270 },
-        envelope: {
-          attack: 6e-4,
-          // attack: 0.0,
-          decay: 0.35,
-          sustain: 0.0,
-          release: 0.0,
-          attackCurve: 'exponential',
-        },
+      punch.volume.setTargetAtTime(-Infinity, 0.0, 6e-2);
+
+      punch.frequency.rampTo(tone * pdf2, pdt21, 0);
+      punch.frequency.rampTo(tone, pdt22, `+${pdt21}`);
+
+      const highpass = new Tone.Filter({
+        type: 'highpass',
+        frequency: 350,
+        Q: 1.0,
+        rolloff: -12, // -12, -24, -48, -96
       });
-      //sig.triggerAttackRelease(KickNote, 3);
-      // sig.triggerAttack(KickNote);
-      //synth.triggerAttack(KickNote);
-      //synth.frequency.rampTo('C1', 0.043);
+
+      const sigVol = new Tone.Volume();
       sig.chain(
         ...[
           //,
-          new Tone.Volume(),
-          //,
-          Tone.getDestination(),
+          sigVol,
         ].filter((n) => n),
       );
-    }, 2.5);
+
+      const subVol = new Tone.Volume();
+      subVol.volume.value = Tone.gainToDb(Tone.dbToGain(subVol.volume.value) * 0.05);
+      sub.chain(
+        ...[
+          //,
+          subVol,
+        ].filter((n) => n),
+      );
+
+      const punchVol = new Tone.Volume();
+      punchVol.volume.value = Tone.gainToDb(Tone.dbToGain(punchVol.volume.value) * 2.0);
+      punch.chain(
+        ...[
+          //,
+          highpass,
+          punchVol,
+        ].filter((n) => n),
+      );
+      
+
+
+      /*
+      const bdVol = new Tone.Volume();
+      .fan(
+
+          ...[
+            //
+            sigVol,
+            subVol,
+            punchVol,
+            // new Tone.Limiter(-12),
+          ].filter((n) => n),
+          //bdVol,
+
+      );
+      */
+      /*
+      bdVol = new Tone.Volume().chain(
+        ...[
+          //,
+          // new Tone.Limiter(-12),
+        ].filter((n) => n),
+      );
+      */
+      /*
+      Tone.fanIn(
+        new Tone.Volume().chain(
+          ...[
+            //
+            sigVol,
+            subVol,
+            punchVol,
+          ].filter((n) => n),
+        ),
+        Tone.getDestination()
+      );
+*/
+      Tone.fanIn(sigVol, Tone.getDestination());
+    }, 10.5);
     smplr.add(KickNote, buffer);
   };
 
