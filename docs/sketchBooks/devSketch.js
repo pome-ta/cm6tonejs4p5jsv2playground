@@ -59,30 +59,33 @@ const sketch = (p) => {
     ].filter((n) => n),
   );
   const KickNote = 'A4';
-  const setKickBuffer = async (smplr, tone = 56) => {
+  const setKickBuffer = async (smplr) => {
     const buffer = await Tone.Offline(() => {
-      const sig = new Tone.Oscillator({
-        frequency: tone * 7,
-        // phase: 90,
-      }).start();
+      const tone = 56;
+      const pdf1 = 7.0;
+      const pdf2 = 1.35;
+      const pdt11 = 0.05;
+      const pdt12 = 0.6;
+
+      const sig = new Tone.Synth({
+        //oscillator: { type: 'sine', phase: 270 },
+        oscillator: { type: 'sine' },
+        envelope: {
+          attack: 6e-4,
+          decay: 30.0,
+          sustain: 1.0,
+          release: 0.0,
+        },
+      });
+      sig.triggerAttack(tone * pdf1);
+
       sig.volume.setTargetAtTime(-Infinity, 0.0, 5e-2);
 
-      sig.frequency.rampTo(tone * 1.35, 0.05, 0);
-      sig.frequency.rampTo(tone * 1.35, 0.6, "+0.05");
+      sig.frequency.rampTo(tone * pdf2, pdt11, 0);
+      sig.frequency.rampTo(tone, pdt12, `+${pdt11}`);
       // sig.frequency.exponentialRampTo(tone * 1.35, 0.5);
       // sig.frequency.linearRampTo(tone * 1.35, 0.5);
       // sig.frequency.exponentialApproachValueAtTime(tone * 1.35, 0, 0.05);
-
-      // const sig = new Tone.Synth({
-      //   //oscillator: { type: 'sine', phase: 270 },
-      //   oscillator: { type: 'sine' },
-      //   envelope: {
-      //     attack: 6e-4,
-      //     decay: 30.0,
-      //     sustain: 1.0,
-      //     release: 0.0,
-      //   },
-      // });
 
       const sub = new Tone.Synth({
         //oscillator: { type: 'sine', phase: 270 },
@@ -90,12 +93,34 @@ const sketch = (p) => {
         envelope: {
           attack: 6e-4,
           // attack: 0.0,
-          decay: 0.35,
-          sustain: 0.0,
+          decay: 30.0,
+          sustain: 0.6,
           release: 0.0,
           attackCurve: 'exponential',
         },
       });
+
+      sub.triggerAttack(tone * pdf1);
+
+      sub.volume.setTargetAtTime(-Infinity, 0.0, 5e-2);
+
+      sub.frequency.rampTo(tone * pdf2, pdt11, 0);
+      sub.frequency.rampTo(tone, pdt12, `+${pdt11}`);
+
+      /*
+      const sub = new Tone.Oscillator({
+        type: 'triangle',
+        frequency: tone * pdf1,
+        // phase: 90,
+      }).start();
+      sig.volume.setTargetAtTime(-Infinity, 0.0, 5e-2);
+
+      sig.frequency.rampTo(tone * pdf2, pdt11, 0);
+      sig.frequency.rampTo(tone, pdt12, `+${pdt11}`);
+      */
+
+      /*
+
 
       const punch = new Tone.Synth({
         //oscillator: { type: 'sine', phase: 270 },
@@ -109,6 +134,7 @@ const sketch = (p) => {
           attackCurve: 'exponential',
         },
       });
+      */
 
       const synth = new Tone.Synth({
         oscillator: { type: 'sine', phase: 270 },
@@ -133,7 +159,7 @@ const sketch = (p) => {
           Tone.getDestination(),
         ].filter((n) => n),
       );
-    }, 30.0);
+    }, 2.5);
     smplr.add(KickNote, buffer);
   };
 
