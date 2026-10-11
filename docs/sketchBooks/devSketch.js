@@ -4,12 +4,30 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 125;
+const BPM = 90;
 
 function ftRand(bias, spread = 1.0) {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
   return bias + (Math.random() * 2 - 1) * maxDist;
 }
+
+const frqCurve = (startfrequency, endfrequency = 0, exponent = 1, steps = 50) => {
+  const curve = Array.from(
+    { length: steps },
+    (_, i) => startfrequency * Math.pow(endfrequency / startfrequency, Math.pow(i / (steps - 1), exponent)),
+  );
+
+  return curve;
+};
+
+const volCurve = (startGain, exponent = 1, endGain = 0, steps = 50) => {
+  const curve = Array.from({ length: steps }, (_, i) => {
+    const progress = Math.pow(i / (steps - 1), exponent);
+    const gain = startGain + (endGain - startGain) * progress;
+    return Tone.gainToDb(gain);
+  });
+  return curve;
+};
 
 const sketch = (p) => {
   // --- Tone.js
@@ -61,6 +79,7 @@ const sketch = (p) => {
   const KickNote = 'A4';
   const setKickBuffer = async (smplr) => {
     const buffer = await Tone.Offline(() => {
+      const decay = 15;
       const tone = 56;
       const pdf1 = 7.0;
       const pdf2 = 1.35;
@@ -68,17 +87,19 @@ const sketch = (p) => {
       const pdt12 = 0.6;
       const pdt21 = 0.03;
       const pdt22 = 0.6;
-      const rampTo = 2.7;
+      const vRampTo = 2.7;
 
       const sigGain = new Tone.Gain();
       const sig = new Tone.Synth({
-        oscillator: { type: 'sine', phase: 270 },
-        // oscillator: { type: 'sine' },
+        // oscillator: { type: 'sine', phase: 270 },
+        oscillator: { type: 'sine' },
         envelope: {
-          attack: 6e-4,
+          // attack: 6e-4,
+          attack: 0.0,
           decay: 30.0,
           sustain: 1.0,
           release: 0.0,
+          attackCurve: 'exponential',
         },
       }).chain(
         ...[
@@ -88,35 +109,26 @@ const sketch = (p) => {
       );
       sig.triggerAttack(tone * pdf1);
 
-      // sig.volume.setTargetAtTime(-Infinity, 0.0, 6e-2);
-      // sig.volume.setTargetAtTime(-Infinity, 0.0, 0.2);
-      // sig.volume.exponentialRampToValueAtTime(-Infinity, 1);
-      sig.volume.rampTo(-Infinity, rampTo);
+      //sig.volume.rampTo(-Infinity, vRampTo);
+      sig.volume.setValueCurveAtTime(volCurve(Tone.dbToGain(sig.volume.value), 2e-4), 0, decay);
 
-      // sig.frequency.rampTo(tone * pdf2, pdt11, 0);
-      // sig.frequency.rampTo(tone, pdt12, `+${pdt11}`);
+      // sig.frequency.exponentialApproachValueAtTime(tone * pdf2, 0, pdt11);
+      // sig.frequency.exponentialApproachValueAtTime(tone, `+${pdt11}`, pdt12);
 
-      // sig.frequency.exponentialRampTo(tone * pdf2, pdt11, 0);
-      // sig.frequency.exponentialRampTo(tone, pdt12, `+${pdt11}`);
+      sig.frequency.setValueCurveAtTime(frqCurve(tone * pdf1, tone * pdf2, 0.9), 0, pdt11);
 
-      sig.frequency.exponentialApproachValueAtTime(tone * pdf2, 0, pdt11);
-      sig.frequency.exponentialApproachValueAtTime(tone, `+${pdt11}`, pdt12);
-
-      // sig.frequency.linearRampTo(tone * pdf2, pdt11, 0);
-      // sig.frequency.linearRampTo(tone, pdt12, `+${pdt11}`);
+      sig.frequency.setValueCurveAtTime(frqCurve(tone * pdf2, tone, 0.9), pdt11, pdt12);
 
       const subGain = new Tone.Gain(0.05);
-      // const subGain = new Tone.Gain();
       const sub = new Tone.Synth({
-        //oscillator: { type: 'sine', phase: 270 },
         oscillator: { type: 'triangle' },
         envelope: {
-          attack: 6e-4,
-          // attack: 0.0,
+          // attack: 6e-4,
+          attack: 0.0,
           decay: 30.0,
           sustain: 0.6,
           release: 0.0,
-          // attackCurve: 'exponential',
+          attackCurve: 'exponential',
         },
       }).chain(
         ...[
@@ -127,11 +139,7 @@ const sketch = (p) => {
 
       sub.triggerAttack(tone * pdf1);
 
-      // sub.volume.setTargetAtTime(-Infinity, 0.0, 5e-2);
-      sub.volume.rampTo(-Infinity, 1);
-
-      // sub.frequency.rampTo(tone * pdf2, pdt11, 0);
-      // sub.frequency.rampTo(tone, pdt12, `+${pdt11}`);
+      sub.volume.rampTo(-Infinity, 2);
 
       sub.frequency.exponentialApproachValueAtTime(tone * pdf2, 0, pdt11);
       sub.frequency.exponentialApproachValueAtTime(tone, `+${pdt11}`, pdt12);
@@ -145,13 +153,15 @@ const sketch = (p) => {
 
       const punchGain = new Tone.Gain(2);
       const punch = new Tone.Synth({
-        oscillator: { type: 'sine', phase: 270 },
-        // oscillator: { type: 'sine' },
+        // oscillator: { type: 'sine', phase: 270 },
+        oscillator: { type: 'sine' },
         envelope: {
-          attack: 6e-4,
+          // attack: 6e-4,
+          attack: 0.0,
           decay: 30.0,
           sustain: 1.0,
           release: 0.0,
+          attackCurve: 'exponential',
         },
       }).chain(
         ...[
@@ -163,11 +173,7 @@ const sketch = (p) => {
 
       punch.triggerAttack(tone * pdf1);
 
-      // punch.volume.setTargetAtTime(-Infinity, 0.0, 6e-2);
-      punch.volume.rampTo(-Infinity, rampTo);
-
-      // punch.frequency.rampTo(tone * pdf2, pdt21, 0);
-      // punch.frequency.rampTo(tone, pdt22, `+${pdt21}`);
+      punch.volume.rampTo(-Infinity, vRampTo);
 
       punch.frequency.exponentialApproachValueAtTime(tone * pdf2, 0, pdt21);
       punch.frequency.exponentialApproachValueAtTime(tone, `+${pdt21}`, pdt22);
@@ -198,18 +204,14 @@ const sketch = (p) => {
 
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      //kickSampler?.triggerRelease(time)
       kickSampler.triggerAttack(KickNote, time, velocity);
-      // kickSampler.triggerAttackRelease(KickNote, `64i`, time, velocity);
+      // kickSampler.triggerAttackRelease(KickNote, `8t`, time, velocity);
     },
     events: [
-      //[0,1]
-      // 1,
-
       [1, 1, 1, 1],
-      // [1, 1, 1, 1],
-      // [1, 1, 1, 1],
-      // [1, 1, 1, [1, ftRand(0.125)]],
+      [1, 1, 1, 1],
+      [1, 1, 1, 1],
+      [1, 1, 1, [1, ftRand(0.225)]],
     ],
     subdivision: '1n',
   });
@@ -228,39 +230,46 @@ const sketch = (p) => {
   );
   const snareNote = 'C3';
   const setSnareBuffer = async (smplr) => {
-    const buffer = await Tone.Offline((context) => {
-      context.transport.bpm.value = BPM;
+    const buffer = await Tone.Offline(() => {
+      const tone = 340;
+      const tone2 = 189;
+      const snappy = 0.3;
+      const vRampTo = 3.0;
 
-      const whiteNoiseHighpass = new Tone.Filter({
+      const noiseHighpass = new Tone.Filter({
         type: 'highpass',
         frequency: 1800,
         Q: 1.0,
         rolloff: -12, // -12, -24, -48, -96
       });
-      const whiteNoiseLowpass = new Tone.Filter({
+      const noiseLowpass = new Tone.Filter({
         type: 'lowpass',
         frequency: 8850,
         Q: 1.0,
         rolloff: -12, // -12, -24, -48, -96
       });
 
-      const whiteNoiseVolume = new Tone.Volume();
-      const whiteNoiseSynth = new Tone.NoiseSynth({
+      const noiseGain = new Tone.Gain(snappy);
+      const whiteNoise = new Tone.NoiseSynth({
         noise: { type: 'white' },
         envelope: {
-          attack: 2e-3,
-          decay: 0.175,
-          sustain: 0.0,
+          attack: 0.0,
+          decay: 4.2,
+          sustain: 1.0,
           release: 0.0,
         },
       }).chain(
         ...[
           //
-          whiteNoiseHighpass,
-          whiteNoiseLowpass,
-          whiteNoiseVolume,
+          noiseHighpass,
+          noiseLowpass,
+          noiseGain,
         ].filter((n) => n),
       );
+
+      whiteNoise.triggerAttack();
+
+      whiteNoise.volume.rampTo(-Infinity, vRampTo);
 
       const membraneVolume = new Tone.Volume();
       const membraneSynth = new Tone.MembraneSynth({
@@ -316,26 +325,22 @@ const sketch = (p) => {
         rolloff: -12, // -12, -24, -48, -96
       });
 
-      whiteNoiseSynth.triggerAttack();
+      //whiteNoiseSynth.triggerAttack();
       sineSynth.triggerAttack(189);
       membraneSynth.triggerAttack(340);
-
-      whiteNoiseVolume.volume.value = Tone.gainToDb(0.4);
-      membraneVolume.volume.value = Tone.gainToDb(0.05);
-      sineVolume.volume.value = Tone.gainToDb(0.6);
 
       Tone.fanIn(
         ...[
           //
-          whiteNoiseVolume,
-          membraneVolume,
-          sineVolume,
+          noiseGain,
+          //membraneVolume,
+          //sineVolume,
         ].filter((n) => n),
         new Tone.Volume().chain(
           ...[
             //
             // snareHighpass,
-            snareComp,
+            //snareComp,
             new Tone.Volume(),
             Tone.getDestination(),
           ].filter((n) => n),
@@ -345,20 +350,16 @@ const sketch = (p) => {
     smplr.add(snareNote, buffer);
   };
 
-
   const snareSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       snareSampler.triggerAttack(snareNote, time, velocity);
-      // snareSampler.triggerAttack(`G#2`, time, velocity);
-      // snareSampler.triggerAttackRelease(snareNote,`32i`, time, velocity);
-      // snareSampler.triggerAttackRelease(`G#2`, `48i`, time, velocity);
     },
     events: [[null, 1]],
     subdivision: '2n',
   });
 
-
   // ---  master mixer
+  const masterVol = new Tone.Volume();
   const fanInNodes = [
     //
     clickVol,
@@ -369,22 +370,24 @@ const sketch = (p) => {
   // masterVol.volume.value = Tone.gainToDb(0.9);
 
   const masterLimiter = new Tone.Limiter(-1);
-  const masterVol = new Tone.Volume();
-  masterVol.chain(
-    ...[
-      //
-      // masterLimiter,
-      Tone.getDestination(),
-    ].filter((n) => n),
+
+  Tone.fanIn(
+    ...fanInNodes.filter((n) => n),
+    masterVol.chain(
+      ...[
+        //
+        // masterLimiter,
+        Tone.getDestination(),
+      ].filter((n) => n),
+    ),
   );
-  Tone.fanIn(...fanInNodes.filter((n) => n), masterVol);
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
     transport.scheduleOnce((time) => {
       // clickSeq.start(time);
       kickSeq.start(time);
-      snareSeq.start(time);
+      //snareSeq.start(time);
     }, transport.context.now());
   });
 
@@ -404,7 +407,7 @@ const sketch = (p) => {
 
     await setKickBuffer(kickSampler);
     await setSnareBuffer(snareSampler);
-    
+
     // xxx: インクルード要検討
     transport.start();
     emitter.emit('startOnceCallSeqs');
