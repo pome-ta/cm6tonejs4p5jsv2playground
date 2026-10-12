@@ -23,18 +23,30 @@ const expCurve = (start, end, curve, steps) => {
     return _start + (_end - _start) * _curveRatio;
   };
 
-  const levels = Array.from({ length: steps + 1 }, (_, i) => envelope(start, end, i / steps, curve));
+  const levels = Array.from({ length: steps + 1 }, (_, i) =>
+    envelope(start, end, i / steps, curve),
+  );
 
   return levels;
 };
 
-const frqCurve = (startfrequency, endfrequency, curveExponent = 0, divSteps = 128) => {
+const frqCurve = (
+  startfrequency,
+  endfrequency,
+  curveExponent = 0,
+  divSteps = 128,
+) => {
   const curve = expCurve(startfrequency, endfrequency, curveExponent, divSteps);
 
   return curve;
 };
 
-const volCurve = (startGain, curveExponent = 1, endGain = 0, divSteps = 2048) => {
+const volCurve = (
+  startGain,
+  curveExponent = 1,
+  endGain = 0,
+  divSteps = 2048,
+) => {
   const gainCurve = expCurve(startGain, endGain, curveExponent, divSteps);
   return gainCurve.map((gain) => Tone.gainToDb(gain));
 };
@@ -89,13 +101,21 @@ const sketch = (p) => {
   const KickNote = 'A4';
   const setKickBuffer = async (smplr) => {
     const buffer = await Tone.Offline(() => {
-      const decay = 30;
-      const amp = 2;
-      const tone = 56;
+      const decay = 30; //58; //30;
+      const amp = 2; //1.55; //2;
+      const tone = 56; //58; //56;
       const envParams = scParams([0.11, 1, 0], [0, decay], -225);
       const trienvParams = scParams([0.11, 0.6, 0], [0, decay], -230);
-      const fenvParams = scParams([tone * 7, tone * 1.35, tone], [0.05, 0.6], -14);
-      const pfenvParams = scParams([tone * 7, tone * 1.35, tone], [0.03, 0.6], -10);
+      const fenvParams = scParams(
+        [tone * 7, tone * 1.35, tone],
+        [0.05, 0.6],
+        -14,
+      );
+      const pfenvParams = scParams(
+        [tone * 7, tone * 1.35, tone],
+        [0.03, 0.6],
+        -10,
+      );
 
       const sigGain = new Tone.Gain();
       const sig = new Tone.Synth({
@@ -117,17 +137,23 @@ const sketch = (p) => {
       );
       sig.triggerAttack(fenvParams.levels[0]);
 
-      sig.volume.setValueCurveAtTime(volCurve(envParams.levels[1], envParams.curve), envParams.times[0], envParams.times[1],);
+      sig.volume.setValueCurveAtTime(
+        volCurve(envParams.levels[1], envParams.curve),
+        envParams.times[0],
+        envParams.times[1],
+      );
 
-      
-      // sig.frequency.setValueCurveAtTime(frqCurve(fenvParams.levels[0], fenvParams.levels[1], fenvParams.curve), 0, fenvParams.times[0],);
-      // sig.frequency.setValueCurveAtTime(frqCurve(fenvParams.levels[1], fenvParams.levels[2], fenvParams.curve), fenvParams.times[0], fenvParams.times[1],);
-      
-      
-      sig.frequency.exponentialApproachValueAtTime(fenvParams.levels[1], 0, fenvParams.times[0]);
-      sig.frequency.exponentialApproachValueAtTime(fenvParams.levels[2], `+${fenvParams.times[0]}`, fenvParams.times[1]);
+      sig.frequency.setValueCurveAtTime(
+        frqCurve(fenvParams.levels[0], fenvParams.levels[1], fenvParams.curve),
+        0,
+        fenvParams.times[0],
+      );
+      sig.frequency.setValueCurveAtTime(
+        frqCurve(fenvParams.levels[1], fenvParams.levels[2], fenvParams.curve),
+        fenvParams.times[0],
+        fenvParams.times[1],
+      );
 
-      // const subGain = new Tone.Gain(0.05);
       const subGain = new Tone.Gain();
       const sub = new Tone.Synth({
         oscillator: { type: 'triangle' },
@@ -136,11 +162,9 @@ const sketch = (p) => {
           // attack: 0.0,
           decay: decay,
           sustain: 1,
-          // sustain: 0.6,
           release: 0.0,
           attackCurve: 'exponential',
         },
-        // volume: Tone.gainToDb(0.05),
       }).chain(
         ...[
           //,
@@ -150,18 +174,22 @@ const sketch = (p) => {
       );
 
       sub.triggerAttack(fenvParams.levels[0]);
-      sub.volume.setValueCurveAtTime(volCurve(trienvParams.levels[1], trienvParams.curve), trienvParams.times[0], trienvParams.times[1],);
-      // sub.volume.setValueCurveAtTime(volCurve(1, trienvParams.curve), trienvParams.times[0], trienvParams.times[1],);
+      sub.volume.setValueCurveAtTime(
+        volCurve(trienvParams.levels[1], trienvParams.curve),
+        trienvParams.times[0],
+        trienvParams.times[1],
+      );
 
-      // sub.frequency.setValueCurveAtTime(frqCurve(fenvParams.levels[0], fenvParams.levels[1], fenvParams.curve), 0, fenvParams.times[0],);
-      // sub.frequency.setValueCurveAtTime(frqCurve(fenvParams.levels[1], fenvParams.levels[2], fenvParams.curve), fenvParams.times[0], fenvParams.times[1],);
-      
-      
-      sub.frequency.exponentialApproachValueAtTime(fenvParams.levels[1], 0, fenvParams.times[0]);
-      sub.frequency.exponentialApproachValueAtTime(fenvParams.levels[2], `+${fenvParams.times[0]}`, fenvParams.times[1]);
-      
-      
-      
+      sub.frequency.setValueCurveAtTime(
+        frqCurve(fenvParams.levels[0], fenvParams.levels[1], fenvParams.curve),
+        0,
+        fenvParams.times[0],
+      );
+      sub.frequency.setValueCurveAtTime(
+        frqCurve(fenvParams.levels[1], fenvParams.levels[2], fenvParams.curve),
+        fenvParams.times[0],
+        fenvParams.times[1],
+      );
 
       const highpass = new Tone.Filter({
         type: 'highpass',
@@ -170,20 +198,17 @@ const sketch = (p) => {
         rolloff: -12, // -12, -24, -48, -96
       });
 
-      // const punchGain = new Tone.Gain(2);
       const punchGain = new Tone.Gain();
       const punch = new Tone.Synth({
         // oscillator: { type: 'sine', phase: 270 },
         oscillator: { type: 'sine' },
         envelope: {
           attack: 6e-4,
-          // attack: 0.0,
           decay: decay,
           sustain: 1.0,
           release: 0.0,
           attackCurve: 'exponential',
         },
-        // volume: Tone.gainToDb(2),
       }).chain(
         ...[
           //,
@@ -194,14 +219,30 @@ const sketch = (p) => {
       );
 
       punch.triggerAttack(pfenvParams.levels[0]);
-      punch.volume.setValueCurveAtTime(volCurve(envParams.times[1], envParams.curve), 0, decay);
+      punch.volume.setValueCurveAtTime(
+        volCurve(envParams.times[1], envParams.curve),
+        0,
+        decay,
+      );
 
-      // punch.frequency.setValueCurveAtTime(frqCurve(pfenvParams.levels[0], pfenvParams.levels[1], pfenvParams.curve), 0, pfenvParams.times[0],);
-      // punch.frequency.setValueCurveAtTime(frqCurve(pfenvParams.levels[1], pfenvParams.levels[2], pfenvParams.curve), pfenvParams.times[0], pfenvParams.times[1],);
-      
-      punch.frequency.exponentialApproachValueAtTime(pfenvParams.levels[1], 0, pfenvParams.times[0]);
-      punch.frequency.exponentialApproachValueAtTime(pfenvParams.levels[2], `+${pfenvParams.times[0]}`, pfenvParams.times[1]);
-      
+      punch.frequency.setValueCurveAtTime(
+        frqCurve(
+          pfenvParams.levels[0],
+          pfenvParams.levels[1],
+          pfenvParams.curve,
+        ),
+        0,
+        pfenvParams.times[0],
+      );
+      punch.frequency.setValueCurveAtTime(
+        frqCurve(
+          pfenvParams.levels[1],
+          pfenvParams.levels[2],
+          pfenvParams.curve,
+        ),
+        pfenvParams.times[0],
+        pfenvParams.times[1],
+      );
 
       const bdGain = new Tone.Gain();
       Tone.fanIn(
@@ -214,9 +255,10 @@ const sketch = (p) => {
         new Tone.Gain().chain(
           ...[
             //,
-            // new Tone.Gain(2.5),
+            new Tone.Gain(2.5),
             new Tone.Limiter(-50),
             new Tone.Gain(amp),
+            new Tone.Channel(),
             bdGain,
           ].filter((n) => n),
         ),
@@ -229,8 +271,8 @@ const sketch = (p) => {
 
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      kickSampler.triggerAttack(KickNote, time, velocity);
-      // kickSampler.triggerAttackRelease(KickNote, `8t`, time, velocity);
+      // kickSampler.triggerAttack(KickNote, time, velocity);
+      kickSampler.triggerAttackRelease(KickNote, `8t`, time, velocity);
     },
     events: [
       [1, 1, 1, 1],
@@ -253,14 +295,27 @@ const sketch = (p) => {
       snareVol,
     ].filter((n) => n),
   );
-  const snareNote = 'C3';
+  const snareNote = 'A4';
   const setSnareBuffer = async (smplr) => {
     const buffer = await Tone.Offline(() => {
+      const amp = 2;
       const tone = 340;
       const tone2 = 189;
       const snappy = 0.3;
-      const vRampTo = 3.0;
+      const amp2 = 1;
 
+      const noiseEnvParams = {
+        attack: 0.001,
+        release: 4.2,
+        level: 1,
+        curve: -115,
+      };
+      const atkEnvParams = {
+        attack: 0.001,
+        release: 0.8,
+        level: 1,
+        curve: -95,
+      };
       const noiseHighpass = new Tone.Filter({
         type: 'highpass',
         frequency: 1800,
@@ -274,12 +329,12 @@ const sketch = (p) => {
         rolloff: -12, // -12, -24, -48, -96
       });
 
-      const noiseGain = new Tone.Gain(snappy);
+      const noiseGain = new Tone.Gain();
       const whiteNoise = new Tone.NoiseSynth({
         noise: { type: 'white' },
         envelope: {
           attack: 0.0,
-          decay: 4.2,
+          decay: 1.0,
           sustain: 1.0,
           release: 0.0,
         },
@@ -288,96 +343,119 @@ const sketch = (p) => {
           //
           noiseHighpass,
           noiseLowpass,
+          new Tone.Gain(snappy),
           noiseGain,
         ].filter((n) => n),
       );
 
       whiteNoise.triggerAttack();
-
-      whiteNoise.volume.rampTo(-Infinity, vRampTo);
-
-      const membraneVolume = new Tone.Volume();
-      const membraneSynth = new Tone.MembraneSynth({
-        // oscillator: { type: 'sine' },
-        // oscillator: { type: 'sine', phase: 270 },
-        oscillator: { type: 'triangle' },
-        envelope: {
-          //
-          attack: 2e-3,
-          decay: 0.25,
-          sustain: 0.0,
-          release: 0.0,
-        },
-        pitchDecay: 0.02,
-        octaves: 4.0,
-      }).chain(
-        ...[
-          //
-          membraneVolume,
-        ].filter((n) => n),
+      whiteNoise.volume.setValueCurveAtTime(
+        volCurve(noiseEnvParams.level, noiseEnvParams.curve),
+        noiseEnvParams.attack,
+        noiseEnvParams.release,
       );
 
-      const sineVolume = new Tone.Volume();
-      const sineSynth = new Tone.Synth({
+      const osc1Gain = new Tone.Gain();
+      const osc1 = new Tone.Synth({
         // oscillator: { type: 'sine', phase: 270 },
         oscillator: { type: 'sine' },
         envelope: {
-          //
-          // attackCurve: 'exponential',
-          attack: 2e-3,
-          decay: 0.25,
-          sustain: 0.0,
+          attack: 6e-4,
+          decay: 1.0,
+          sustain: 1.0,
           release: 0.0,
+          attackCurve: 'exponential',
         },
       }).chain(
         ...[
-          //
-          sineVolume,
+          //,
+          new Tone.Gain(0.6),
+          osc1Gain,
         ].filter((n) => n),
       );
 
-      const snareComp = new Tone.Compressor({
-        threshold: -40, // -100-0 : -24
-        ratio: 20, // 1-20 : 12
-        attack: 5e-1,
-        release: 2e-4,
-        knee: 40, // 0-40 : 30
-      });
-      const snareHighpass = new Tone.Filter({
+      const osc2Gain = new Tone.Gain();
+      const osc2 = new Tone.Synth({
+        // oscillator: { type: 'sine', phase: 270 },
+        oscillator: { type: 'sine' },
+        envelope: {
+          attack: 6e-4,
+          decay: 1.0,
+          sustain: 1.0,
+          release: 0.0,
+          attackCurve: 'exponential',
+        },
+      }).chain(
+        ...[
+          //,
+          new Tone.Gain(0.7),
+          osc2Gain,
+        ].filter((n) => n),
+      );
+
+      osc1.triggerAttack(tone2);
+      osc2.triggerAttack(tone);
+
+      osc1.volume.setValueCurveAtTime(
+        volCurve(atkEnvParams.level, atkEnvParams.curve),
+        0,
+        atkEnvParams.release,
+      );
+      osc2.volume.setValueCurveAtTime(
+        volCurve(atkEnvParams.level, atkEnvParams.curve),
+        0,
+        atkEnvParams.release,
+      );
+
+      const sumGain = new Tone.Gain();
+      Tone.fanIn(
+        ...[
+          //
+          osc1Gain,
+          osc2Gain,
+        ].filter((n) => n),
+        new Tone.Gain().chain(
+          ...[
+            //,
+            new Tone.Gain(2),
+            sumGain,
+          ].filter((n) => n),
+        ),
+      );
+      const sigHighpass = new Tone.Filter({
         type: 'highpass',
-        frequency: 300,
-        Q: 0.9,
+        frequency: 340,
+        Q: 1.0,
         rolloff: -12, // -12, -24, -48, -96
       });
-
-      //whiteNoiseSynth.triggerAttack();
-      sineSynth.triggerAttack(189);
-      membraneSynth.triggerAttack(340);
-
+      const sigGain = new Tone.Gain();
       Tone.fanIn(
         ...[
           //
           noiseGain,
-          //membraneVolume,
-          //sineVolume,
+          sumGain,
         ].filter((n) => n),
-        new Tone.Volume().chain(
+        new Tone.Gain().chain(
           ...[
-            //
-            // snareHighpass,
-            //snareComp,
-            new Tone.Volume(),
-            Tone.getDestination(),
+            //,
+            new Tone.Gain(amp),
+            new Tone.Gain(2.5),
+            new Tone.Channel(),
+            sigHighpass,
+            sigGain,
           ].filter((n) => n),
         ),
       );
-    }, 1.75);
+
+      Tone.fanIn(sigGain, Tone.getDestination());
+    }, 5.75);
     smplr.add(snareNote, buffer);
   };
 
   const snareSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       snareSampler.triggerAttack(snareNote, time, velocity);
+      // snareSampler.triggerAttackRelease(snareNote, '16t', time, velocity);
     },
     events: [[null, 1]],
     subdivision: '2n',
@@ -412,7 +490,7 @@ const sketch = (p) => {
     transport.scheduleOnce((time) => {
       // clickSeq.start(time);
       kickSeq.start(time);
-      //snareSeq.start(time);
+      snareSeq.start(time);
     }, transport.context.now());
   });
 
