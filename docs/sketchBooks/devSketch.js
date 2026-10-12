@@ -32,7 +32,7 @@ const frqCurve = (startfrequency, endfrequency, curveExponent = 0, divSteps = 25
   return curve;
 };
 
-const volCurve = (startGain, curveExponent = 1, endGain = 0, divSteps = 1024) => {
+const volCurve = (startGain, curveExponent = 1, endGain = 0, divSteps = 256) => {
   const gainCurve = expCurve(startGain, endGain, curveExponent, divSteps);
   return gainCurve.map((gain) => Tone.gainToDb(gain));
 };
@@ -237,9 +237,9 @@ const sketch = (p) => {
         new Tone.Gain().chain(
           ...[
             //,
-            // new Tone.Gain(2.5),
-            // new Tone.Limiter(-20),
-            // new Tone.Gain(2),
+            new Tone.Gain(2.5),
+            new Tone.Limiter(-20),
+            new Tone.Gain(2),
             bdGain,
           ].filter((n) => n),
         ),
