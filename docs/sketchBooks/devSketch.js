@@ -11,6 +11,8 @@ function ftRand(bias, spread = 1.0) {
   return bias + (Math.random() * 2 - 1) * maxDist;
 }
 
+const scParams = (levels, times, curve) => ({ levels, times, curve });
+
 const expCurve = (start, end, curve, steps) => {
   const envelope = (_start, _end, _progress, _curve) => {
     if (_curve === 0) {
@@ -21,30 +23,18 @@ const expCurve = (start, end, curve, steps) => {
     return _start + (_end - _start) * _curveRatio;
   };
 
-  const levels = Array.from({ length: steps + 1 }, (_, i) =>
-    envelope(start, end, i / steps, curve),
-  );
+  const levels = Array.from({ length: steps + 1 }, (_, i) => envelope(start, end, i / steps, curve));
 
   return levels;
 };
 
-const frqCurve = (
-  startfrequency,
-  endfrequency,
-  curveExponent = 0,
-  divSteps = 1024,
-) => {
+const frqCurve = (startfrequency, endfrequency, curveExponent = 0, divSteps = 128) => {
   const curve = expCurve(startfrequency, endfrequency, curveExponent, divSteps);
 
   return curve;
 };
 
-const volCurve = (
-  startGain,
-  curveExponent = 1,
-  endGain = 0,
-  divSteps = 2048,
-) => {
+const volCurve = (startGain, curveExponent = 1, endGain = 0, divSteps = 2048) => {
   const gainCurve = expCurve(startGain, endGain, curveExponent, divSteps);
   return gainCurve.map((gain) => Tone.gainToDb(gain));
 };
@@ -84,8 +74,6 @@ const sketch = (p) => {
   const clickVol = new Tone.Volume(-4);
   clickSynth.chain(clickVol);
 
-  const scParams = (levels, times, curve) => ({ levels, times, curve });
-
   // --- kick
   const kickVol = new Tone.Volume();
   const kickSampler = new Tone.Sampler({
@@ -106,16 +94,8 @@ const sketch = (p) => {
       const tone = 56;
       const envParams = scParams([0.11, 1, 0], [0, decay], -225);
       const trienvParams = scParams([0.11, 0.6, 0], [0, decay], -230);
-      const fenvParams = scParams(
-        [tone * 7, tone * 1.35, tone],
-        [0.05, 0.6],
-        -14,
-      );
-      const pfenvParams = scParams(
-        [tone * 7, tone * 1.35, tone],
-        [0.03, 0.6],
-        -10,
-      );
+      const fenvParams = scParams([tone * 7, tone * 1.35, tone], [0.05, 0.6], -14);
+      const pfenvParams = scParams([tone * 7, tone * 1.35, tone], [0.03, 0.6], -10);
 
       const sigGain = new Tone.Gain();
       const sig = new Tone.Synth({
@@ -137,22 +117,15 @@ const sketch = (p) => {
       );
       sig.triggerAttack(fenvParams.levels[0]);
 
-      sig.volume.setValueCurveAtTime(
-        volCurve(envParams.levels[1], envParams.curve),
-        envParams.times[0], // 0
-        envParams.times[1], // decay
-      );
+      sig.volume.setValueCurveAtTime(volCurve(envParams.levels[1], envParams.curve), envParams.times[0], envParams.times[1],);
 
-      sig.frequency.setValueCurveAtTime(
-        frqCurve(fenvParams.levels[0], fenvParams.levels[1], fenvParams.curve),
-        0,
-        fenvParams.times[0],
-      );
-      sig.frequency.setValueCurveAtTime(
-        frqCurve(fenvParams.levels[1], fenvParams.levels[2], fenvParams.curve),
-        fenvParams.times[0],
-        fenvParams.times[1],
-      );
+      
+      // sig.frequency.setValueCurveAtTime(frqCurve(fenvParams.levels[0], fenvParams.levels[1], fenvParams.curve), 0, fenvParams.times[0],);
+      // sig.frequency.setValueCurveAtTime(frqCurve(fenvParams.levels[1], fenvParams.levels[2], fenvParams.curve), fenvParams.times[0], fenvParams.times[1],);
+      
+      
+      sig.frequency.exponentialApproachValueAtTime(fenvParams.levels[1], 0, fenvParams.times[0]);
+      sig.frequency.exponentialApproachValueAtTime(fenvParams.levels[2], `+${fenvParams.times[0]}`, fenvParams.times[1]);
 
       // const subGain = new Tone.Gain(0.05);
       const subGain = new Tone.Gain();
@@ -163,6 +136,7 @@ const sketch = (p) => {
           // attack: 0.0,
           decay: decay,
           sustain: 1,
+          // sustain: 0.6,
           release: 0.0,
           attackCurve: 'exponential',
         },
@@ -176,22 +150,18 @@ const sketch = (p) => {
       );
 
       sub.triggerAttack(fenvParams.levels[0]);
-      sub.volume.setValueCurveAtTime(
-        volCurve(trienvParams.levels[1], trienvParams.curve),
-        trienvParams.times[0],
-        trienvParams.times[1],
-      );
+      sub.volume.setValueCurveAtTime(volCurve(trienvParams.levels[1], trienvParams.curve), trienvParams.times[0], trienvParams.times[1],);
+      // sub.volume.setValueCurveAtTime(volCurve(1, trienvParams.curve), trienvParams.times[0], trienvParams.times[1],);
 
-      sub.frequency.setValueCurveAtTime(
-        frqCurve(fenvParams.levels[0], fenvParams.levels[1], fenvParams.curve),
-        0,
-        fenvParams.times[0],
-      );
-      sub.frequency.setValueCurveAtTime(
-        frqCurve(fenvParams.levels[1], fenvParams.levels[2], fenvParams.curve),
-        fenvParams.times[0],
-        fenvParams.times[1],
-      );
+      // sub.frequency.setValueCurveAtTime(frqCurve(fenvParams.levels[0], fenvParams.levels[1], fenvParams.curve), 0, fenvParams.times[0],);
+      // sub.frequency.setValueCurveAtTime(frqCurve(fenvParams.levels[1], fenvParams.levels[2], fenvParams.curve), fenvParams.times[0], fenvParams.times[1],);
+      
+      
+      sub.frequency.exponentialApproachValueAtTime(fenvParams.levels[1], 0, fenvParams.times[0]);
+      sub.frequency.exponentialApproachValueAtTime(fenvParams.levels[2], `+${fenvParams.times[0]}`, fenvParams.times[1]);
+      
+      
+      
 
       const highpass = new Tone.Filter({
         type: 'highpass',
@@ -224,26 +194,14 @@ const sketch = (p) => {
       );
 
       punch.triggerAttack(pfenvParams.levels[0]);
-      punch.volume.setValueCurveAtTime(
-        volCurve(envParams.times[1], envParams.curve),
-        0,
-        decay,
-      );
+      punch.volume.setValueCurveAtTime(volCurve(envParams.times[1], envParams.curve), 0, decay);
 
-      punch.frequency.setValueCurveAtTime(
-        frqCurve(fenvParams.levels[0], fenvParams.levels[1], fenvParams.curve),
-        0,
-        fenvParams.times[0],
-      );
-      punch.frequency.setValueCurveAtTime(
-        frqCurve(
-          pfenvParams.levels[1],
-          pfenvParams.levels[2],
-          fenvParams.curve,
-        ),
-        envParams.times[0],
-        envParams.times[1],
-      );
+      // punch.frequency.setValueCurveAtTime(frqCurve(pfenvParams.levels[0], pfenvParams.levels[1], pfenvParams.curve), 0, pfenvParams.times[0],);
+      // punch.frequency.setValueCurveAtTime(frqCurve(pfenvParams.levels[1], pfenvParams.levels[2], pfenvParams.curve), pfenvParams.times[0], pfenvParams.times[1],);
+      
+      punch.frequency.exponentialApproachValueAtTime(pfenvParams.levels[1], 0, pfenvParams.times[0]);
+      punch.frequency.exponentialApproachValueAtTime(pfenvParams.levels[2], `+${pfenvParams.times[0]}`, pfenvParams.times[1]);
+      
 
       const bdGain = new Tone.Gain();
       Tone.fanIn(
@@ -256,8 +214,8 @@ const sketch = (p) => {
         new Tone.Gain().chain(
           ...[
             //,
-            new Tone.Gain(2.5),
-            new Tone.Limiter(-20),
+            // new Tone.Gain(2.5),
+            new Tone.Limiter(-50),
             new Tone.Gain(amp),
             bdGain,
           ].filter((n) => n),
