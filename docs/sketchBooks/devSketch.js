@@ -21,18 +21,30 @@ const expCurve = (start, end, curve, steps) => {
     return _start + (_end - _start) * _curveRatio;
   };
 
-  const levels = Array.from({ length: steps + 1 }, (_, i) => envelope(start, end, i / steps, curve));
+  const levels = Array.from({ length: steps + 1 }, (_, i) =>
+    envelope(start, end, i / steps, curve),
+  );
 
   return levels;
 };
 
-const frqCurve = (startfrequency, endfrequency, curveExponent = 0, divSteps = 256) => {
+const frqCurve = (
+  startfrequency,
+  endfrequency,
+  curveExponent = 0,
+  divSteps = 256,
+) => {
   const curve = expCurve(startfrequency, endfrequency, curveExponent, divSteps);
 
   return curve;
 };
 
-const volCurve = (startGain, curveExponent = 1, endGain = 0, divSteps = 256) => {
+const volCurve = (
+  startGain,
+  curveExponent = 1,
+  endGain = 0,
+  divSteps = 256,
+) => {
   const gainCurve = expCurve(startGain, endGain, curveExponent, divSteps);
   return gainCurve.map((gain) => Tone.gainToDb(gain));
 };
@@ -146,10 +158,22 @@ const sketch = (p) => {
       // sig.frequency.exponentialApproachValueAtTime(tone * pdf2, 0, pdt11);
       // sig.frequency.exponentialApproachValueAtTime(tone, `+${pdt11}`, pdt12);
 
-      sig.volume.setValueCurveAtTime(volCurve(Tone.dbToGain(sig.volume.value), -225), 0, decay);
+      sig.volume.setValueCurveAtTime(
+        volCurve(Tone.dbToGain(sig.volume.value), -225),
+        0,
+        decay,
+      );
 
-      sig.frequency.setValueCurveAtTime(frqCurve(tone * pdf1, tone * pdf2, -14), 0, pdt11);
-      sig.frequency.setValueCurveAtTime(frqCurve(tone * pdf2, tone, -14), pdt11, pdt12);
+      sig.frequency.setValueCurveAtTime(
+        frqCurve(tone * pdf1, tone * pdf2, -14),
+        0,
+        pdt11,
+      );
+      sig.frequency.setValueCurveAtTime(
+        frqCurve(tone * pdf2, tone, -14),
+        pdt11,
+        pdt12,
+      );
 
       // const subGain = new Tone.Gain(0.05);
       const subGain = new Tone.Gain();
@@ -179,10 +203,22 @@ const sketch = (p) => {
       //sub.frequency.exponentialApproachValueAtTime(tone * pdf2, 0, pdt11);
       //sub.frequency.exponentialApproachValueAtTime(tone, `+${pdt11}`, pdt12);
 
-      sub.volume.setValueCurveAtTime(volCurve(Tone.dbToGain(sub.volume.value), 230e-5), 0, decay);
+      sub.volume.setValueCurveAtTime(
+        volCurve(Tone.dbToGain(sub.volume.value), 230e-5),
+        0,
+        decay,
+      );
 
-      sub.frequency.setValueCurveAtTime(frqCurve(tone * pdf1, tone * pdf2, 0.96), 0, pdt11);
-      sub.frequency.setValueCurveAtTime(frqCurve(tone * pdf2, tone, 0.96), pdt11, pdt12);
+      sub.frequency.setValueCurveAtTime(
+        frqCurve(tone * pdf1, tone * pdf2, 0.96),
+        0,
+        pdt11,
+      );
+      sub.frequency.setValueCurveAtTime(
+        frqCurve(tone * pdf2, tone, 0.96),
+        pdt11,
+        pdt12,
+      );
 
       const highpass = new Tone.Filter({
         type: 'highpass',
@@ -221,10 +257,22 @@ const sketch = (p) => {
 
       //punch.frequency.exponentialApproachValueAtTime(tone * pdf2, 0, pdt21);
       //punch.frequency.exponentialApproachValueAtTime(tone, `+${pdt21}`, pdt22);
-      punch.volume.setValueCurveAtTime(volCurve(Tone.dbToGain(punch.volume.value), 230e-5), 0, decay);
+      punch.volume.setValueCurveAtTime(
+        volCurve(Tone.dbToGain(punch.volume.value), 230e-5),
+        0,
+        decay,
+      );
 
-      punch.frequency.setValueCurveAtTime(frqCurve(tone * pdf1, tone * pdf2, 0.9), 0, pdt21);
-      punch.frequency.setValueCurveAtTime(frqCurve(tone * pdf2, tone, 0.9), pdt21, pdt22);
+      punch.frequency.setValueCurveAtTime(
+        frqCurve(tone * pdf1, tone * pdf2, 0.9),
+        0,
+        pdt21,
+      );
+      punch.frequency.setValueCurveAtTime(
+        frqCurve(tone * pdf2, tone, 0.9),
+        pdt21,
+        pdt22,
+      );
 
       const bdGain = new Tone.Gain();
       Tone.fanIn(
