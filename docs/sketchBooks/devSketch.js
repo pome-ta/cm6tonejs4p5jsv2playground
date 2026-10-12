@@ -11,6 +11,33 @@ function ftRand(bias, spread = 1.0) {
   return bias + (Math.random() * 2 - 1) * maxDist;
 }
 
+const expCurve = (start, end, curve, steps) => {
+  const envelope = (_start, _end, _progress, _curve) => {
+    if (_curve === 0) {
+      return _start + (_end - _start) * _progress;
+    }
+    const _exp = Math.exp(_curve * _progress);
+    const _curveRatio = (_exp - 1) / (Math.exp(_curve) - 1);
+    return _start + (_end - _start) * _curveRatio;
+  };
+
+  const levels = Array.from({ length: steps + 1 }, (_, i) => envelope(start, end, i / steps, curve));
+
+  return levels;
+};
+
+const frqCurve = (startfrequency, endfrequency, curveExponent = 0, divSteps = 256) => {
+  const curve = expCurve(startfrequency, endfrequency, curveExponent, divSteps);
+
+  return curve;
+};
+
+const volCurve = (startGain, curveExponent = 1, endGain = 0, divSteps = 1024) => {
+  const gainCurve = expCurve(startGain, endGain, curveExponent, divSteps);
+  return gainCurve.map((gain) => Tone.gainToDb(gain));
+};
+
+/*
 const frqCurve = (startfrequency, endfrequency = 0, exponent = 1, steps = 50) => {
   const curve = Array.from(
     { length: steps },
@@ -28,6 +55,11 @@ const volCurve = (startGain, exponent = 1, endGain = 0, steps = 50) => {
   });
   return curve;
 };
+
+const steps = 3000;
+const duration = 30;
+const curve = -225;
+*/
 
 const sketch = (p) => {
   // --- Tone.js
@@ -79,7 +111,7 @@ const sketch = (p) => {
   const KickNote = 'A4';
   const setKickBuffer = async (smplr) => {
     const buffer = await Tone.Offline(() => {
-      const decay = 15;
+      const decay = 30;
       const tone = 56;
       const pdf1 = 7.0;
       const pdf2 = 1.35;
@@ -110,16 +142,17 @@ const sketch = (p) => {
       sig.triggerAttack(tone * pdf1);
 
       //sig.volume.rampTo(-Infinity, vRampTo);
-      sig.volume.setValueCurveAtTime(volCurve(Tone.dbToGain(sig.volume.value), 2e-4), 0, decay);
 
       // sig.frequency.exponentialApproachValueAtTime(tone * pdf2, 0, pdt11);
       // sig.frequency.exponentialApproachValueAtTime(tone, `+${pdt11}`, pdt12);
 
-      sig.frequency.setValueCurveAtTime(frqCurve(tone * pdf1, tone * pdf2, 0.9), 0, pdt11);
+      sig.volume.setValueCurveAtTime(volCurve(Tone.dbToGain(sig.volume.value), -225), 0, decay);
 
-      sig.frequency.setValueCurveAtTime(frqCurve(tone * pdf2, tone, 0.9), pdt11, pdt12);
+      sig.frequency.setValueCurveAtTime(frqCurve(tone * pdf1, tone * pdf2, -14), 0, pdt11);
+      sig.frequency.setValueCurveAtTime(frqCurve(tone * pdf2, tone, -14), pdt11, pdt12);
 
-      const subGain = new Tone.Gain(0.05);
+      // const subGain = new Tone.Gain(0.05);
+      const subGain = new Tone.Gain();
       const sub = new Tone.Synth({
         oscillator: { type: 'triangle' },
         envelope: {
@@ -130,19 +163,26 @@ const sketch = (p) => {
           release: 0.0,
           attackCurve: 'exponential',
         },
+        // volume: Tone.gainToDb(0.05),
       }).chain(
         ...[
           //,
+          new Tone.Gain(0.05),
           subGain,
         ].filter((n) => n),
       );
 
       sub.triggerAttack(tone * pdf1);
 
-      sub.volume.rampTo(-Infinity, 2);
+      //sub.volume.rampTo(-Infinity, 2);
 
-      sub.frequency.exponentialApproachValueAtTime(tone * pdf2, 0, pdt11);
-      sub.frequency.exponentialApproachValueAtTime(tone, `+${pdt11}`, pdt12);
+      //sub.frequency.exponentialApproachValueAtTime(tone * pdf2, 0, pdt11);
+      //sub.frequency.exponentialApproachValueAtTime(tone, `+${pdt11}`, pdt12);
+
+      sub.volume.setValueCurveAtTime(volCurve(Tone.dbToGain(sub.volume.value), 230e-5), 0, decay);
+
+      sub.frequency.setValueCurveAtTime(frqCurve(tone * pdf1, tone * pdf2, 0.96), 0, pdt11);
+      sub.frequency.setValueCurveAtTime(frqCurve(tone * pdf2, tone, 0.96), pdt11, pdt12);
 
       const highpass = new Tone.Filter({
         type: 'highpass',
@@ -151,7 +191,8 @@ const sketch = (p) => {
         rolloff: -12, // -12, -24, -48, -96
       });
 
-      const punchGain = new Tone.Gain(2);
+      // const punchGain = new Tone.Gain(2);
+      const punchGain = new Tone.Gain();
       const punch = new Tone.Synth({
         // oscillator: { type: 'sine', phase: 270 },
         oscillator: { type: 'sine' },
@@ -163,35 +204,42 @@ const sketch = (p) => {
           release: 0.0,
           attackCurve: 'exponential',
         },
+        // volume: Tone.gainToDb(2),
       }).chain(
         ...[
           //,
+          new Tone.Gain(2),
           highpass,
+          // new Tone.Gain(2),
           punchGain,
         ].filter((n) => n),
       );
 
       punch.triggerAttack(tone * pdf1);
 
-      punch.volume.rampTo(-Infinity, vRampTo);
+      //punch.volume.rampTo(-Infinity, vRampTo);
 
-      punch.frequency.exponentialApproachValueAtTime(tone * pdf2, 0, pdt21);
-      punch.frequency.exponentialApproachValueAtTime(tone, `+${pdt21}`, pdt22);
+      //punch.frequency.exponentialApproachValueAtTime(tone * pdf2, 0, pdt21);
+      //punch.frequency.exponentialApproachValueAtTime(tone, `+${pdt21}`, pdt22);
+      punch.volume.setValueCurveAtTime(volCurve(Tone.dbToGain(punch.volume.value), 230e-5), 0, decay);
+
+      punch.frequency.setValueCurveAtTime(frqCurve(tone * pdf1, tone * pdf2, 0.9), 0, pdt21);
+      punch.frequency.setValueCurveAtTime(frqCurve(tone * pdf2, tone, 0.9), pdt21, pdt22);
 
       const bdGain = new Tone.Gain();
       Tone.fanIn(
         ...[
           //
           sigGain,
-          subGain,
-          punchGain,
+          // subGain,
+          // punchGain,
         ].filter((n) => n),
         new Tone.Gain().chain(
           ...[
             //,
-            new Tone.Gain(2.5),
-            new Tone.Limiter(-20),
-            new Tone.Gain(2),
+            // new Tone.Gain(2.5),
+            // new Tone.Limiter(-20),
+            // new Tone.Gain(2),
             bdGain,
           ].filter((n) => n),
         ),
