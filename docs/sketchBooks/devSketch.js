@@ -87,19 +87,19 @@ const sketch = (p) => {
   const KickNote = 'A4';
   const setKickBuffer = async (smplr) => {
     const buffer = await Tone.Offline(() => {
+      const decay = 1.5;
       const tone = 56;
 
-      const noiseLowpass = new Tone.Filter({
-        type: 'lowpass',
-        frequency: 800,
-        Q: 1.0,
-        rolloff: -96, // -12, -24, -48, -96
-      });
+      const mulTone = [7.0, 1.35, 1.0];
+      const timeTone = [0.0, 0.05, 0.6];
+
       const ocsGain = new Tone.Gain();
       const osc = new Tone.OmniOscillator({
         frequency: 0,
         type: 'sine',
         // type: 'triangle',
+        // type: 'square',
+
         phase: 270,
         // type: 'pulse',
         // width: 0,
@@ -107,20 +107,20 @@ const sketch = (p) => {
         .chain(
           ...[
             //,
-            // noiseLowpass,
             ocsGain,
           ],
         )
         .start();
 
-      osc.volume.rampTo(Tone.gainToDb(0.0), 2.25);
+      //osc.volume.rampTo(Tone.gainToDb(0.0), decay);
+      osc.volume.rampTo(-Infinity, decay);
 
-      osc.frequency.setValueCurveAtTime(frqCurve(tone*7, tone * 1.35, -14), 0, 0.05);
-      osc.frequency.setValueCurveAtTime(frqCurve(tone * 1.35,tone, -14), 0.0, 0.6);
-
+      osc.frequency.setValueCurveAtTime(frqCurve(tone * mulTone[0], tone * mulTone[1], -14), timeTone[0], timeTone[1]);
+      osc.frequency.setValueCurveAtTime(frqCurve(tone * mulTone[1], tone * mulTone[2], -14), timeTone[1], timeTone[2]);
 
       Tone.fanIn(ocsGain, Tone.getDestination());
-    }, 2.5);
+    }, 1.25);
+
     smplr.add(KickNote, buffer);
   };
 
