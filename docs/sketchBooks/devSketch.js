@@ -1,4 +1,4 @@
-// --- # example: 808 ?
+// --- # example:
 import * as Tone from 'tone';
 
 import TapIndicator from 'modules/TapIndicator.js';
@@ -10,8 +10,6 @@ function ftRand(bias, spread = 1.0) {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
   return bias + (Math.random() * 2 - 1) * maxDist;
 }
-
-const scParams = (levels, times, curve) => ({ levels, times, curve });
 
 const expCurve = (start, end, curve, steps) => {
   const envelope = (_start, _end, _progress, _curve) => {
@@ -89,140 +87,47 @@ const sketch = (p) => {
   const KickNote = 'A4';
   const setKickBuffer = async (smplr) => {
     const buffer = await Tone.Offline(() => {
-      const decay = 30; //58; //30;
-      const amp = 2; //1.55; //2;
-      const tone = 56; //58; //56;
-      const envParams = scParams([0.11, 1, 0], [0, decay], -225);
-      const trienvParams = scParams([0.11, 0.6, 0], [0, decay], -230);
-      const fenvParams = scParams([tone * 7, tone * 1.35, tone], [0.05, 0.6], -14);
-      const pfenvParams = scParams([tone * 7, tone * 1.35, tone], [0.03, 0.6], -10);
+      const tone = 56;
 
-      const sigGain = new Tone.Gain();
-      const sig = new Tone.Oscillator({
-        frequency: fenvParams.levels[0],
-        // oscillator: { type: 'sine' },
-        oscillator: { type: 'sine', phase: 270 },
-      })
-        .chain(
-          ...[
-            //,
-            sigGain,
-          ].filter((n) => n),
-        )
-        .start();
-
-      sig.volume.setValueCurveAtTime(
-        volCurve(envParams.levels[1], envParams.curve),
-        envParams.times[0],
-        envParams.times[1],
-      );
-
-      sig.frequency.setValueCurveAtTime(
-        frqCurve(fenvParams.levels[0], fenvParams.levels[1], fenvParams.curve),
-        0,
-        fenvParams.times[0],
-      );
-      sig.frequency.setValueCurveAtTime(
-        frqCurve(fenvParams.levels[1], fenvParams.levels[2], fenvParams.curve),
-        fenvParams.times[0],
-        fenvParams.times[1],
-      );
-
-      const subGain = new Tone.Gain();
-      const sub = new Tone.Oscillator({
-        frequency: fenvParams.levels[0],
-        oscillator: { type: 'triangle' },
-      })
-        .chain(
-          ...[
-            //,
-            new Tone.Gain(0.05),
-            subGain,
-          ].filter((n) => n),
-        )
-        .start();
-
-      sub.volume.setValueCurveAtTime(
-        volCurve(trienvParams.levels[1], trienvParams.curve),
-        trienvParams.times[0],
-        trienvParams.times[1],
-      );
-
-      sub.frequency.setValueCurveAtTime(
-        frqCurve(fenvParams.levels[0], fenvParams.levels[1], fenvParams.curve),
-        0,
-        fenvParams.times[0],
-      );
-      sub.frequency.setValueCurveAtTime(
-        frqCurve(fenvParams.levels[1], fenvParams.levels[2], fenvParams.curve),
-        fenvParams.times[0],
-        fenvParams.times[1],
-      );
-
-      const highpass = new Tone.Filter({
-        type: 'highpass',
-        frequency: 350,
-        Q: 0.0,
-        rolloff: -12, // -12, -24, -48, -96
+      const noiseLowpass = new Tone.Filter({
+        type: 'lowpass',
+        frequency: 800,
+        Q: 1.0,
+        rolloff: -96, // -12, -24, -48, -96
       });
-
-      const punchGain = new Tone.Gain();
-      const punch = new Tone.Oscillator({
-        frequency: pfenvParams.levels[0],
-        // oscillator: { type: 'sine' },
-        oscillator: { type: 'sine', phase: 270 },
+      const ocsGain = new Tone.Gain();
+      const osc = new Tone.OmniOscillator({
+        frequency: 0,
+        type: 'sine',
+        // type: 'triangle',
+        phase: 270,
+        // type: 'pulse',
+        // width: 0,
       })
         .chain(
           ...[
             //,
-            new Tone.Gain(2),
-            highpass,
-            punchGain,
-          ].filter((n) => n),
+            // noiseLowpass,
+            ocsGain,
+          ],
         )
         .start();
-      punch.volume.setValueCurveAtTime(volCurve(envParams.times[1], envParams.curve), 0, decay);
 
-      punch.frequency.setValueCurveAtTime(
-        frqCurve(pfenvParams.levels[0], pfenvParams.levels[1], pfenvParams.curve),
-        0,
-        pfenvParams.times[0],
-      );
-      punch.frequency.setValueCurveAtTime(
-        frqCurve(pfenvParams.levels[1], pfenvParams.levels[2], pfenvParams.curve),
-        pfenvParams.times[0],
-        pfenvParams.times[1],
-      );
+      osc.volume.rampTo(Tone.gainToDb(0.0), 2.25);
 
-      const bdGain = new Tone.Gain();
-      Tone.fanIn(
-        ...[
-          //
-          sigGain,
-          subGain,
-          punchGain,
-        ].filter((n) => n),
-        new Tone.Gain().chain(
-          ...[
-            //,
-            new Tone.Gain(2.5),
-            new Tone.Limiter(-50),
-            new Tone.Gain(amp),
-            new Tone.Channel(),
-            bdGain,
-          ].filter((n) => n),
-        ),
-      );
+      osc.frequency.setValueCurveAtTime(frqCurve(tone*7, tone * 1.35, -14), 0, 0.05);
+      osc.frequency.setValueCurveAtTime(frqCurve(tone * 1.35,tone, -14), 0.0, 0.6);
 
-      Tone.fanIn(bdGain, Tone.getDestination());
-    }, 10.5);
+
+      Tone.fanIn(ocsGain, Tone.getDestination());
+    }, 2.5);
     smplr.add(KickNote, buffer);
   };
 
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      // kickSampler.triggerAttack(KickNote, time, velocity);
-      kickSampler.triggerAttackRelease(KickNote, `16n.`, time, velocity);
+      kickSampler.triggerAttack(KickNote, time, velocity);
+      // kickSampler.triggerAttackRelease(KickNote, `16n.`, time, velocity);
     },
     events: [
       [1, 1, 1, 1],
@@ -695,8 +600,8 @@ SynthDef.new(\openhihat, {
       // clickSeq.start(time);
       kickSeq.start(time);
       snareSeq.start(time);
-      closeHatSeq.start(time);
-      openHatSeq.start(time);
+      //closeHatSeq.start(time);
+      //openHatSeq.start(time);
     }, transport.context.now());
   });
 
