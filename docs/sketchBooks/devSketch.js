@@ -50,28 +50,6 @@ const sketch = (p) => {
 
   const emitter = new Tone.Emitter();
 
-  // メトロノーム
-  const clickSynth = new Tone.MembraneSynth({
-    pitchDecay: `3i`, // 0 ~ 0.5 秒
-    octaves: 1.25, // 0.5 ~ 8
-    envelope: {
-      attack: 0.0,
-      decay: 1.0,
-      sustain: 0.0,
-      release: `8t`,
-    },
-    oscillator: { type: 'sine' },
-  });
-  const clickSeq = new Tone.Sequence({
-    callback: (time, note) => {
-      clickSynth.triggerAttackRelease(note, '1i', time);
-    },
-    events: ['A5', 'A4', 'A4', 'A4'],
-    subdivision: '4n',
-  });
-  const clickVol = new Tone.Volume(-4);
-  clickSynth.chain(clickVol);
-
   // --- bd
   const kickVol = new Tone.Volume();
   const kickSampler = new Tone.Sampler({
@@ -87,39 +65,57 @@ const sketch = (p) => {
   const KickNote = 'A4';
   const setKickBuffer = async (smplr) => {
     const buffer = await Tone.Offline(() => {
-      const decay = 1.5;
+      const decay = 2.0;
       const tone = 56;
+      const gule = 1.35;
 
-      const mulTone = [7.0, 1.35, 1.0];
       const timeTone = [0.0, 0.05, 0.6];
 
+      const comp = new Tone.Compressor({
+        threshold: -30, // -100-0 : -24
+        ratio: 20, // 1-20 : 12
+        attack: 0.97,
+        release: 4e-3,
+        knee: 35, // 0-40 : 30
+      });
+      const lowpass = new Tone.Filter({
+        type: 'lowpass',
+        frequency: 1800,
+        Q: 1.0,
+        rolloff: -12, // -12, -24, -48, -96
+      });
+
+      const bandpass = new Tone.Filter({
+        type: 'bandpass',
+        frequency: 250,
+        Q: 1.0,
+        rolloff: -12, // -12, -24, -48, -96
+      });
       const ocsGain = new Tone.Gain();
       const osc = new Tone.OmniOscillator({
         frequency: 0,
         type: 'sine',
-        // type: 'triangle',
-        // type: 'square',
-
         phase: 270,
-        // type: 'pulse',
-        // width: 0,
       })
         .chain(
           ...[
             //,
+            comp,
+            // lowpass,
+            // bandpass,
             ocsGain,
           ],
         )
         .start();
 
-      //osc.volume.rampTo(Tone.gainToDb(0.0), decay);
-      osc.volume.rampTo(-Infinity, decay);
+      //osc.volume.rampTo(-Infinity, decay);
+      osc.volume.setValueCurveAtTime(volCurve(1.08, -25), 0.0125, decay);
 
-      osc.frequency.setValueCurveAtTime(frqCurve(tone * mulTone[0], tone * mulTone[1], -14), timeTone[0], timeTone[1]);
-      osc.frequency.setValueCurveAtTime(frqCurve(tone * mulTone[1], tone * mulTone[2], -14), timeTone[1], timeTone[2]);
+      osc.frequency.setValueCurveAtTime(frqCurve(tone * 7, tone * gule, -14), timeTone[0], timeTone[1]);
+      osc.frequency.setValueCurveAtTime(frqCurve(tone * gule, tone, -14), timeTone[1], timeTone[2]);
 
       Tone.fanIn(ocsGain, Tone.getDestination());
-    }, 1.25);
+    }, 2.25);
 
     smplr.add(KickNote, buffer);
   };
@@ -293,290 +289,12 @@ const sketch = (p) => {
     subdivision: '2n',
   });
 
-  // --- hat
-  const closeHatVol = new Tone.Volume();
-  const closeHatSampler = new Tone.Sampler({
-    attack: 0.0,
-    release: '2i',
-    curve: 'exponential',
-  }).chain(
-    ...[
-      //
-      closeHatVol,
-    ].filter((n) => n),
-  );
-
-  const closeHatNote = 'A4';
-  const setCloseHatBuffer = async (smplr) => {
-    const buffer = await Tone.Offline(() => {
-      const decay = 0.42;
-      const amp = 1;
-      const pan = 0;
-
-      const frqs = [203.52, 366.31, 301.77, 518.19, 811.16, 538.75];
-      const LFPulse = (frq) => {
-        const osc = new Tone.AudioToGain();
-        new Tone.PulseOscillator(frq, 0).connect(osc).start();
-        return osc;
-      };
-
-      const sighi = new Tone.Gain();
-      const sighiBandpass = new Tone.Filter({
-        type: 'bandpass',
-        frequency: 8900,
-        Q: 1.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-      const sighiHighpass = new Tone.Filter({
-        type: 'highpass',
-        frequency: 9000,
-        Q: 0.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-      Tone.fanIn(
-        ...[...frqs].map((frq) => LFPulse(frq)),
-        new Tone.Gain().chain(
-          ...[
-            //
-            sighiBandpass,
-            sighiHighpass,
-            sighi,
-          ].filter((n) => n),
-        ),
-      );
-
-      const siglow = new Tone.Gain();
-      const siglowBandpass = new Tone.Filter({
-        type: 'bandpass',
-        frequency: 8900,
-        Q: 0.8,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-      const siglowHighpass = new Tone.Filter({
-        type: 'highpass',
-        frequency: 9000,
-        Q: 0.3,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-      Tone.fanIn(
-        ...[...frqs].map((frq) => LFPulse(frq)),
-        new Tone.Gain().chain(
-          ...[
-            //
-            siglowBandpass,
-            siglowHighpass,
-            siglow,
-          ].filter((n) => n),
-        ),
-      );
-
-      const sig = new Tone.Volume();
-      sig.volume.setValueCurveAtTime(volCurve(1, -30), 0, decay);
-      Tone.fanIn(
-        ...[
-          //
-          sighi,
-          siglow,
-        ].filter((n) => n),
-        sig,
-      );
-
-      const sigPeaking = new Tone.Filter({
-        type: 'peaking',
-        frequency: 9700,
-        Q: 1.7,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-
-      const sigGain = new Tone.Gain();
-      sig.chain(
-        ...[
-          //,
-          sigPeaking,
-          new Tone.Gain(amp),
-          new Tone.Channel(),
-          sigGain,
-        ].filter((n) => n),
-      );
-
-      Tone.fanIn(sigGain, Tone.getDestination());
-    }, 5.75);
-    smplr.add(snareNote, buffer);
-  };
-
-  const closeHatSeq = new Tone.Sequence({
-    callback: (time, velocity) => {
-      closeHatSampler.triggerAttack(closeHatNote, time, velocity);
-      // snareSampler.triggerAttackRelease(snareNote, '16t', time, velocity);
-    },
-    events: [[null, 1]],
-    subdivision: '4n',
-  });
-
-  // --- openhihat
-  const openHatVol = new Tone.Volume();
-  const openHatSampler = new Tone.Sampler({
-    attack: 0.0,
-    release: '2i',
-    curve: 'exponential',
-  }).chain(
-    ...[
-      //
-      openHatVol,
-    ].filter((n) => n),
-  );
-
-  const openHatNote = 'A4';
-  const setOpenHatBuffer = async (smplr) => {
-    const buffer = await Tone.Offline(() => {
-      const decay = 0.5;
-      const amp = 4;
-      const pan = 0;
-
-      /*
-SynthDef.new(\openhihat, {
-	arg decay=0.5, amp=4, pan=0;
-	var sig, siga, sigb, env1, env2, osc1, osc2, osc3, osc4, osc5, osc6, sum;
-	env1 = EnvGen.kr(Env.perc(0.1, decay, curve:-3), doneAction:2);
-	env2 = EnvGen.kr(Env.new([0, 1, 0], [0, decay*5], curve:-150), doneAction:0);
-	osc1 = LFPulse.ar(203.52) * 0.6;
-	osc2 = LFPulse.ar(366.31) * 0.6;
-	osc3 = LFPulse.ar(301.77) * 0.6;
-	osc4 = LFPulse.ar(518.19) * 0.6;
-	osc5 = LFPulse.ar(811.16) * 0.6;
-	osc6 = LFPulse.ar(538.75) * 0.6;
-	sig = osc1 + osc2 + osc3 + osc4 + osc5 +osc6;
-	sig = BLowShelf.ar(sig, 990, 2, -3);
-	sig = BPF.ar(sig, 7700);
-	sig = BPeakEQ.ar(sig, 7200, 0.5, 5);
-	sig = BHiPass4.ar(sig, 8100, 0.7);
-	sig = BHiShelf.ar(sig, 9400, 1, 5);
-	siga = sig * env1 * 0.6;
-	sigb = sig * env2;
-	sum = siga + sigb;
-	sum = LPF.ar(sum, 4000);
-	sum = Pan2.ar(sum, 0);
-	sum = sum * amp * 2;
-	Out.ar(0, sum);
-}).add;
-*/
-
-      const frqs = [203.52, 366.31, 301.77, 518.19, 811.16, 538.75];
-      const LFPulse = (frq) => {
-        const osc = new Tone.AudioToGain();
-
-        new Tone.PulseOscillator({
-          frequency: frq,
-          width: 0,
-          volume: Tone.gainToDb(0.6),
-        })
-          .connect(osc)
-          .start();
-        return osc;
-      };
-
-      const sighi = new Tone.Gain();
-      const sighiBandpass = new Tone.Filter({
-        type: 'bandpass',
-        frequency: 8900,
-        Q: 1.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-      const sighiHighpass = new Tone.Filter({
-        type: 'highpass',
-        frequency: 9000,
-        Q: 0.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-      Tone.fanIn(
-        ...[...frqs].map((frq) => LFPulse(frq)),
-        new Tone.Gain().chain(
-          ...[
-            //
-            sighiBandpass,
-            sighiHighpass,
-            sighi,
-          ].filter((n) => n),
-        ),
-      );
-
-      const siglow = new Tone.Gain();
-      const siglowBandpass = new Tone.Filter({
-        type: 'bandpass',
-        frequency: 8900,
-        Q: 0.8,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-      const siglowHighpass = new Tone.Filter({
-        type: 'highpass',
-        frequency: 9000,
-        Q: 0.3,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-      Tone.fanIn(
-        ...[...frqs].map((frq) => LFPulse(frq)),
-        new Tone.Gain().chain(
-          ...[
-            //
-            siglowBandpass,
-            siglowHighpass,
-            siglow,
-          ].filter((n) => n),
-        ),
-      );
-
-      const sig = new Tone.Volume();
-      sig.volume.setValueCurveAtTime(volCurve(1, -30), 0, decay);
-      Tone.fanIn(
-        ...[
-          //
-          sighi,
-          siglow,
-        ].filter((n) => n),
-        sig,
-      );
-
-      const sigPeaking = new Tone.Filter({
-        type: 'peaking',
-        frequency: 9700,
-        Q: 1.7,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-
-      const sigGain = new Tone.Gain();
-      sig.chain(
-        ...[
-          //,
-          sigPeaking,
-          new Tone.Gain(amp),
-          new Tone.Channel(),
-          sigGain,
-        ].filter((n) => n),
-      );
-
-      Tone.fanIn(sigGain, Tone.getDestination());
-    }, 5.75);
-    smplr.add(snareNote, buffer);
-  };
-
-  const openHatSeq = new Tone.Sequence({
-    callback: (time, velocity) => {
-      openHatSampler.triggerAttack(openHatNote, time, velocity);
-      // snareSampler.triggerAttackRelease(snareNote, '16t', time, velocity);
-    },
-    events: [[1, null]],
-    subdivision: '4n',
-  });
-
   // ---  master mixer
   const masterVol = new Tone.Volume();
   const fanInNodes = [
     //
-    clickVol,
     kickVol,
     snareVol,
-    closeHatVol,
-    openHatVol,
   ];
   // kickVol.set({ volume: Tone.gainToDb(5.7) });
   // masterVol.volume.value = Tone.gainToDb(0.9);
@@ -597,11 +315,8 @@ SynthDef.new(\openhihat, {
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
     transport.scheduleOnce((time) => {
-      // clickSeq.start(time);
       kickSeq.start(time);
-      snareSeq.start(time);
-      //closeHatSeq.start(time);
-      //openHatSeq.start(time);
+      // snareSeq.start(time);
     }, transport.context.now());
   });
 
@@ -621,8 +336,6 @@ SynthDef.new(\openhihat, {
 
     await setKickBuffer(kickSampler);
     await setSnareBuffer(snareSampler);
-    await setCloseHatBuffer(closeHatSampler);
-    await setOpenHatBuffer(openHatSampler);
 
     // xxx: インクルード要検討
     transport.start();
