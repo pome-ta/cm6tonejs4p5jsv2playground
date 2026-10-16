@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 110;
+const BPM = 130;
 
 function ftRand(bias, spread = 1.0) {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -68,29 +68,16 @@ const sketch = (p) => {
       const decay = 2.0;
       const tone = 56;
       const gule = 1.35;
-
-      const timeTone = [0.0, 0.05, 0.6];
+      const timeTone = [0.0, 0.05, 0.5];
 
       const comp = new Tone.Compressor({
-        threshold: -30, // -100-0 : -24
-        ratio: 20, // 1-20 : 12
-        attack: 0.97,
-        release: 4e-3,
+        threshold: -28, // -100-0 : -24
+        ratio: 18, // 1-20 : 12
+        attack: 1.0,
+        release: 4e-4,
         knee: 35, // 0-40 : 30
       });
-      const lowpass = new Tone.Filter({
-        type: 'lowpass',
-        frequency: 1800,
-        Q: 1.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
 
-      const bandpass = new Tone.Filter({
-        type: 'bandpass',
-        frequency: 250,
-        Q: 1.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
       const ocsGain = new Tone.Gain();
       const osc = new Tone.OmniOscillator({
         frequency: 0,
@@ -101,15 +88,13 @@ const sketch = (p) => {
           ...[
             //,
             comp,
-            // lowpass,
-            // bandpass,
             ocsGain,
           ],
         )
         .start();
 
       //osc.volume.rampTo(-Infinity, decay);
-      osc.volume.setValueCurveAtTime(volCurve(1.08, -25), 0.0125, decay);
+      osc.volume.setValueCurveAtTime(volCurve(1.08, -45), 0.0125, decay);
 
       osc.frequency.setValueCurveAtTime(frqCurve(tone * 7, tone * gule, -14), timeTone[0], timeTone[1]);
       osc.frequency.setValueCurveAtTime(frqCurve(tone * gule, tone, -14), timeTone[1], timeTone[2]);
@@ -255,6 +240,7 @@ const sketch = (p) => {
         Q: 0.0,
         rolloff: -12, // -12, -24, -48, -96
       });
+
       const sigGain = new Tone.Gain();
       Tone.fanIn(
         ...[
@@ -270,6 +256,7 @@ const sketch = (p) => {
             new Tone.Channel(),
             sigHighpass,
             sigGain,
+
           ].filter((n) => n),
         ),
       );
