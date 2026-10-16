@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 110;
+const BPM = 130;
 
 const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -582,7 +582,8 @@ const sketch = (p) => {
   const openHatVol = new Tone.Volume();
   const openHatSampler = new Tone.Sampler({
     attack: 0.0,
-    release: '2i',
+    // release: '2i',
+    release: 0.0,
     curve: 'exponential',
   }).chain(
     ...[
@@ -727,8 +728,8 @@ const sketch = (p) => {
   // --- seq
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      kickSampler.triggerAttack(KickNote, time, velocity);
-      // kickSampler.triggerAttackRelease(KickNote, `16n.`, time, velocity);
+      // kickSampler.triggerAttack(KickNote, time, velocity);
+      kickSampler.triggerAttackRelease(KickNote, `16t`, time, velocity);
     },
     events: [
       [1, 1, 1, 1],
@@ -816,7 +817,7 @@ const sketch = (p) => {
   // kickVol.set({ volume: Tone.gainToDb(5.7) });
   // masterVol.volume.value = Tone.gainToDb(0.9);
 
-  const masterLimiter = new Tone.Limiter(-2);
+  const masterLimiter = new Tone.Limiter(-38);
 
   Tone.fanIn(
     ...fanInNodes.filter((n) => n),
