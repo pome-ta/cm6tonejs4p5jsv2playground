@@ -191,9 +191,9 @@ const sketch = (p) => {
           ].filter((n) => n),
         ),
       );
-
       Tone.fanIn(bdGain, Tone.getDestination());
     }, 10.5);
+
     smplr.add(KickNote, buffer);
   };
 
@@ -336,9 +336,9 @@ const sketch = (p) => {
           ].filter((n) => n),
         ),
       );
-
       Tone.fanIn(sigGain, Tone.getDestination());
     }, 5.75);
+
     smplr.add(snareNote, buffer);
   };
 
@@ -463,9 +463,9 @@ const sketch = (p) => {
           ].filter((n) => n),
         ),
       );
-
       Tone.fanIn(sigGain, Tone.getDestination());
     }, 1.75);
+
     smplr.add(snareNote, buffer);
   };
 
@@ -574,9 +574,9 @@ const sketch = (p) => {
           sigGain,
         ].filter((n) => n),
       );
-
       Tone.fanIn(sigGain, Tone.getDestination());
     }, 1.25);
+
     smplr.add(snareNote, buffer);
   };
 
@@ -707,37 +707,11 @@ const sketch = (p) => {
           sumGain,
         ),
       );
-
       Tone.fanIn(sumGain, Tone.getDestination());
     }, 1.25);
+
     smplr.add(snareNote, buffer);
   };
-
-  // ---  master mixer
-  const masterVol = new Tone.Volume();
-  const fanInNodes = [
-    //
-    kickVol,
-    snareVol,
-    rimshotVol,
-    closeHatVol,
-    openHatVol,
-  ];
-  // kickVol.set({ volume: Tone.gainToDb(5.7) });
-  // masterVol.volume.value = Tone.gainToDb(0.9);
-
-  const masterLimiter = new Tone.Limiter(-2);
-
-  Tone.fanIn(
-    ...fanInNodes.filter((n) => n),
-    masterVol.chain(
-      ...[
-        //
-        // masterLimiter,
-        Tone.getDestination(),
-      ].filter((n) => n),
-    ),
-  );
 
   // --- seq
   const kickSeq = new Tone.Sequence({
@@ -792,15 +766,64 @@ const sketch = (p) => {
     subdivision: '4n',
   });
 
+  // ---  master mixer
+  const masterVol = new Tone.Volume();
+  const fanInNodes = [
+    //
+    kickVol,
+    snareVol,
+    rimshotVol,
+    closeHatVol,
+    openHatVol,
+  ];
+  // kickVol.set({ volume: Tone.gainToDb(5.7) });
+  // masterVol.volume.value = Tone.gainToDb(0.9);
+
+  const masterLimiter = new Tone.Limiter(-2);
+
+  Tone.fanIn(
+    ...fanInNodes.filter((n) => n),
+    masterVol.chain(
+      ...[
+        //
+        // masterLimiter,
+        Tone.getDestination(),
+      ].filter((n) => n),
+    ),
+  );
+
+  const synth2 = new Tone.Synth().toDestination();
+  //const now = Tone.now();
+  const now2 = transport.context.now();
+  synth2.triggerAttackRelease('C7', '8n', now2);
+  synth2.triggerAttackRelease('E7', '8n', now2 + 0.5);
+  synth2.triggerAttackRelease('G7', '8n', now2 + 1);
+
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
+    const synth = new Tone.Synth().toDestination();
+    //const now = Tone.now();
+
     transport.scheduleOnce((time) => {
       kickSeq.start(time);
       snareSeq.start(time);
       rimshotSeq.start(time);
       closeHatSeq.start(time);
-      openHatSeq.start(time);
+
+      const now = transport.context.now();
+      synth.triggerAttackRelease('C5', '8n', now);
+      synth.triggerAttackRelease('E5', '8n', now + 0.5);
+      synth.triggerAttackRelease('G5', '8n', now + 1);
+
+      /*
+      kickSeq.start(now);
+      snareSeq.start(now);
+      rimshotSeq.start(now);
+      closeHatSeq.start(now);
+      openHatSeq.start(now);
+      */
     }, transport.context.now());
+    //}, now);
   });
 
   // --- Sketch
@@ -822,6 +845,13 @@ const sketch = (p) => {
     await setRimshotBuffer(rimshotSampler);
     await setCloseHatBuffer(closeHatSampler);
     await setOpenHatBuffer(openHatSampler);
+
+    const synth = new Tone.Synth().toDestination();
+    //const now = Tone.now();
+    const now = transport.context.now();
+    synth.triggerAttackRelease('C3', '8n', now);
+    synth.triggerAttackRelease('E3', '8n', now + 0.5);
+    synth.triggerAttackRelease('G3', '8n', now + 1);
 
     // xxx: インクルード要検討
     transport.start();
