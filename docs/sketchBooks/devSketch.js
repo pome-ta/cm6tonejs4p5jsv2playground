@@ -397,7 +397,7 @@ const sketch = (p) => {
         .chain(
           ...[
             //
-            new Tone.Gain(Tone.gainToDb(0.46)),
+            new Tone.Gain(0.46),
           ].filter((n) => n),
           punchGain,
         )
@@ -799,7 +799,7 @@ const sketch = (p) => {
       snareSeq.start(time);
       rimshotSeq.start(time);
       closeHatSeq.start(time);
-      // openHatSeq.start(time);
+      openHatSeq.start(time);
     }, transport.context.now());
   });
 
