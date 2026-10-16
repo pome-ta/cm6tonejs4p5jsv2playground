@@ -6,12 +6,10 @@ import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
 const BPM = 110;
 
-function ftRand(bias, spread = 1.0) {
+const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
   return bias + (Math.random() * 2 - 1) * maxDist;
-}
-
-const scParams = (levels, times, curve) => ({ levels, times, curve });
+};
 
 const expCurve = (start, end, curve, steps) => {
   const envelope = (_start, _end, _progress, _curve) => {
@@ -22,7 +20,6 @@ const expCurve = (start, end, curve, steps) => {
     const _curveRatio = (_exp - 1) / (Math.exp(_curve) - 1);
     return _start + (_end - _start) * _curveRatio;
   };
-
   const levels = Array.from({ length: steps + 1 }, (_, i) => envelope(start, end, i / steps, curve));
 
   return levels;
@@ -30,7 +27,6 @@ const expCurve = (start, end, curve, steps) => {
 
 const frqCurve = (startfrequency, endfrequency, curveExponent = 0, divSteps = 128) => {
   const curve = expCurve(startfrequency, endfrequency, curveExponent, divSteps);
-
   return curve;
 };
 
@@ -38,6 +34,8 @@ const volCurve = (startGain, curveExponent = 1, endGain = 0, divSteps = 256) => 
   const gainCurve = expCurve(startGain, endGain, curveExponent, divSteps);
   return gainCurve.map((gain) => Tone.gainToDb(gain));
 };
+
+const scParams = (levels, times, curve) => ({ levels, times, curve });
 
 const sketch = (p) => {
   // --- Tone.js
@@ -61,8 +59,8 @@ const sketch = (p) => {
   }).chain(
     ...[
       //
-      kickVol,
     ].filter((n) => n),
+    kickVol,
   );
   const KickNote = 'A4';
   const setKickBuffer = async (smplr) => {
@@ -84,8 +82,8 @@ const sketch = (p) => {
         .chain(
           ...[
             //,
-            sigGain,
           ].filter((n) => n),
+          sigGain,
         )
         .start();
 
@@ -115,8 +113,8 @@ const sketch = (p) => {
           ...[
             //,
             new Tone.Gain(0.05),
-            subGain,
           ].filter((n) => n),
+          subGain,
         )
         .start();
 
@@ -155,8 +153,8 @@ const sketch = (p) => {
             //,
             new Tone.Gain(2),
             highpass,
-            punchGain,
           ].filter((n) => n),
+          punchGain,
         )
         .start();
       punch.volume.setValueCurveAtTime(volCurve(envParams.times[1], envParams.curve), 0, decay);
@@ -187,8 +185,8 @@ const sketch = (p) => {
             new Tone.Limiter(-50),
             new Tone.Gain(amp),
             new Tone.Channel(),
-            bdGain,
           ].filter((n) => n),
+          bdGain,
         ),
       );
       Tone.fanIn(bdGain, Tone.getDestination());
@@ -253,8 +251,8 @@ const sketch = (p) => {
             noiseHighpass,
             noiseLowpass,
             new Tone.Gain(snappy),
-            noiseGain,
           ].filter((n) => n),
+          noiseGain,
         )
         .start();
 
@@ -274,8 +272,8 @@ const sketch = (p) => {
           ...[
             //,
             new Tone.Gain(0.6),
-            osc1Gain,
           ].filter((n) => n),
+          osc1Gain,
         )
         .start();
 
@@ -289,8 +287,8 @@ const sketch = (p) => {
           ...[
             //,
             new Tone.Gain(0.7),
-            osc2Gain,
           ].filter((n) => n),
+          osc2Gain,
         )
         .start();
 
@@ -308,8 +306,8 @@ const sketch = (p) => {
           ...[
             //,
             new Tone.Gain(amp2),
-            sumGain,
           ].filter((n) => n),
+          sumGain,
         ),
       );
       const sigHighpass = new Tone.Filter({
@@ -332,8 +330,8 @@ const sketch = (p) => {
             new Tone.Gain(2.5),
             new Tone.Channel(),
             sigHighpass,
-            sigGain,
           ].filter((n) => n),
+          sigGain,
         ),
       );
       Tone.fanIn(sigGain, Tone.getDestination());
@@ -351,8 +349,8 @@ const sketch = (p) => {
   }).chain(
     ...[
       //
-      rimshotVol,
     ].filter((n) => n),
+    rimshotVol,
   );
   const rimshotNote = 'A4';
   const setRimshotBuffer = async (smplr) => {
@@ -459,8 +457,8 @@ const sketch = (p) => {
             sigLowpass,
             new Tone.Gain(amp),
             new Tone.Channel(),
-            sigGain,
           ].filter((n) => n),
+          sigGain,
         ),
       );
       Tone.fanIn(sigGain, Tone.getDestination());
@@ -478,8 +476,8 @@ const sketch = (p) => {
   }).chain(
     ...[
       //
-      closeHatVol,
     ].filter((n) => n),
+    closeHatVol,
   );
 
   const closeHatNote = 'A4';
@@ -516,8 +514,8 @@ const sketch = (p) => {
             //
             sighiBandpass,
             sighiHighpass,
-            sighi,
           ].filter((n) => n),
+          sighi,
         ),
       );
 
@@ -541,8 +539,8 @@ const sketch = (p) => {
             //
             siglowBandpass,
             siglowHighpass,
-            siglow,
           ].filter((n) => n),
+          siglow,
         ),
       );
 
@@ -571,8 +569,8 @@ const sketch = (p) => {
           sigPeaking,
           new Tone.Gain(amp),
           new Tone.Channel(),
-          sigGain,
         ].filter((n) => n),
+        sigGain,
       );
       Tone.fanIn(sigGain, Tone.getDestination());
     }, 1.25);
@@ -589,8 +587,8 @@ const sketch = (p) => {
   }).chain(
     ...[
       //
-      openHatVol,
     ].filter((n) => n),
+    openHatVol,
   );
 
   const openHatNote = 'A4';
@@ -667,7 +665,6 @@ const sketch = (p) => {
             sigHighpass,
             sigHighshelf,
           ].filter((n) => n),
-          // sig,
           sig.fan(siga, sigb),
         ),
       );
@@ -712,6 +709,20 @@ const sketch = (p) => {
 
     smplr.add(snareNote, buffer);
   };
+
+  // --- emitter
+  emitter.once('startOnceCallSeqs', () => {
+    transport.scheduleOnce((time) => {
+      kickSeq.start(time);
+      // snareSeq.start(time);
+      rimshotSeq.start(time);
+      // closeHatSeq.start(time);
+      // openHatSeq.start(time);
+      hihatSeq.start(time);
+
+      // }, transport.context.now());
+    }, transport.seconds);
+  });
 
   // --- seq
   const kickSeq = new Tone.Sequence({
@@ -766,7 +777,31 @@ const sketch = (p) => {
     subdivision: '4n',
   });
 
-  transport.start();
+  const hihatHandlers = new Map([
+    [
+      1, // close
+      (time, velocity) => {
+        openHatSampler?.triggerRelease();
+        closeHatSampler.triggerAttack(closeHatNote, time, velocity === 1 ? velocity : ftRand(velocity));
+      },
+    ],
+
+    [
+      -1, // open
+      (time, velocity) => {
+        closeHatSampler?.triggerRelease();
+        openHatSampler.triggerAttack(openHatNote, time, velocity === 1 ? velocity : ftRand(velocity));
+      },
+    ],
+  ]);
+
+  const hihatSeq = new Tone.Sequence({
+    callback: (time, velocity) => {
+      hihatHandlers.get(Math.sign(velocity))?.(time, Math.abs(velocity));
+    },
+    events: [[[-1], 1]],
+    subdivision: '4n',
+  });
 
   // ---  master mixer
   const masterVol = new Tone.Volume();
@@ -789,47 +824,10 @@ const sketch = (p) => {
       ...[
         //
         // masterLimiter,
-        Tone.getDestination(),
       ].filter((n) => n),
+      Tone.getDestination(),
     ),
   );
-
-  const synth2 = new Tone.Synth().toDestination();
-  //const now = Tone.now();
-  const now2 = transport.context.now();
-  synth2.triggerAttackRelease('C7', '8n', now2);
-  synth2.triggerAttackRelease('E7', '8n', now2 + 0.5);
-  synth2.triggerAttackRelease('G7', '8n', now2 + 1);
-
-  // --- emitter
-  emitter.once('startOnceCallSeqs', () => {
-    // transport.start();
-    const synth = new Tone.Synth().toDestination();
-    const now = Tone.now();
-
-    transport.scheduleOnce((time) => {
-      kickSeq.start(time);
-      snareSeq.start(time);
-      rimshotSeq.start(time);
-      closeHatSeq.start(time);
-
-      // const now = transport.context.now();
-      synth.triggerAttackRelease('C5', '8n', now);
-      synth.triggerAttackRelease('E5', '8n', now + 0.5);
-      synth.triggerAttackRelease('G5', '8n', now + 1);
-
-      /*
-      kickSeq.start(now);
-      snareSeq.start(now);
-      rimshotSeq.start(now);
-      closeHatSeq.start(now);
-      openHatSeq.start(now);
-      */
-      // }, transport.context.now());
-    }, transport.seconds);
-    // }, now);
-    //}, 0);
-  });
 
   // --- Sketch
   let cnvs;
@@ -851,17 +849,9 @@ const sketch = (p) => {
     await setCloseHatBuffer(closeHatSampler);
     await setOpenHatBuffer(openHatSampler);
 
-    const synth = new Tone.Synth().toDestination();
-    //const now = Tone.now();
-    const now = transport.context.now();
-    synth.triggerAttackRelease('C3', '8n', now);
-    synth.triggerAttackRelease('E3', '8n', now + 0.5);
-    synth.triggerAttackRelease('G3', '8n', now + 1);
-
     // xxx: インクルード要検討
-
+    transport.start();
     emitter.emit('startOnceCallSeqs');
-    //transport.start();
 
     tapIndicator.setup();
     spectrumAnalyzer.targetNodes(masterVol);
