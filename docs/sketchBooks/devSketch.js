@@ -766,6 +766,8 @@ const sketch = (p) => {
     subdivision: '4n',
   });
 
+  transport.start();
+
   // ---  master mixer
   const masterVol = new Tone.Volume();
   const fanInNodes = [
@@ -801,8 +803,9 @@ const sketch = (p) => {
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
+    // transport.start();
     const synth = new Tone.Synth().toDestination();
-    //const now = Tone.now();
+    const now = Tone.now();
 
     transport.scheduleOnce((time) => {
       kickSeq.start(time);
@@ -810,7 +813,7 @@ const sketch = (p) => {
       rimshotSeq.start(time);
       closeHatSeq.start(time);
 
-      const now = transport.context.now();
+      // const now = transport.context.now();
       synth.triggerAttackRelease('C5', '8n', now);
       synth.triggerAttackRelease('E5', '8n', now + 0.5);
       synth.triggerAttackRelease('G5', '8n', now + 1);
@@ -822,8 +825,10 @@ const sketch = (p) => {
       closeHatSeq.start(now);
       openHatSeq.start(now);
       */
-    }, transport.context.now());
-    //}, now);
+      // }, transport.context.now());
+    }, transport.seconds);
+    // }, now);
+    //}, 0);
   });
 
   // --- Sketch
@@ -854,8 +859,9 @@ const sketch = (p) => {
     synth.triggerAttackRelease('G3', '8n', now + 1);
 
     // xxx: インクルード要検討
-    transport.start();
+
     emitter.emit('startOnceCallSeqs');
+    //transport.start();
 
     tapIndicator.setup();
     spectrumAnalyzer.targetNodes(masterVol);
