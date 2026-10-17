@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 125;
+const BPM = 96;
 
 const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -20,17 +20,29 @@ const expCurve = (start, end, curve, steps) => {
     const _curveRatio = (_exp - 1) / (Math.exp(_curve) - 1);
     return _start + (_end - _start) * _curveRatio;
   };
-  const levels = Array.from({ length: steps + 1 }, (_, i) => envelope(start, end, i / steps, curve));
+  const levels = Array.from({ length: steps + 1 }, (_, i) =>
+    envelope(start, end, i / steps, curve),
+  );
 
   return levels;
 };
 
-const frqCurve = (startfrequency, endfrequency, curveExponent = 0, divSteps = 128) => {
+const frqCurve = (
+  startfrequency,
+  endfrequency,
+  curveExponent = 0,
+  divSteps = 128,
+) => {
   const curve = expCurve(startfrequency, endfrequency, curveExponent, divSteps);
   return curve;
 };
 
-const volCurve = (startGain, curveExponent = 1, endGain = 0, divSteps = 256) => {
+const volCurve = (
+  startGain,
+  curveExponent = 1,
+  endGain = 0,
+  divSteps = 256,
+) => {
   const gainCurve = expCurve(startGain, endGain, curveExponent, divSteps);
   return gainCurve.map((gain) => Tone.gainToDb(gain));
 };
@@ -70,8 +82,16 @@ const sketch = (p) => {
       const tone = 56; //58; //56;
       const envParams = scParams([0.11, 1, 0], [0, decay], -225);
       const trienvParams = scParams([0.11, 0.6, 0], [0, decay], -230);
-      const fenvParams = scParams([tone * 7, tone * 1.35, tone], [0.05, 0.6], -14);
-      const pfenvParams = scParams([tone * 7, tone * 1.35, tone], [0.03, 0.6], -10);
+      const fenvParams = scParams(
+        [tone * 7, tone * 1.35, tone],
+        [0.05, 0.6],
+        -14,
+      );
+      const pfenvParams = scParams(
+        [tone * 7, tone * 1.35, tone],
+        [0.03, 0.6],
+        -10,
+      );
 
       const sigGain = new Tone.Gain();
       const sig = new Tone.Oscillator({
@@ -157,15 +177,27 @@ const sketch = (p) => {
           punchGain,
         )
         .start();
-      punch.volume.setValueCurveAtTime(volCurve(envParams.times[1], envParams.curve), 0, decay);
+      punch.volume.setValueCurveAtTime(
+        volCurve(envParams.times[1], envParams.curve),
+        0,
+        decay,
+      );
 
       punch.frequency.setValueCurveAtTime(
-        frqCurve(pfenvParams.levels[0], pfenvParams.levels[1], pfenvParams.curve),
+        frqCurve(
+          pfenvParams.levels[0],
+          pfenvParams.levels[1],
+          pfenvParams.curve,
+        ),
         0,
         pfenvParams.times[0],
       );
       punch.frequency.setValueCurveAtTime(
-        frqCurve(pfenvParams.levels[1], pfenvParams.levels[2], pfenvParams.curve),
+        frqCurve(
+          pfenvParams.levels[1],
+          pfenvParams.levels[2],
+          pfenvParams.curve,
+        ),
         pfenvParams.times[0],
         pfenvParams.times[1],
       );
@@ -292,8 +324,16 @@ const sketch = (p) => {
         )
         .start();
 
-      osc1.volume.setValueCurveAtTime(volCurve(atkEnvParams.level, atkEnvParams.curve), 0, atkEnvParams.release);
-      osc2.volume.setValueCurveAtTime(volCurve(atkEnvParams.level, atkEnvParams.curve), 0, atkEnvParams.release);
+      osc1.volume.setValueCurveAtTime(
+        volCurve(atkEnvParams.level, atkEnvParams.curve),
+        0,
+        atkEnvParams.release,
+      );
+      osc2.volume.setValueCurveAtTime(
+        volCurve(atkEnvParams.level, atkEnvParams.curve),
+        0,
+        atkEnvParams.release,
+      );
 
       const sumGain = new Tone.Gain();
       Tone.fanIn(
@@ -471,7 +511,8 @@ const sketch = (p) => {
   const closeHatVol = new Tone.Volume();
   const closeHatSampler = new Tone.Sampler({
     attack: 0.0,
-    release: '2i',
+    // release: '2i',
+    release: 0.0,
     curve: 'exponential',
   }).chain(
     ...[
@@ -582,8 +623,8 @@ const sketch = (p) => {
   const openHatVol = new Tone.Volume();
   const openHatSampler = new Tone.Sampler({
     attack: 0.0,
-    release: '2i',
-    // release: 0.0,
+    // release: '2i',
+    release: 0.0,
     curve: 'exponential',
   }).chain(
     ...[
@@ -670,7 +711,7 @@ const sketch = (p) => {
         ),
       );
 
-      new Tone.Gain(Tone.gainToDb(0.6)).chain(siga);
+      new Tone.Gain(0.6).chain(siga);
       siga.volume.setValueCurveAtTime(
         volCurve(env1Params.level, env1Params.curve),
         env1Params.attack,
@@ -726,8 +767,8 @@ const sketch = (p) => {
   // --- seq
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      // kickSampler.triggerAttack(KickNote, time, velocity);
-      kickSampler.triggerAttackRelease(KickNote, `8t`, time, ftRand(velocity));
+      kickSampler.triggerAttack(KickNote, time, ftRand(velocity));
+      // kickSampler.triggerAttackRelease(KickNote, `8t`, time, ftRand(velocity));
     },
     events: [
       [1, 1, 1, 1],
@@ -742,30 +783,24 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       snareSampler.triggerAttack(snareNote, time, ftRand(velocity));
       // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
-      // snareSampler.triggerAttackRelease(snareNote, '16t', time, ftRand(velocity));
     },
     events: [
-      [null, 1],
-      [null, 1],
-      [null, [1, [null, 0.5]]],
-      [null, 1],
+      [null, 1, null, 1],
+      [null, [1, [null, 0.5]], null, 1],
     ],
-    subdivision: '2n',
+    subdivision: '1n',
   });
 
   const rimshotSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       rimshotSampler.triggerAttack(rimshotNote, time, ftRand(velocity));
       // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
-      // snareSampler.triggerAttackRelease(snareNote, '16t', time, ftRand(velocity));
     },
     events: [
-      [null, 1],
-      [null, 1],
-      [null, [1, [null, 0.5]]],
-      [null, 1],
+      [null, 1, null, 1],
+      [null, [1, [null, 0.5]], null, 1],
     ],
-    subdivision: '2n',
+    subdivision: '1n',
   });
 
   const hihatHandlers = new Map([
@@ -791,20 +826,10 @@ const sketch = (p) => {
       hihatHandlers.get(Math.sign(velocity))?.(time, Math.abs(velocity));
     },
     events: [
-      // [null, 1, null, 1],
-      // [null, 1,],
-      // [null, 1],
-      // [null, 1],
-      // [[null,  -1],1],
-      [null, 1],
-      [-0.4, 1],
-      [null, 1],
-      [null, 1],
-      //
-      [null, 1],
-      [null, 1],
-      [null, 1],
-      [null, -1, 0.7, -1],
+      [null, 1, -1, 1],
+      [null, 1, -1, 1],
+      [null, 1, -1, 1],
+      [null, 1, -1, 1],
     ],
     subdivision: '4n',
   });
@@ -819,13 +844,29 @@ const sketch = (p) => {
     return channel;
   };
 
-  const kickCh = toChannel(kickVol, { volume: 0, pan: 0.0, channelCount: 1 });
-  const snareCh = toChannel(snareVol, { volume: 1, pan: -0.1, channelCount: 1 });
-  const rimshotCh = toChannel(rimshotVol, { volume: 3, pan: -0.1, channelCount: 1 });
-  const closeHatCh = toChannel(closeHatVol, { volume: 0, pan: 0.3, channelCount: 1 });
-  const openHatCh = toChannel(openHatVol, { volume: 0, pan: 0.4, channelCount: 1 });
+  const kickCh = toChannel(kickVol, { volume: 0.0, pan: 0.0, channelCount: 1 });
+  const snareCh = toChannel(snareVol, {
+    volume: 1.0,
+    pan: -0.1,
+    channelCount: 1,
+  });
+  const rimshotCh = toChannel(rimshotVol, {
+    volume: 3.0,
+    pan: -0.1,
+    channelCount: 1,
+  });
+  const closeHatCh = toChannel(closeHatVol, {
+    volume: 0.0,
+    pan: 0.3,
+    channelCount: 1,
+  });
+  const openHatCh = toChannel(openHatVol, {
+    volume: 0.0,
+    pan: 0.4,
+    channelCount: 1,
+  });
 
-  const drumKitCh = new Tone.Channel({ volume: 6, channelCount: 2 });
+  const drumKitCh = new Tone.Channel({ volume: 2, channelCount: 2 });
   drumKitCh.receive(drumKitBusName);
 
   // ---  master mixer
@@ -840,8 +881,8 @@ const sketch = (p) => {
     masterVol.chain(
       ...[
         //
-        new Tone.Gain(1.1),
-        masterLimiter,
+        // new Tone.Gain(1.1),
+        // masterLimiter,
         // new Tone.Gain(1.1),
       ].filter((n) => n),
       Tone.getDestination(),
