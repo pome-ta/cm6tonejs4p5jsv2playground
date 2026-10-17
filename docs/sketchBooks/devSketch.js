@@ -582,8 +582,8 @@ const sketch = (p) => {
   const openHatVol = new Tone.Volume();
   const openHatSampler = new Tone.Sampler({
     attack: 0.0,
-    // release: '2i',
-    release: 0.0,
+    release: '2i',
+    // release: 0.0,
     curve: 'exponential',
   }).chain(
     ...[
@@ -716,9 +716,7 @@ const sketch = (p) => {
     transport.scheduleOnce((time) => {
       kickSeq.start(time);
       snareSeq.start(time);
-      // rimshotSeq.start(time);
-      // closeHatSeq.start(time);
-      // openHatSeq.start(time);
+      rimshotSeq.start(time);
       hihatSeq.start(time);
 
       // }, transport.context.now());
@@ -728,8 +726,8 @@ const sketch = (p) => {
   // --- seq
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      kickSampler.triggerAttack(KickNote, time, velocity);
-      // kickSampler.triggerAttackRelease(KickNote, `8t`, time, velocity);
+      // kickSampler.triggerAttack(KickNote, time, velocity);
+      kickSampler.triggerAttackRelease(KickNote, `8t`, time, velocity);
     },
     events: [
       [1, 1, 1, 1],
@@ -746,7 +744,12 @@ const sketch = (p) => {
       // snareSampler.triggerAttack(`B4`, time, velocity);
       // snareSampler.triggerAttackRelease(snareNote, '16t', time, velocity);
     },
-    events: [[null, 1]],
+    events: [
+      [null, 1],
+      [null, 1],
+      [null, [1, [null, 0.5]]],
+      [null, 1],
+    ],
     subdivision: '2n',
   });
 
@@ -756,7 +759,12 @@ const sketch = (p) => {
       // snareSampler.triggerAttack(`B4`, time, velocity);
       // snareSampler.triggerAttackRelease(snareNote, '16t', time, velocity);
     },
-    events: [[null, 1]],
+    events: [
+      [null, 1],
+      [null, 1],
+      [null, [1, [null, 0.5]]],
+      [null, 1],
+    ],
     subdivision: '2n',
   });
 
@@ -783,10 +791,20 @@ const sketch = (p) => {
       hihatHandlers.get(Math.sign(velocity))?.(time, Math.abs(velocity));
     },
     events: [
+      // [null, 1, null, 1],
+      // [null, 1,],
+      // [null, 1],
+      // [null, 1],
+      // [[null,  -1],1],
+      [null, 1],
+      [-0.4, 1],
+      [null, 1],
+      [null, 1],
+      //
       [null, 1],
       [null, 1],
       [null, 1],
-      [null, [1, 1]],
+      [null, -1, 0.7, -1],
     ],
     subdivision: '4n',
   });
@@ -802,17 +820,17 @@ const sketch = (p) => {
   };
 
   const kickCh = toChannel(kickVol, { volume: 0, pan: 0.0, channelCount: 1 });
-  const snareCh = toChannel(snareVol, { volume: 0, pan: 0.0, channelCount: 1 });
-  const rimshotCh = toChannel(rimshotVol, { volume: 0, pan: 0.0, channelCount: 1 });
+  const snareCh = toChannel(snareVol, { volume: 0, pan: -0.1, channelCount: 1 });
+  const rimshotCh = toChannel(rimshotVol, { volume: 3, pan: -0.1, channelCount: 1 });
   const closeHatCh = toChannel(closeHatVol, { volume: 0, pan: 0.4, channelCount: 1 });
   const openHatCh = toChannel(openHatVol, { volume: 0, pan: 0.4, channelCount: 1 });
 
-  const drumKitCh = new Tone.Channel({ channelCount: 2 });
+  const drumKitCh = new Tone.Channel({ volume: 3, channelCount: 2 });
   drumKitCh.receive(drumKitBusName);
 
   // ---  master mixer
   const masterVol = new Tone.Volume();
-  const masterLimiter = new Tone.Limiter(-38);
+  const masterLimiter = new Tone.Limiter(-8);
 
   Tone.fanIn(
     ...[
@@ -822,7 +840,7 @@ const sketch = (p) => {
     masterVol.chain(
       ...[
         //
-        // masterLimiter,
+        masterLimiter,
       ].filter((n) => n),
       Tone.getDestination(),
     ),
