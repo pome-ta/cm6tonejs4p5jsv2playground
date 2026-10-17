@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 110;
+const BPM = 125;
 
 const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -727,22 +727,22 @@ const sketch = (p) => {
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       // kickSampler.triggerAttack(KickNote, time, velocity);
-      kickSampler.triggerAttackRelease(KickNote, `8t`, time, velocity);
+      kickSampler.triggerAttackRelease(KickNote, `8t`, time, ftRand(velocity));
     },
     events: [
       [1, 1, 1, 1],
       [1, 1, 1, 1],
       [1, 1, 1, 1],
-      [1, 1, 1, [1, ftRand(0.225)]],
+      [1, 1, 1, [1, 0.225]],
     ],
     subdivision: '1n',
   });
 
   const snareSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      snareSampler.triggerAttack(snareNote, time, velocity);
-      // snareSampler.triggerAttack(`B4`, time, velocity);
-      // snareSampler.triggerAttackRelease(snareNote, '16t', time, velocity);
+      snareSampler.triggerAttack(snareNote, time, ftRand(velocity));
+      // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
+      // snareSampler.triggerAttackRelease(snareNote, '16t', time, ftRand(velocity));
     },
     events: [
       [null, 1],
@@ -755,9 +755,9 @@ const sketch = (p) => {
 
   const rimshotSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      rimshotSampler.triggerAttack(rimshotNote, time, velocity);
-      // snareSampler.triggerAttack(`B4`, time, velocity);
-      // snareSampler.triggerAttackRelease(snareNote, '16t', time, velocity);
+      rimshotSampler.triggerAttack(rimshotNote, time, ftRand(velocity));
+      // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
+      // snareSampler.triggerAttackRelease(snareNote, '16t', time, ftRand(velocity));
     },
     events: [
       [null, 1],
@@ -773,7 +773,7 @@ const sketch = (p) => {
       1, // close
       (time, velocity) => {
         openHatSampler?.triggerRelease();
-        closeHatSampler.triggerAttack(closeHatNote, time, velocity === 1 ? velocity : ftRand(velocity));
+        closeHatSampler.triggerAttack(closeHatNote, time, ftRand(velocity));
       },
     ],
 
@@ -781,7 +781,7 @@ const sketch = (p) => {
       -1, // open
       (time, velocity) => {
         closeHatSampler?.triggerRelease();
-        openHatSampler.triggerAttack(openHatNote, time, velocity === 1 ? velocity : ftRand(velocity));
+        openHatSampler.triggerAttack(openHatNote, time, ftRand(velocity));
       },
     ],
   ]);
@@ -820,17 +820,17 @@ const sketch = (p) => {
   };
 
   const kickCh = toChannel(kickVol, { volume: 0, pan: 0.0, channelCount: 1 });
-  const snareCh = toChannel(snareVol, { volume: 0, pan: -0.1, channelCount: 1 });
+  const snareCh = toChannel(snareVol, { volume: 1, pan: -0.1, channelCount: 1 });
   const rimshotCh = toChannel(rimshotVol, { volume: 3, pan: -0.1, channelCount: 1 });
-  const closeHatCh = toChannel(closeHatVol, { volume: 0, pan: 0.4, channelCount: 1 });
+  const closeHatCh = toChannel(closeHatVol, { volume: 0, pan: 0.3, channelCount: 1 });
   const openHatCh = toChannel(openHatVol, { volume: 0, pan: 0.4, channelCount: 1 });
 
-  const drumKitCh = new Tone.Channel({ volume: 3, channelCount: 2 });
+  const drumKitCh = new Tone.Channel({ volume: 6, channelCount: 2 });
   drumKitCh.receive(drumKitBusName);
 
   // ---  master mixer
   const masterVol = new Tone.Volume();
-  const masterLimiter = new Tone.Limiter(-8);
+  const masterLimiter = new Tone.Limiter(-16);
 
   Tone.fanIn(
     ...[
@@ -840,7 +840,9 @@ const sketch = (p) => {
     masterVol.chain(
       ...[
         //
+        new Tone.Gain(1.1),
         masterLimiter,
+        // new Tone.Gain(1.1),
       ].filter((n) => n),
       Tone.getDestination(),
     ),
