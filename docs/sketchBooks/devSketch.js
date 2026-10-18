@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 125;
+const BPM = 110;
 
 const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -707,7 +707,7 @@ const sketch = (p) => {
         ),
       );
       Tone.fanIn(sumGain, Tone.getDestination());
-    }, 1.25);
+    }, 1.75);
 
     smplr.add(snareNote, buffer);
   };
@@ -728,7 +728,7 @@ const sketch = (p) => {
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       kickSampler.triggerAttack(KickNote, time, ftRand(velocity));
-      // kickSampler.triggerAttackRelease(KickNote, `8t`, time, ftRand(velocity));
+      // kickSampler.triggerAttackRelease(KickNote, `8n.`, time, ftRand(velocity));
     },
     events: [
       [1, 1, 1, 1],
@@ -791,9 +791,9 @@ const sketch = (p) => {
     },
     events: [
       [null, 1, -1, 1, null, 1, -1, 1],
+      [null, 1, -1, 1, null, 1, -1, [1, -1, null, 1]],
       [null, 1, -1, 1, null, 1, -1, 1],
-      [null, 1, -1, 1, null, 1, -1, 1],
-      [null, 1, -1, [1, -1.25], [1, -1.55], 1, null, [-1, 1]],
+      [null, 1, -1, [1, -1], [1, -1], 1, null, [-1, 1]],
     ],
     subdivision: '1n',
   });
