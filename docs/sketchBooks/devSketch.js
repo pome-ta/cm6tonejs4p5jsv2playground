@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 96;
+const BPM = 115;
 
 const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -727,8 +727,8 @@ const sketch = (p) => {
   // --- seq
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      kickSampler.triggerAttack(KickNote, time, ftRand(velocity));
-      // kickSampler.triggerAttackRelease(KickNote, `8t`, time, ftRand(velocity));
+      // kickSampler.triggerAttack(KickNote, time, ftRand(velocity));
+      kickSampler.triggerAttackRelease(KickNote, `8t`, time, ftRand(velocity));
     },
     events: [
       [1, 1, 1, 1],
@@ -746,7 +746,9 @@ const sketch = (p) => {
     },
     events: [
       [null, 1, null, 1],
-      [null, [1, [null, 0.5]], null, 1],
+      [null, 1, null, 1],
+      [null, 1, null, 1],
+      [null, [1, [null, 0.45]], null, 1],
     ],
     subdivision: '1n',
   });
@@ -758,7 +760,9 @@ const sketch = (p) => {
     },
     events: [
       [null, 1, null, 1],
-      [null, [1, [null, 0.5]], null, 1],
+      [null, 1, null, 1],
+      [null, 1, null, 1],
+      [null, [1, [null, 0.45]], null, 1],
     ],
     subdivision: '1n',
   });
@@ -786,12 +790,16 @@ const sketch = (p) => {
       hihatHandlers.get(Math.sign(velocity))?.(time, Math.abs(velocity));
     },
     events: [
-      [null, 1, -1, 1],
-      [null, 1, -1, 1],
-      [null, 1, -1, 1],
-      [null, 1, -1, 1],
+      [null, 1, -1, 1, null, 1, -1, 1],
+      [null, 1, -1, 1, null, 1, -1, 1],
+      [null, 1, -1, 1, null, 1, -1, 1],
+      [null, 1, -1, [1, null, -1, null], [null,-1,], null, null, 1],
+
+      // [null, 1, -1, 1],
+      // [null, 1, -1, 1],
+      // [[-1,null,1,null],[-1,null,1,null]],
     ],
-    subdivision: '4n',
+    subdivision: '1n',
   });
 
   // --- drumKit
