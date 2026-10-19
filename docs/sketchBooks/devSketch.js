@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 110;
+const BPM = 130;
 
 const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -830,8 +830,17 @@ const sketch = (p) => {
     channelCount: 1,
   });
 
+  const drumKitVol = new Tone.Volume();
   const drumKitCh = new Tone.Channel({ volume: 2, channelCount: 2 });
-  drumKitCh.receive(drumKitBusName);
+  //drumKitCh.receive(drumKitBusName);
+  drumKitCh
+    .chain(
+      ...[
+        //
+      ].filter((n) => n),
+      drumKitVol,
+    )
+    .receive(drumKitBusName);
 
   // ---  master mixer
   const masterVol = new Tone.Volume();
@@ -840,7 +849,7 @@ const sketch = (p) => {
   Tone.fanIn(
     ...[
       //
-      drumKitCh,
+      drumKitVol,
     ].filter((n) => n),
     masterVol.chain(
       ...[
