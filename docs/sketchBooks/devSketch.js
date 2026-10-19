@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 130;
+const BPM = 110;
 
 const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -904,10 +904,10 @@ const sketch = (p) => {
       // kickSampler.triggerAttackRelease(KickNote, `8n.`, time, ftRand(velocity));
     },
     events: [
-      [1, 1, 1, 1],
-      [1, 1, 1, 1],
-      [1, 1, 1, 1],
-      [1, 1, 1, [1, 0.225]],
+      [1, null, [null, 1], null],
+      [1, null, [null, 1], null],
+      [1, null, [null, 1], null],
+      [1, null, [null, 1], [null, null, null, 0.4]],
     ],
     subdivision: '1n',
   });
@@ -919,9 +919,9 @@ const sketch = (p) => {
     },
     events: [
       [null, 1, null, 1],
-      [null, 1, null, 1],
-      [null, 1, null, 1],
-      [null, [1, [null, 0.45]], null, 1],
+      // [null, 1, null, 1],
+      // [null, 1, null, 1],
+      // [null, [1, [null, 0.45]], null, 1],
     ],
     subdivision: '1n',
   });
@@ -930,10 +930,10 @@ const sketch = (p) => {
       cpRawSampler.triggerAttack(cpRawNote, time, ftRand(velocity));
     },
     events: [
-      [null, 1, null, 1],
-      [null, 1, null, 1],
-      [null, 1, null, 1],
-      [null, [1, [null, 0.45]], null, 1],
+      // [null, 1, null, 1],
+      // [null, 1, null, 1],
+      // [null, 1, null, 1],
+      // [null, [1, [null, 0.55]], null, 1],
     ],
     subdivision: '1n',
   });
@@ -943,10 +943,10 @@ const sketch = (p) => {
       cpReverbSampler.triggerAttack(cpReverbNote, time, ftRand(velocity));
     },
     events: [
-      [null, 1, null, 1],
-      [null, 1, null, 1],
-      [null, 1, null, 1],
-      [null, [1, [null, 0.45]], null, 1],
+      // [null, 1, null, 1],
+      // [null, 1, null, 1],
+      // [null, 1, null, 1],
+      // [null, [1, [null, 0.45]], null, 1],
     ],
     subdivision: '1n',
   });
@@ -956,10 +956,10 @@ const sketch = (p) => {
       // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
     },
     events: [
-      [null, 1, null, 1],
-      [null, 1, null, 1],
-      [null, 1, null, 1],
-      [null, [1, [null, 0.45]], null, 1],
+      // [null, 1, null, 1],
+      // [null, 1, null, 1],
+      // [null, 1, null, 1],
+      [null, [null, [null, 0.45]], null, 1],
     ],
     subdivision: '1n',
   });
@@ -993,6 +993,7 @@ const sketch = (p) => {
       [null, 1, -1, [1, -1], [1, -1], 1, null, [-1, 1]],
     ],
     subdivision: '1n',
+    humanize: 0.004,
   });
 
   // --- drumKit
