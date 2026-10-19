@@ -20,17 +20,29 @@ const expCurve = (start, end, curve, steps) => {
     const _curveRatio = (_exp - 1) / (Math.exp(_curve) - 1);
     return _start + (_end - _start) * _curveRatio;
   };
-  const levels = Array.from({ length: steps + 1 }, (_, i) => envelope(start, end, i / steps, curve));
+  const levels = Array.from({ length: steps + 1 }, (_, i) =>
+    envelope(start, end, i / steps, curve),
+  );
 
   return levels;
 };
 
-const frqCurve = (startfrequency, endfrequency, curveExponent = 0, divSteps = 128) => {
+const frqCurve = (
+  startfrequency,
+  endfrequency,
+  curveExponent = 0,
+  divSteps = 128,
+) => {
   const curve = expCurve(startfrequency, endfrequency, curveExponent, divSteps);
   return curve;
 };
 
-const volCurve = (startGain, curveExponent = 1, endGain = 0, divSteps = 256) => {
+const volCurve = (
+  startGain,
+  curveExponent = 1,
+  endGain = 0,
+  divSteps = 256,
+) => {
   const gainCurve = expCurve(startGain, endGain, curveExponent, divSteps);
   return gainCurve.map((gain) => Tone.gainToDb(gain));
 };
@@ -70,8 +82,16 @@ const sketch = (p) => {
       const tone = 56; //58; //56;
       const envParams = scParams([0.11, 1, 0], [0, decay], -225);
       const trienvParams = scParams([0.11, 0.6, 0], [0, decay], -230);
-      const fenvParams = scParams([tone * 7, tone * 1.35, tone], [0.05, 0.6], -14);
-      const pfenvParams = scParams([tone * 7, tone * 1.35, tone], [0.03, 0.6], -10);
+      const fenvParams = scParams(
+        [tone * 7, tone * 1.35, tone],
+        [0.05, 0.6],
+        -14,
+      );
+      const pfenvParams = scParams(
+        [tone * 7, tone * 1.35, tone],
+        [0.03, 0.6],
+        -10,
+      );
 
       const sigGain = new Tone.Gain();
       const sig = new Tone.Oscillator({
@@ -157,15 +177,27 @@ const sketch = (p) => {
           punchGain,
         )
         .start();
-      punch.volume.setValueCurveAtTime(volCurve(envParams.times[1], envParams.curve), 0, decay);
+      punch.volume.setValueCurveAtTime(
+        volCurve(envParams.times[1], envParams.curve),
+        0,
+        decay,
+      );
 
       punch.frequency.setValueCurveAtTime(
-        frqCurve(pfenvParams.levels[0], pfenvParams.levels[1], pfenvParams.curve),
+        frqCurve(
+          pfenvParams.levels[0],
+          pfenvParams.levels[1],
+          pfenvParams.curve,
+        ),
         0,
         pfenvParams.times[0],
       );
       punch.frequency.setValueCurveAtTime(
-        frqCurve(pfenvParams.levels[1], pfenvParams.levels[2], pfenvParams.curve),
+        frqCurve(
+          pfenvParams.levels[1],
+          pfenvParams.levels[2],
+          pfenvParams.curve,
+        ),
         pfenvParams.times[0],
         pfenvParams.times[1],
       );
@@ -292,8 +324,16 @@ const sketch = (p) => {
         )
         .start();
 
-      osc1.volume.setValueCurveAtTime(volCurve(atkEnvParams.level, atkEnvParams.curve), 0, atkEnvParams.release);
-      osc2.volume.setValueCurveAtTime(volCurve(atkEnvParams.level, atkEnvParams.curve), 0, atkEnvParams.release);
+      osc1.volume.setValueCurveAtTime(
+        volCurve(atkEnvParams.level, atkEnvParams.curve),
+        0,
+        atkEnvParams.release,
+      );
+      osc2.volume.setValueCurveAtTime(
+        volCurve(atkEnvParams.level, atkEnvParams.curve),
+        0,
+        atkEnvParams.release,
+      );
 
       const sumGain = new Tone.Gain();
       Tone.fanIn(
@@ -336,6 +376,177 @@ const sketch = (p) => {
       );
       Tone.fanIn(sigGain, Tone.getDestination());
     }, 5.75);
+
+    smplr.add(snareNote, buffer);
+  };
+
+  // --- cpRaw
+  const cpRawVol = new Tone.Volume();
+  const cpRawSampler = new Tone.Sampler({
+    attack: 0.0,
+    release: '2i',
+    curve: 'exponential',
+  }).chain(
+    ...[
+      //
+    ].filter((n) => n),
+    cpRawVol,
+  );
+  const cpRawNote = 'A4';
+  const setCpRawBuffer = async (smplr) => {
+    const buffer = await Tone.Offline(() => {
+      const amp = 1;
+
+      const atkenvParams = scParams([0.5, 1, 0], [0, 0.3], -160);
+      const denvParams = {
+        delay: 0.026,
+        attack: 0.0,
+        decay: 6.0,
+        release: 1.0,
+        level: 1,
+        curve: -157,
+      };
+
+      const atkGain = new Tone.Gain();
+      const atkNoise = new Tone.Noise({
+        noise: { type: 'white' },
+      })
+        .chain(
+          ...[
+            //
+            new Tone.Gain(1.4),
+          ].filter((n) => n),
+          atkGain,
+        )
+        .start();
+
+      atkNoise.volume.setValueCurveAtTime(
+        volCurve(atkenvParams.levels[1], atkenvParams.curve),
+        atkenvParams.times[0],
+        atkenvParams.times[1],
+      );
+
+      const decayGain = new Tone.Gain();
+      const decayNoise = new Tone.Noise({
+        noise: { type: 'white' },
+      })
+        .chain(
+          ...[
+            //
+          ].filter((n) => n),
+          decayGain,
+        )
+        .start();
+
+      decayNoise.volume.setValueCurveAtTime(
+        volCurve(denvParams.level, denvParams.curve),
+        denvParams.delay,
+        denvParams.decay,
+      );
+
+      const sumHighpass = new Tone.Filter({
+        type: 'highpass',
+        frequency: 500,
+        Q: 0.0,
+        rolloff: -12, // -12, -24, -48, -96
+      });
+      const sumBandpass = new Tone.Filter({
+        type: 'bandpass',
+        frequency: 1062,
+        Q: 0.5,
+        rolloff: -12, // -12, -24, -48, -96
+      });
+      const sumGain = new Tone.Gain();
+      Tone.fanIn(
+        ...[
+          //
+          atkGain,
+          decayGain,
+        ].filter((n) => n),
+        new Tone.Gain().chain(
+          ...[
+            //,
+            new Tone.Gain(amp),
+            sumHighpass,
+            sumBandpass,
+            new Tone.Gain(2.5),
+            new Tone.Channel(),
+          ].filter((n) => n),
+          sumGain,
+        ),
+      );
+
+      Tone.fanIn(sumGain, Tone.getDestination());
+    }, 6.125);
+
+    smplr.add(snareNote, buffer);
+  };
+
+  // --- cpReverb
+  const cpReverbVol = new Tone.Volume();
+  const cpReverbSampler = new Tone.Sampler({
+    attack: 0.0,
+    release: '2i',
+    curve: 'exponential',
+  }).chain(
+    ...[
+      //
+    ].filter((n) => n),
+    cpReverbVol,
+  );
+  const cpReverbNote = 'A4';
+  const setCpReverbBuffer = async (smplr) => {
+    const buffer = await Tone.Offline(() => {
+      const amp = 1;
+      const gate = 0;
+
+      const revgenParams = {
+        attack: 0.1,
+        release: 4.0,
+        level: 1,
+        curve: -9,
+      };
+
+      const reverbHighpass = new Tone.Filter({
+        type: 'highpass',
+        frequency: 500,
+        Q: 0.0,
+        rolloff: -12, // -12, -24, -48, -96
+      });
+
+      const reverbLowpass = new Tone.Filter({
+        type: 'lowpass',
+        frequency: 1000,
+        Q: 0.0,
+        rolloff: -12, // -12, -24, -48, -96
+      });
+
+      const reverbGain = new Tone.Gain();
+      const reverbNoise = new Tone.Noise({
+        noise: { type: 'white' },
+      })
+        .chain(
+          ...[
+            //
+            // new Tone.Gain(0.02),
+            new Tone.Gain(0.2),
+            reverbHighpass,
+            reverbLowpass,
+            new Tone.Gain(amp),
+            new Tone.Channel(),
+          ].filter((n) => n),
+          reverbGain,
+        )
+        .start();
+
+      reverbNoise.volume.setValueCurveAtTime(
+        volCurve(revgenParams.level, revgenParams.curve),
+        revgenParams.attack,
+        revgenParams.release,
+      );
+
+      Tone.fanIn(reverbGain, Tone.getDestination());
+    }, 4.125);
 
     smplr.add(snareNote, buffer);
   };
@@ -715,10 +926,12 @@ const sketch = (p) => {
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
     transport.scheduleOnce((time) => {
-      kickSeq.start(time);
-      snareSeq.start(time);
-      rimshotSeq.start(time);
-      hihatSeq.start(time);
+      // kickSeq.start(time);
+      // cpRawSeq.start(time);
+      cpReverbSeq.start(time);
+      // snareSeq.start(time);
+      // rimshotSeq.start(time);
+      // hihatSeq.start(time);
 
       // }, transport.context.now());
     }, transport.seconds);
@@ -752,7 +965,33 @@ const sketch = (p) => {
     ],
     subdivision: '1n',
   });
+  const cpRawSeq = new Tone.Sequence({
+    callback: (time, velocity) => {
+      cpRawSampler.triggerAttack(cpRawNote, time, ftRand(velocity));
+      // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
+    },
+    events: [
+      [null, 1, null, 1],
+      [null, 1, null, 1],
+      [null, 1, null, 1],
+      [null, [1, [null, 0.45]], null, 1],
+    ],
+    subdivision: '1n',
+  });
 
+  const cpReverbSeq = new Tone.Sequence({
+    callback: (time, velocity) => {
+      cpReverbSampler.triggerAttack(cpReverbNote, time, ftRand(velocity));
+      // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
+    },
+    events: [
+      [null, 1, null, 1],
+      [null, 1, null, 1],
+      [null, 1, null, 1],
+      [null, [1, [null, 0.45]], null, 1],
+    ],
+    subdivision: '1n',
+  });
   const rimshotSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       rimshotSampler.triggerAttack(rimshotNote, time, ftRand(velocity));
@@ -812,6 +1051,16 @@ const sketch = (p) => {
   const snareCh = toChannel(snareVol, {
     volume: 1.0,
     pan: -0.1,
+    channelCount: 1,
+  });
+  const cpRawCh = toChannel(cpRawVol, {
+    volume: 1.0,
+    pan: 0.0,
+    channelCount: 1,
+  });
+  const cpReverbCh = toChannel(cpReverbVol, {
+    volume: 1.0,
+    pan: 0.0,
     channelCount: 1,
   });
   const rimshotCh = toChannel(rimshotVol, {
@@ -878,6 +1127,8 @@ const sketch = (p) => {
 
     await setKickBuffer(kickSampler);
     await setSnareBuffer(snareSampler);
+    await setCpRawBuffer(cpRawSampler);
+    await setCpReverbBuffer(cpReverbSampler);
     await setRimshotBuffer(rimshotSampler);
     await setCloseHatBuffer(closeHatSampler);
     await setOpenHatBuffer(openHatSampler);
@@ -907,3 +1158,4 @@ const sketch = (p) => {
 };
 
 new p5(sketch);
+
