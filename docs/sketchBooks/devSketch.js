@@ -175,11 +175,11 @@ const sketch = (p) => {
       );
 
       const comp = new Tone.Compressor({
-        threshold: -25, // -100-0 : -24
-        ratio: 18, // 1-20 : 12
+        threshold: -8, // -100-0 : -24
+        ratio: 8, // 1-20 : 12
         attack: 1.0,
         release: 4e-4,
-        knee: 32, // 0-40 : 30
+        knee: 28, // 0-40 : 30
       });
 
       const bdGain = new Tone.Gain();
@@ -194,7 +194,7 @@ const sketch = (p) => {
           ...[
             //,
             new Tone.Gain(2.5),
-            // new Tone.Limiter(-25),
+            // new Tone.Limiter(-12),
             comp,
             new Tone.Gain(amp),
             new Tone.Channel(),
@@ -694,6 +694,64 @@ const sketch = (p) => {
     smplr.add(snareNote, buffer);
   };
 
+  // --- maracas
+  const maracasVol = new Tone.Volume();
+  const maracasSampler = new Tone.Sampler({
+    attack: 0.0,
+    // release: '2i',
+    release: 0.0,
+    curve: 'exponential',
+  }).chain(
+    ...[
+      //
+    ].filter((n) => n),
+    maracasVol,
+  );
+
+  const maracasNote = 'A4';
+  const setMaracasBuffer = async (smplr) => {
+    const buffer = await Tone.Offline(() => {
+      const amp = 1;
+      const gate = 0;
+
+      const envParams = scParams([0.3, 1, 0], [0.027, 0.07], -250);
+
+      const sigHighpass = new Tone.Filter({
+        type: 'highpass',
+        frequency: 5500,
+        Q: 0.0,
+        rolloff: -12, // -12, -24, -48, -96
+      });
+      const sigGain = new Tone.Gain();
+      const sig = new Tone.Noise({
+        noise: { type: 'white' },
+      })
+        .chain(
+          ...[
+            //
+            new Tone.Gain(amp),
+            sigHighpass,
+            new Tone.Channel(),
+          ].filter((n) => n),
+          sigGain,
+        )
+        .start();
+      sig.volume.setValueCurveAtTime(
+        volCurve(envParams.levels[0], envParams.curve, envParams.levels[1]),
+        0,
+        envParams.times[0],
+      );
+      sig.volume.setValueCurveAtTime(
+        volCurve(envParams.levels[1], envParams.curve),
+        envParams.times[0],
+        envParams.times[1],
+      );
+
+      Tone.fanIn(sigGain, Tone.getDestination());
+    }, 1.125);
+
+    smplr.add(snareNote, buffer);
+  };
   // --- hat
   const closeHatVol = new Tone.Volume();
   const closeHatSampler = new Tone.Sampler({
@@ -948,6 +1006,7 @@ const sketch = (p) => {
       cpReverbSeq.start(time);
       rimshotSeq.start(time);
       clavesSeq.start(time);
+      maracasSeq.start(time);
       hihatSeq.start(time);
 
       // }, transport.context.now());
@@ -1016,6 +1075,15 @@ const sketch = (p) => {
     subdivision: '1n',
   });
 
+  const maracasSeq = new Tone.Sequence({
+    callback: (time, velocity) => {
+      maracasSampler.triggerAttack(maracasNote, time, ftRand(velocity));
+      // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
+    },
+    events: [[[[null, null, 1, 1], null, [null, null, 1, 1], null]]],
+    subdivision: '1n',
+  });
+
   const hihatHandlers = new Map([
     [
       1, // close
@@ -1058,7 +1126,7 @@ const sketch = (p) => {
     return channel;
   };
 
-  const kickCh = toChannel(kickVol, { volume: -6.0, pan: 0.0, channelCount: 1 });
+  const kickCh = toChannel(kickVol, { volume: 0.0, pan: 0.0, channelCount: 1 });
   const snareCh = toChannel(snareVol, {
     volume: 1.0,
     pan: -0.1,
@@ -1084,6 +1152,12 @@ const sketch = (p) => {
     pan: 0.0,
     channelCount: 1,
   });
+
+  const maracasCh = toChannel(maracasVol, {
+    volume: 1.0,
+    pan: 0.0,
+    channelCount: 1,
+  });
   const closeHatCh = toChannel(closeHatVol, {
     volume: 0.0,
     pan: 0.3,
@@ -1101,8 +1175,9 @@ const sketch = (p) => {
     .chain(
       ...[
         //
-        new Tone.Gain(2.1),
-        new Tone.Limiter(-16),
+        // new Tone.Gain(2.1),
+        // new Tone.Limiter(-8),
+        // new Tone.Gain(1.1),
       ].filter((n) => n),
       drumKitVol,
     )
@@ -1148,6 +1223,7 @@ const sketch = (p) => {
     await setCpReverbBuffer(cpReverbSampler);
     await setRimshotBuffer(rimshotSampler);
     await setClavesBuffer(clavesSampler);
+    await setMaracasBuffer(maracasSampler);
     await setCloseHatBuffer(closeHatSampler);
     await setOpenHatBuffer(openHatSampler);
 
