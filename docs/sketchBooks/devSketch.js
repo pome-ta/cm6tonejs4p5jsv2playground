@@ -77,7 +77,7 @@ const sketch = (p) => {
       const sig = new Tone.Oscillator({
         frequency: fenvParams.levels[0],
         // oscillator: { type: 'sine' },
-        oscillator: { type: 'sine',phase: 270 },
+        oscillator: { type: 'sine', phase: 270 },
       })
         .chain(
           ...[
@@ -107,13 +107,12 @@ const sketch = (p) => {
       const subGain = new Tone.Gain();
       const sub = new Tone.Oscillator({
         frequency: fenvParams.levels[0],
-        oscillator: { type: 'triangle', },
+        oscillator: { type: 'triangle' },
       })
         .chain(
           ...[
             //
             new Tone.Gain(0.05),
-            
           ].filter((n) => n),
           subGain,
         )
@@ -158,8 +157,11 @@ const sketch = (p) => {
           punchGain,
         )
         .start();
-      punch.volume.setValueCurveAtTime(volCurve(envParams.levels[1], envParams.curve), envParams.times[0],
-        envParams.times[1],);
+      punch.volume.setValueCurveAtTime(
+        volCurve(envParams.levels[1], envParams.curve),
+        envParams.times[0],
+        envParams.times[1],
+      );
 
       punch.frequency.setValueCurveAtTime(
         frqCurve(pfenvParams.levels[0], pfenvParams.levels[1], pfenvParams.curve),
@@ -171,13 +173,13 @@ const sketch = (p) => {
         pfenvParams.times[0],
         pfenvParams.times[1],
       );
-      
-            const comp = new Tone.Compressor({
-        threshold: -50, // -100-0 : -24
+
+      const comp = new Tone.Compressor({
+        threshold: -25, // -100-0 : -24
         ratio: 18, // 1-20 : 12
         attack: 1.0,
         release: 4e-4,
-        knee: 35, // 0-40 : 30
+        knee: 32, // 0-40 : 30
       });
 
       const bdGain = new Tone.Gain();
@@ -192,8 +194,8 @@ const sketch = (p) => {
           ...[
             //,
             new Tone.Gain(2.5),
-            new Tone.Limiter(-50),
-            // comp,
+            // new Tone.Limiter(-25),
+            comp,
             new Tone.Gain(amp),
             new Tone.Channel(),
           ].filter((n) => n),
@@ -201,7 +203,7 @@ const sketch = (p) => {
         ),
       );
       Tone.fanIn(bdGain, Tone.getDestination());
-    }, 30.5);
+    }, 10.5);
 
     smplr.add(KickNote, buffer);
   };
@@ -941,12 +943,12 @@ const sketch = (p) => {
   emitter.once('startOnceCallSeqs', () => {
     transport.scheduleOnce((time) => {
       kickSeq.start(time);
-      // snareSeq.start(time);
-      // cpRawSeq.start(time);
-      // cpReverbSeq.start(time);
-      // rimshotSeq.start(time);
-      // clavesSeq.start(time);
-      // hihatSeq.start(time);
+      snareSeq.start(time);
+      cpRawSeq.start(time);
+      cpReverbSeq.start(time);
+      rimshotSeq.start(time);
+      clavesSeq.start(time);
+      hihatSeq.start(time);
 
       // }, transport.context.now());
     }, transport.seconds);
@@ -1005,7 +1007,12 @@ const sketch = (p) => {
       clavesSampler.triggerAttack(clavesNote, time, ftRand(velocity));
       // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
     },
-    events: [[null, [1, [null, 0.55]], null, 1]],
+    events: [
+      [
+        [null, 1, 1, null],
+        [1, [null, 1], null, 1],
+      ],
+    ],
     subdivision: '1n',
   });
 
@@ -1051,7 +1058,7 @@ const sketch = (p) => {
     return channel;
   };
 
-  const kickCh = toChannel(kickVol, { volume: 0.0, pan: 0.0, channelCount: 1 });
+  const kickCh = toChannel(kickVol, { volume: -6.0, pan: 0.0, channelCount: 1 });
   const snareCh = toChannel(snareVol, {
     volume: 1.0,
     pan: -0.1,
@@ -1073,7 +1080,7 @@ const sketch = (p) => {
     channelCount: 1,
   });
   const clavesCh = toChannel(clavesVol, {
-    volume: 6.0,
+    volume: 12.0,
     pan: 0.0,
     channelCount: 1,
   });
@@ -1094,6 +1101,8 @@ const sketch = (p) => {
     .chain(
       ...[
         //
+        new Tone.Gain(2.1),
+        new Tone.Limiter(-16),
       ].filter((n) => n),
       drumKitVol,
     )
@@ -1101,7 +1110,7 @@ const sketch = (p) => {
 
   // ---  master mixer
   const masterVol = new Tone.Volume();
-  const masterLimiter = new Tone.Limiter(-16);
+  const masterLimiter = new Tone.Limiter(-8);
 
   Tone.fanIn(
     ...[
@@ -1111,7 +1120,7 @@ const sketch = (p) => {
     masterVol.chain(
       ...[
         //
-        // new Tone.Gain(1.1),
+        // new Tone.Gain(2.1),
         // masterLimiter,
         // new Tone.Gain(1.1),
       ].filter((n) => n),
