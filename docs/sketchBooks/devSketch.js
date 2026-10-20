@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 110;
+const BPM = 125;
 
 const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -88,6 +88,11 @@ const sketch = (p) => {
         .start();
 
       sig.volume.setValueCurveAtTime(
+        volCurve(envParams.levels[0], envParams.curve, envParams.levels[1]),
+        0,
+        envParams.times[0],
+      );
+      sig.volume.setValueCurveAtTime(
         volCurve(envParams.levels[1], envParams.curve),
         envParams.times[0],
         envParams.times[1],
@@ -118,6 +123,11 @@ const sketch = (p) => {
         )
         .start();
 
+      sub.volume.setValueCurveAtTime(
+        volCurve(trienvParams.levels[0], trienvParams.curve, trienvParams.levels[1]),
+        0,
+        trienvParams.times[0],
+      );
       sub.volume.setValueCurveAtTime(
         volCurve(trienvParams.levels[1], trienvParams.curve),
         trienvParams.times[0],
@@ -157,6 +167,12 @@ const sketch = (p) => {
           punchGain,
         )
         .start();
+
+      punch.volume.setValueCurveAtTime(
+        volCurve(envParams.levels[0], envParams.curve, envParams.levels[1]),
+        0,
+        envParams.times[0],
+      );
       punch.volume.setValueCurveAtTime(
         volCurve(envParams.levels[1], envParams.curve),
         envParams.times[0],
@@ -177,9 +193,9 @@ const sketch = (p) => {
       const comp = new Tone.Compressor({
         threshold: -8, // -100-0 : -24
         ratio: 8, // 1-20 : 12
-        attack: 1.0,
-        release: 4e-4,
-        knee: 28, // 0-40 : 30
+        attack: 1e-1,
+        release: 1e-1,
+        knee: 8, // 0-40 : 30
       });
 
       const bdGain = new Tone.Gain();
@@ -194,7 +210,7 @@ const sketch = (p) => {
           ...[
             //,
             new Tone.Gain(2.5),
-            // new Tone.Limiter(-12),
+            // new Tone.Limiter(-8),
             comp,
             new Tone.Gain(amp),
             new Tone.Channel(),
@@ -501,8 +517,8 @@ const sketch = (p) => {
         .chain(
           ...[
             //
-            // new Tone.Gain(0.02),
-            new Tone.Gain(0.2),
+            new Tone.Gain(0.02),
+            // new Tone.Gain(0.2),
             reverbHighpass,
             reverbLowpass,
             new Tone.Gain(amp),
@@ -1002,11 +1018,11 @@ const sketch = (p) => {
     transport.scheduleOnce((time) => {
       kickSeq.start(time);
       snareSeq.start(time);
-      cpRawSeq.start(time);
-      cpReverbSeq.start(time);
+      // cpRawSeq.start(time);
+      // cpReverbSeq.start(time);
       rimshotSeq.start(time);
       clavesSeq.start(time);
-      maracasSeq.start(time);
+      // maracasSeq.start(time);
       hihatSeq.start(time);
 
       // }, transport.context.now());
@@ -1082,6 +1098,7 @@ const sketch = (p) => {
     },
     events: [[[[null, null, 1, 1], null, [null, null, 1, 1], null]]],
     subdivision: '1n',
+    humanize: 0.006,
   });
 
   const hihatHandlers = new Map([
@@ -1113,7 +1130,7 @@ const sketch = (p) => {
       [null, 1, -1, [1, -1], [1, -1], 1, null, [-1, 1]],
     ],
     subdivision: '1n',
-    humanize: 0.004,
+    humanize: 0.006,
   });
 
   // --- drumKit
@@ -1126,9 +1143,9 @@ const sketch = (p) => {
     return channel;
   };
 
-  const kickCh = toChannel(kickVol, { volume: 0.0, pan: 0.0, channelCount: 1 });
+  const kickCh = toChannel(kickVol, { volume: -6.0, pan: 0.0, channelCount: 1 });
   const snareCh = toChannel(snareVol, {
-    volume: 1.0,
+    volume: 2.0,
     pan: -0.1,
     channelCount: 1,
   });
@@ -1175,8 +1192,8 @@ const sketch = (p) => {
     .chain(
       ...[
         //
-        // new Tone.Gain(2.1),
-        // new Tone.Limiter(-8),
+        new Tone.Gain(1.55),
+        new Tone.Limiter(-2),
         // new Tone.Gain(1.1),
       ].filter((n) => n),
       drumKitVol,
