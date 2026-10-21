@@ -37,6 +37,210 @@ const volCurve = (startGain, curveExponent = 1, endGain = 0, divSteps = 256) => 
 
 const scParams = (levels, times, curve) => ({ levels, times, curve });
 
+const processorSource = `
+class BDProcessor extends AudioWorkletProcessor {
+  constructor(options) {
+    super();
+    const p = options.processorOptions || {};
+    this.startTime = Number(p.startTime) || 0;
+    this.decay = Number(p.decay) || 30;
+    this.tone = Number(p.tone) || 56;
+    this.amp = Number(p.amp) || 2;
+
+    this.stopTime = this.startTime + this.decay;
+
+    // sig, sub用の位相と、punch用の位相
+    this.phase = Math.PI / 2;
+    this.punchPhase = Math.PI / 2;
+    console.log('ho')
+
+    // HPF (350Hz) の係数事前計算
+    const w0 = (2 * Math.PI * 350) / sampleRate;
+    const alpha = Math.sin(w0) / Math.SQRT2;
+    const a0 = 1 + alpha;
+
+    this.hpf_b0 = (1 + Math.cos(w0)) / 2 / a0;
+    this.hpf_b1 = -(1 + Math.cos(w0)) / a0;
+    this.hpf_b2 = (1 + Math.cos(w0)) / 2 / a0;
+    this.hpf_a1 = (-2 * Math.cos(w0)) / a0;
+    this.hpf_a2 = (1 - alpha) / a0;
+
+    // HPF用の状態変数
+    this.x1 = 0;
+    this.x2 = 0;
+    this.y1 = 0;
+    this.y2 = 0;
+  }
+
+  curveValue(elapsed, duration, y0, y1, curve) {
+    if (elapsed <= 0) return y0;
+    if (elapsed >= duration) return y1;
+    const t = elapsed / duration;
+    if (Math.abs(curve) < 0.001) return y0 + (y1 - y0) * t;
+    return y0 + ((y1 - y0) * (Math.exp(curve * t) - 1)) / (Math.exp(curve) - 1);
+  }
+
+  process(inputs, outputs) {
+    const channel = outputs[0]?.[0];
+    if (!channel) return true;
+
+    const blockStart = currentTime;
+
+    if (blockStart >= this.stopTime) {
+      return false;
+    }
+
+    for (let i = 0; i < channel.length; i++) {
+      const sampleTime = blockStart + i / sampleRate;
+
+      if (sampleTime < this.startTime || sampleTime >= this.stopTime) {
+        channel[i] = 0;
+        continue;
+      }
+
+      const elapsed = sampleTime - this.startTime;
+
+      // 1. ボリュームエンベロープ
+      const env = this.curveValue(elapsed, this.decay, 1.0, 0.0, -225);
+      const trienv = this.curveValue(elapsed, this.decay, 0.6, 0.0, -230);
+
+      // 2. ピッチエンベロープ (sig, sub用)
+      let fenv = this.tone;
+      if (elapsed <= 0.05) {
+        fenv = this.curveValue(
+          elapsed,
+          0.05,
+          this.tone * 7,
+          this.tone * 1.35,
+          -14,
+        );
+      } else if (elapsed <= 0.05 + 0.6) {
+        fenv = this.curveValue(
+          elapsed - 0.05,
+          0.6,
+          this.tone * 1.35,
+          this.tone,
+          -14,
+        );
+      }
+
+      // 3. ピッチエンベロープ (punch用)
+      let pfenv = this.tone;
+      if (elapsed <= 0.03) {
+        pfenv = this.curveValue(
+          elapsed,
+          0.03,
+          this.tone * 7,
+          this.tone * 1.35,
+          -10,
+        );
+      } else if (elapsed <= 0.03 + 0.6) {
+        pfenv = this.curveValue(
+          elapsed - 0.03,
+          0.6,
+          this.tone * 1.35,
+          this.tone,
+          -10,
+        );
+      }
+
+      // 4. オシレーターの計算
+      const sig = Math.sin(this.phase) * env;
+      const sub =
+        (2 / Math.PI) * Math.asin(Math.sin(this.phase)) * trienv * 0.05;
+
+      // punch (サイン波を生成してHPFに通す)
+      const punchOsc = Math.sin(this.punchPhase) * env * 2;
+      const punch =
+        this.hpf_b0 * punchOsc +
+        this.hpf_b1 * this.x1 +
+        this.hpf_b2 * this.x2 -
+        this.hpf_a1 * this.y1 -
+        this.hpf_a2 * this.y2;
+
+      this.x2 = this.x1;
+      this.x1 = punchOsc;
+      this.y2 = this.y1;
+      this.y1 = punch;
+
+      // 5. ミックス (リミッターなし、単純加算のみ)
+      // const mixed = (sig) * 2.5;
+      // const mixed = (sub) * 2.5;
+      // const mixed = (punch) * 2.5;
+      // const mixed = (sub + punch) * 2.5;
+      const mixed = (sig + sub + punch) * 2.5;
+
+      // 【パターン1】リミッターなし(単純加算そのまま)
+      // let limited = mixed;
+
+      // 【パターン2】ハードクリップ(-0.5〜0.5を超えた分をバッサリ切り捨てる)
+      // let limited = Math.max(-0.5, Math.min(0.5, mixed));
+
+      // 【パターン3】ソフトクリッパー(Math.tanhを使って滑らかに0.5に抑え込む)
+      let limited = Math.tanh(mixed * 2.0) * 0.5;
+
+      channel[i] = limited * this.amp;
+
+      // 6. 位相の更新
+      this.phase =
+        (this.phase + (2 * Math.PI * fenv) / sampleRate) % (Math.PI * 2);
+      this.punchPhase =
+        (this.punchPhase + (2 * Math.PI * pfenv) / sampleRate) % (Math.PI * 2);
+    }
+
+    if (outputs[0][1]) {
+      outputs[0][1].set(channel);
+    }
+
+    return true;
+  }
+}
+
+registerProcessor('bd-processor', BDProcessor);
+`;
+
+async function renderToBuffer() {
+  const blobUrl = URL.createObjectURL(new Blob([processorSource], { type: 'application/javascript' }));
+  const amp = 2;
+  const decay = 30;
+  const tone = 56;
+
+  const toneBuffer = await Tone.Offline(
+    async (context) => {
+      // callback は await されるので、ここで worklet をロードすれば
+      // render() → workletsAreReady() が完了を保証する
+      await context.addAudioWorkletModule(blobUrl);
+      URL.revokeObjectURL(blobUrl);
+      
+      console.log(context.now())
+
+
+      const node = context.createAudioWorkletNode('bd-processor', {
+        numberOfOutputs: 1,
+        outputChannelCount: [2],
+        processorOptions: {
+          startTime: context.currentTime,
+          decay: decay,
+          tone: tone,
+          amp: amp,
+        },
+      });
+
+      node.connect(Tone.getDestination());
+    },
+    decay + 5,
+    2,
+    Tone.getContext().sampleRate,
+  );
+  
+  
+
+  return toneBuffer;
+  //smplr.add('A4', toneBuffer);
+}
+
+const ki2buff = await renderToBuffer();
+
 const sketch = (p) => {
   // --- Tone.js
   const ctx = p.getAudioContext();
@@ -49,6 +253,20 @@ const sketch = (p) => {
   transport.bpm.value = BPM;
 
   const emitter = new Tone.Emitter();
+
+  const kickVol2 = new Tone.Volume();
+  const kickSampler2 = new Tone.Sampler({
+    attack: 0.0,
+    release: '2i',
+    curve: 'exponential',
+  }).chain(
+    ...[
+      //
+    ].filter((n) => n),
+    kickVol2,
+  );
+  const kickNote2 = 'A4';
+  kickSampler2.add(kickNote2, ki2buff);
 
   // --- bd
   const kickVol = new Tone.Volume();
@@ -1017,13 +1235,14 @@ const sketch = (p) => {
   emitter.once('startOnceCallSeqs', () => {
     transport.scheduleOnce((time) => {
       kickSeq.start(time);
-      snareSeq.start(time);
+      kickSeq2.start(time);
+      //snareSeq.start(time);
       // cpRawSeq.start(time);
       // cpReverbSeq.start(time);
-      rimshotSeq.start(time);
-      clavesSeq.start(time);
+      //rimshotSeq.start(time);
+      //clavesSeq.start(time);
       // maracasSeq.start(time);
-      hihatSeq.start(time);
+      //hihatSeq.start(time);
 
       // }, transport.context.now());
     }, transport.seconds);
@@ -1037,7 +1256,21 @@ const sketch = (p) => {
     },
     events: [
       [1, 1, 1, 1],
-      [1, 1, 1, [1, 0.55]],
+      [null, null, null, null],
+      //[1, 1, 1, [1, 0.55]],
+    ],
+    subdivision: '1n',
+  });
+
+  const kickSeq2 = new Tone.Sequence({
+    callback: (time, velocity) => {
+      kickSampler2.triggerAttack(kickNote2, time, ftRand(velocity));
+      // kickSampler.triggerAttackRelease(KickNote, `8n.`, time, ftRand(velocity));
+    },
+    events: [
+      [null, null, null, null],
+      [1, 1, 1, 1],
+      //[1, 1, 1, [1, 0.55]],
     ],
     subdivision: '1n',
   });
@@ -1143,7 +1376,8 @@ const sketch = (p) => {
     return channel;
   };
 
-  const kickCh = toChannel(kickVol, { volume: -6.0, pan: 0.0, channelCount: 1 });
+  const kickCh = toChannel(kickVol, { volume: 0.0, pan: 0.0, channelCount: 1 });
+  const kickCh2 = toChannel(kickVol2, { volume: 0.0, pan: 0.0, channelCount: 1 });
   const snareCh = toChannel(snareVol, {
     volume: 2.0,
     pan: -0.1,
@@ -1234,6 +1468,7 @@ const sketch = (p) => {
     // put setup code here
     cnvs = p.createCanvas(w, h);
 
+    //await renderToBuffer(kickSampler2);
     await setKickBuffer(kickSampler);
     await setSnareBuffer(snareSampler);
     await setCpRawBuffer(cpRawSampler);
