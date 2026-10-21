@@ -20,17 +20,29 @@ const expCurve = (start, end, curve, steps) => {
     const _curveRatio = (_exp - 1) / (Math.exp(_curve) - 1);
     return _start + (_end - _start) * _curveRatio;
   };
-  const levels = Array.from({ length: steps + 1 }, (_, i) => envelope(start, end, i / steps, curve));
+  const levels = Array.from({ length: steps + 1 }, (_, i) =>
+    envelope(start, end, i / steps, curve),
+  );
 
   return levels;
 };
 
-const frqCurve = (startfrequency, endfrequency, curveExponent = 0, divSteps = 128) => {
+const frqCurve = (
+  startfrequency,
+  endfrequency,
+  curveExponent = 0,
+  divSteps = 128,
+) => {
   const curve = expCurve(startfrequency, endfrequency, curveExponent, divSteps);
   return curve;
 };
 
-const volCurve = (startGain, curveExponent = 1, endGain = 0, divSteps = 256) => {
+const volCurve = (
+  startGain,
+  curveExponent = 1,
+  endGain = 0,
+  divSteps = 256,
+) => {
   const gainCurve = expCurve(startGain, endGain, curveExponent, divSteps);
   return gainCurve.map((gain) => Tone.gainToDb(gain));
 };
@@ -200,7 +212,9 @@ registerProcessor('bd-processor', BDProcessor);
 `;
 
 async function renderToBuffer() {
-  const blobUrl = URL.createObjectURL(new Blob([processorSource], { type: 'application/javascript' }));
+  const blobUrl = URL.createObjectURL(
+    new Blob([processorSource], { type: 'application/javascript' }),
+  );
   const amp = 2;
   const decay = 30;
   const tone = 56;
@@ -211,9 +225,8 @@ async function renderToBuffer() {
       // render() → workletsAreReady() が完了を保証する
       await context.addAudioWorkletModule(blobUrl);
       URL.revokeObjectURL(blobUrl);
-      
-      console.log(context.now())
 
+      console.log(context.now());
 
       const node = context.createAudioWorkletNode('bd-processor', {
         numberOfOutputs: 1,
@@ -225,15 +238,20 @@ async function renderToBuffer() {
           amp: amp,
         },
       });
+      // node.toDestination()
+      Tone.fanIn(node, Tone.getDestination());
 
-      node.connect(Tone.getDestination());
+      // // const input = new Tone.Gain();
+      // const output = new Tone.Gain();
+      // // input.connect(node);
+      // node.connect(Tone.getDestination());
+
+      // output.connect(Tone.getDestination());
     },
     decay + 5,
     2,
     Tone.getContext().sampleRate,
   );
-  
-  
 
   return toneBuffer;
   //smplr.add('A4', toneBuffer);
@@ -288,8 +306,16 @@ const sketch = (p) => {
       const tone = 56; //58; //56;
       const envParams = scParams([0.11, 1, 0], [0, decay], -225);
       const trienvParams = scParams([0.11, 0.6, 0], [0, decay], -230);
-      const fenvParams = scParams([tone * 7, tone * 1.35, tone], [0.05, 0.6], -14);
-      const pfenvParams = scParams([tone * 7, tone * 1.35, tone], [0.03, 0.6], -10);
+      const fenvParams = scParams(
+        [tone * 7, tone * 1.35, tone],
+        [0.05, 0.6],
+        -14,
+      );
+      const pfenvParams = scParams(
+        [tone * 7, tone * 1.35, tone],
+        [0.03, 0.6],
+        -10,
+      );
 
       const sigGain = new Tone.Gain();
       const sig = new Tone.Oscillator({
@@ -342,7 +368,11 @@ const sketch = (p) => {
         .start();
 
       sub.volume.setValueCurveAtTime(
-        volCurve(trienvParams.levels[0], trienvParams.curve, trienvParams.levels[1]),
+        volCurve(
+          trienvParams.levels[0],
+          trienvParams.curve,
+          trienvParams.levels[1],
+        ),
         0,
         trienvParams.times[0],
       );
@@ -398,12 +428,20 @@ const sketch = (p) => {
       );
 
       punch.frequency.setValueCurveAtTime(
-        frqCurve(pfenvParams.levels[0], pfenvParams.levels[1], pfenvParams.curve),
+        frqCurve(
+          pfenvParams.levels[0],
+          pfenvParams.levels[1],
+          pfenvParams.curve,
+        ),
         0,
         pfenvParams.times[0],
       );
       punch.frequency.setValueCurveAtTime(
-        frqCurve(pfenvParams.levels[1], pfenvParams.levels[2], pfenvParams.curve),
+        frqCurve(
+          pfenvParams.levels[1],
+          pfenvParams.levels[2],
+          pfenvParams.curve,
+        ),
         pfenvParams.times[0],
         pfenvParams.times[1],
       );
@@ -539,8 +577,16 @@ const sketch = (p) => {
         )
         .start();
 
-      osc1.volume.setValueCurveAtTime(volCurve(atkEnvParams.level, atkEnvParams.curve), 0, atkEnvParams.release);
-      osc2.volume.setValueCurveAtTime(volCurve(atkEnvParams.level, atkEnvParams.curve), 0, atkEnvParams.release);
+      osc1.volume.setValueCurveAtTime(
+        volCurve(atkEnvParams.level, atkEnvParams.curve),
+        0,
+        atkEnvParams.release,
+      );
+      osc2.volume.setValueCurveAtTime(
+        volCurve(atkEnvParams.level, atkEnvParams.curve),
+        0,
+        atkEnvParams.release,
+      );
 
       const sumGain = new Tone.Gain();
       Tone.fanIn(
@@ -644,7 +690,11 @@ const sketch = (p) => {
           decayGain,
         )
         .start();
-      decayNoise.volume.setValueCurveAtTime(volCurve(0, denvParams.curve), 0, denvParams.delay);
+      decayNoise.volume.setValueCurveAtTime(
+        volCurve(0, denvParams.curve),
+        0,
+        denvParams.delay,
+      );
       decayNoise.volume.setValueCurveAtTime(
         volCurve(denvParams.level, denvParams.curve),
         denvParams.delay,
@@ -920,7 +970,11 @@ const sketch = (p) => {
           sigGain,
         )
         .start();
-      sig.volume.setValueCurveAtTime(volCurve(envParams.levels[1], envParams.curve), 0, envParams.times[1]);
+      sig.volume.setValueCurveAtTime(
+        volCurve(envParams.levels[1], envParams.curve),
+        0,
+        envParams.times[1],
+      );
 
       Tone.fanIn(sigGain, Tone.getDestination());
     }, 1.125);
@@ -1377,7 +1431,11 @@ const sketch = (p) => {
   };
 
   const kickCh = toChannel(kickVol, { volume: 0.0, pan: 0.0, channelCount: 1 });
-  const kickCh2 = toChannel(kickVol2, { volume: 0.0, pan: 0.0, channelCount: 1 });
+  const kickCh2 = toChannel(kickVol2, {
+    volume: 0.0,
+    pan: 0.0,
+    channelCount: 1,
+  });
   const snareCh = toChannel(snareVol, {
     volume: 2.0,
     pan: -0.1,
@@ -1504,3 +1562,4 @@ const sketch = (p) => {
 };
 
 new p5(sketch);
+
