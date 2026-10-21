@@ -21,343 +21,22 @@ const expCurve = (start, end, curve, steps) => {
     const _curveRatio = (_exp - 1) / (Math.exp(_curve) - 1);
     return _start + (_end - _start) * _curveRatio;
   };
-  const levels = Array.from({ length: steps + 1 }, (_, i) =>
-    envelope(start, end, i / steps, curve),
-  );
+  const levels = Array.from({ length: steps + 1 }, (_, i) => envelope(start, end, i / steps, curve));
 
   return levels;
 };
 
-const frqCurve = (
-  startfrequency,
-  endfrequency,
-  curveExponent = 0,
-  divSteps = 128,
-) => {
+const frqCurve = (startfrequency, endfrequency, curveExponent = 0, divSteps = 128) => {
   const curve = expCurve(startfrequency, endfrequency, curveExponent, divSteps);
   return curve;
 };
 
-const volCurve = (
-  startGain,
-  curveExponent = 1,
-  endGain = 0,
-  divSteps = 256,
-) => {
+const volCurve = (startGain, curveExponent = 1, endGain = 0, divSteps = 256) => {
   const gainCurve = expCurve(startGain, endGain, curveExponent, divSteps);
   return gainCurve.map((gain) => Tone.gainToDb(gain));
 };
 
 const scParams = (levels, times, curve) => ({ levels, times, curve });
-
-const processorSource = `
-class BDProcessor extends AudioWorkletProcessor {
-  constructor(options) {
-    super();
-    const p = options.processorOptions || {};
-    this.startTime = Number(p.startTime) || 0;
-    this.decay = Number(p.decay) || 30;
-    this.tone = Number(p.tone) || 56;
-    this.amp = Number(p.amp) || 2;
-
-    this.silentSamples = 0;
-
-    this.stopTime = this.startTime + this.decay;
-
-    // sig, sub用の位相と、punch用の位相
-    // this.phase = Math.PI / 2;
-    // this.punchPhase = Math.PI / 2;
-    this.phase = (3 * Math.PI) / 2;
-    this.punchPhase = (3 * Math.PI) / 2;
-
-    // HPF (350Hz) の係数事前計算
-    const w0 = (2 * Math.PI * 350) / sampleRate;
-    const alpha = Math.sin(w0) / Math.SQRT2;
-    const a0 = 1 + alpha;
-
-    this.hpf_b0 = (1 + Math.cos(w0)) / 2 / a0;
-    this.hpf_b1 = -(1 + Math.cos(w0)) / a0;
-    this.hpf_b2 = (1 + Math.cos(w0)) / 2 / a0;
-    this.hpf_a1 = (-2 * Math.cos(w0)) / a0;
-    this.hpf_a2 = (1 - alpha) / a0;
-
-    // HPF用の状態変数
-    this.x1 = 0;
-    this.x2 = 0;
-    this.y1 = 0;
-    this.y2 = 0;
-  }
-
-  curveValue(elapsed, duration, y0, y1, curve) {
-    if (elapsed <= 0) return y0;
-    if (elapsed >= duration) return y1;
-    const t = elapsed / duration;
-    if (Math.abs(curve) < 0.001) return y0 + (y1 - y0) * t;
-    return y0 + ((y1 - y0) * (Math.exp(curve * t) - 1)) / (Math.exp(curve) - 1);
-  }
-
-  process(inputs, outputs) {
-    const channel = outputs[0]?.[0];
-    if (!channel) return true;
-
-    const blockStart = currentTime;
-
-    if (blockStart >= this.stopTime) {
-      return false;
-    }
-
-    for (let i = 0; i < channel.length; i++) {
-      const sampleTime = blockStart + i / sampleRate;
-
-      if (sampleTime < this.startTime || sampleTime >= this.stopTime) {
-        channel[i] = 0;
-        continue;
-      }
-
-      const elapsed = sampleTime - this.startTime;
-
-      // 1. ボリュームエンベロープ
-      const env = this.curveValue(elapsed, this.decay, 1.0, 0.0, -225);
-      const trienv = this.curveValue(elapsed, this.decay, 0.6, 0.0, -230);
-
-      // 2. ピッチエンベロープ (sig, sub用)
-      let fenv = this.tone;
-      if (elapsed <= 0.05) {
-        fenv = this.curveValue(
-          elapsed,
-          0.05,
-          this.tone * 7,
-          this.tone * 1.35,
-          -14,
-        );
-      } else if (elapsed <= 0.05 + 0.6) {
-        fenv = this.curveValue(
-          elapsed - 0.05,
-          0.6,
-          this.tone * 1.35,
-          this.tone,
-          -14,
-        );
-      }
-
-      // 3. ピッチエンベロープ (punch用)
-      let pfenv = this.tone;
-      if (elapsed <= 0.03) {
-        pfenv = this.curveValue(
-          elapsed,
-          0.03,
-          this.tone * 7,
-          this.tone * 1.35,
-          -10,
-        );
-      } else if (elapsed <= 0.03 + 0.6) {
-        pfenv = this.curveValue(
-          elapsed - 0.03,
-          0.6,
-          this.tone * 1.35,
-          this.tone,
-          -10,
-        );
-      }
-
-      // 4. オシレーターの計算
-      const sig = Math.sin(this.phase) * env;
-      const sub =
-        (2 / Math.PI) * Math.asin(Math.sin(this.phase)) * trienv * 0.05;
-
-      // punch (サイン波を生成してHPFに通す)
-      const punchOsc = Math.sin(this.punchPhase) * env * 2;
-      const punch =
-        this.hpf_b0 * punchOsc +
-        this.hpf_b1 * this.x1 +
-        this.hpf_b2 * this.x2 -
-        this.hpf_a1 * this.y1 -
-        this.hpf_a2 * this.y2;
-
-      this.x2 = this.x1;
-      this.x1 = punchOsc;
-      this.y2 = this.y1;
-      this.y1 = punch;
-
-      // 5. ミックス (リミッターなし、単純加算のみ)
-      // const mixed = (sig) * 2.5;
-      // const mixed = (sub) * 2.5;
-      // const mixed = (punch) * 2.5;
-      // const mixed = (sub + punch) * 2.5;
-      const mixed = (sig + sub + punch) * 2.5;
-
-      // 【パターン1】リミッターなし(単純加算そのまま)
-      // let limited = mixed;
-
-      // 【パターン2】ハードクリップ(-0.5〜0.5を超えた分をバッサリ切り捨てる)
-      // let limited = Math.max(-0.5, Math.min(0.5, mixed));
-
-      // 【パターン3】ソフトクリッパー(Math.tanhを使って滑らかに0.5に抑え込む)
-      let limited = Math.tanh(mixed * 2.0) * 0.5;
-
-      channel[i] = limited * this.amp;
-
-      // 6. 位相の更新
-      this.phase =
-        (this.phase + (2 * Math.PI * fenv) / sampleRate) % (Math.PI * 2);
-      this.punchPhase =
-        (this.punchPhase + (2 * Math.PI * pfenv) / sampleRate) % (Math.PI * 2);
-
-      if (env < 1e-5) {
-        // -80dB 相当
-        this.silentSamples++;
-      } else {
-        this.silentSamples = 0;
-      }
-    }
-
-    if (outputs[0][1]) {
-      outputs[0][1].set(channel);
-    }
-
-    if (this.silentSamples >= channel.length) {
-      this.port.postMessage('ended');
-      return false;
-    }
-    return true;
-  }
-}
-
-registerProcessor('bd-processor', BDProcessor);
-`;
-
-export class MyDrum extends Tone.ToneAudioNode {
-  constructor(
-    workletUrl,
-    processorName,
-    { decay = 30, tone = 56, amp = 2 } = {},
-  ) {
-    super();
-    this.name = 'MyDrum';
-    this.input = undefined;
-    this.envelope = new Tone.AmplitudeEnvelope({
-      context: this.context,
-      attack: 0.001,
-      decay: 0.2,
-      sustain: 0,
-      release: 0.1,
-    });
-    this.output = this.envelope;
-
-    this._processorName = processorName;
-    this._decay = decay;
-    this._tone = tone;
-    this._amp = amp;
-
-    this._ready = false;
-    this._activeNodes = new Set(); // 鳴っているノードの管理
-
-    this.context.addAudioWorkletModule(workletUrl).then(() => {
-      if (this.disposed) return;
-      this._ready = true;
-    });
-  }
-
-  triggerAttack(time, velocity = 1) {
-    if (!this._ready) return this;
-    const t = this.toSeconds(time);
-
-    // トリガー毎にワンショットノードを生成(Sampler 方式)
-    const node = this.context.createAudioWorkletNode(this._processorName, {
-      outputChannelCount: [2],
-      processorOptions: {
-        startTime: t,
-        decay: this._decay,
-        tone: this._tone,
-        amp: this._amp * velocity, // velocity は amp に畳み込む
-      },
-    });
-    // node.connect(this.envelope.input ?? this.envelope);
-    Tone.connect(node, this.envelope);
-    this._activeNodes.add(node);
-
-    // worklet が 'ended' を postMessage したら切断して回収
-    node.port.onmessage = (e) => {
-      if (e.data === 'ended') {
-        node.disconnect();
-        this._activeNodes.delete(node);
-      }
-    };
-
-    this.envelope.triggerAttack(t, 1);
-    return this;
-  }
-
-  triggerRelease(time) {
-    this.envelope.triggerRelease(this.toSeconds(time));
-    return this;
-  }
-
-  triggerAttackRelease(duration, time, velocity) {
-    const t = this.toSeconds(time);
-    this.triggerAttack(t, velocity);
-    this.triggerRelease(t + this.toSeconds(duration));
-    return this;
-  }
-
-  dispose() {
-    super.dispose();
-    this._activeNodes.forEach((n) => {
-      n.port.postMessage('dispose');
-      n.disconnect();
-    });
-    this._activeNodes.clear();
-    return this;
-  }
-}
-
-async function renderToBuffer() {
-  const blobUrl = URL.createObjectURL(
-    new Blob([processorSource], { type: 'application/javascript' }),
-  );
-  const amp = 2;
-  const decay = 30;
-  const tone = 56;
-
-  const toneBuffer = await Tone.Offline(
-    async (context) => {
-      // callback は await されるので、ここで worklet をロードすれば
-      // render() → workletsAreReady() が完了を保証する
-      await context.addAudioWorkletModule(blobUrl);
-      URL.revokeObjectURL(blobUrl);
-
-      console.log(context.now());
-
-      const node = context.createAudioWorkletNode('bd-processor', {
-        // numberOfOutputs: 1,
-        outputChannelCount: [2],
-        processorOptions: {
-          startTime: context.currentTime,
-          decay: decay,
-          tone: tone,
-          amp: amp,
-        },
-      });
-      // node.toDestination()
-      Tone.fanIn(node, Tone.getDestination());
-
-      // // const input = new Tone.Gain();
-      // const output = new Tone.Gain();
-      // // input.connect(node);
-      // node.connect(Tone.getDestination());
-
-      // output.connect(Tone.getDestination());
-    },
-    decay + 5,
-    2,
-    Tone.getContext().sampleRate,
-  );
-
-  return toneBuffer;
-  //smplr.add('A4', toneBuffer);
-}
-
-// const ki2buff = await renderToBuffer();
 
 const sketch = (p) => {
   // --- Tone.js
@@ -391,207 +70,16 @@ const sketch = (p) => {
   // );
 
   // const kickSampler2 = new MyDrum(blobUrl, 'bd-processor').chain(
-  const kickSampler2 = new BD({ decay: 1.4, tone: 75, amp: 2.4 }).chain(
-    ...[
-      //
-    ].filter((n) => n),
-    kickVol2,
-  );
-  const kickNote2 = 'A4';
 
   // --- bd
   const kickVol = new Tone.Volume();
-  const kickSampler = new Tone.Sampler({
-    attack: 0.0,
-    release: '2i',
-    curve: 'exponential',
-  }).chain(
+  const kickGen = new BD({ decay: 30, tone: 56, amp: 2 }).chain(
+    // const kickSampler2 = new BD().chain(
     ...[
       //
     ].filter((n) => n),
     kickVol,
   );
-  const KickNote = 'A4';
-  const setKickBuffer = async (smplr) => {
-    const buffer = await Tone.Offline(() => {
-      const decay = 30; //58; //30;
-      const amp = 2; //1.55; //2;
-      const tone = 56; //58; //56;
-      const envParams = scParams([0.11, 1, 0], [0, decay], -225);
-      const trienvParams = scParams([0.11, 0.6, 0], [0, decay], -230);
-      const fenvParams = scParams(
-        [tone * 7, tone * 1.35, tone],
-        [0.05, 0.6],
-        -14,
-      );
-      const pfenvParams = scParams(
-        [tone * 7, tone * 1.35, tone],
-        [0.03, 0.6],
-        -10,
-      );
-
-      const sigGain = new Tone.Gain();
-      const sig = new Tone.Oscillator({
-        frequency: fenvParams.levels[0],
-        // oscillator: { type: 'sine' },
-        oscillator: { type: 'sine', phase: 270 },
-      })
-        .chain(
-          ...[
-            //,
-          ].filter((n) => n),
-          sigGain,
-        )
-        .start();
-
-      sig.volume.setValueCurveAtTime(
-        volCurve(envParams.levels[0], envParams.curve, envParams.levels[1]),
-        0,
-        envParams.times[0],
-      );
-      sig.volume.setValueCurveAtTime(
-        volCurve(envParams.levels[1], envParams.curve),
-        envParams.times[0],
-        envParams.times[1],
-      );
-
-      sig.frequency.setValueCurveAtTime(
-        frqCurve(fenvParams.levels[0], fenvParams.levels[1], fenvParams.curve),
-        0,
-        fenvParams.times[0],
-      );
-      sig.frequency.setValueCurveAtTime(
-        frqCurve(fenvParams.levels[1], fenvParams.levels[2], fenvParams.curve),
-        fenvParams.times[0],
-        fenvParams.times[1],
-      );
-
-      const subGain = new Tone.Gain();
-      const sub = new Tone.Oscillator({
-        frequency: fenvParams.levels[0],
-        oscillator: { type: 'triangle' },
-      })
-        .chain(
-          ...[
-            //
-            new Tone.Gain(0.05),
-          ].filter((n) => n),
-          subGain,
-        )
-        .start();
-
-      sub.volume.setValueCurveAtTime(
-        volCurve(
-          trienvParams.levels[0],
-          trienvParams.curve,
-          trienvParams.levels[1],
-        ),
-        0,
-        trienvParams.times[0],
-      );
-      sub.volume.setValueCurveAtTime(
-        volCurve(trienvParams.levels[1], trienvParams.curve),
-        trienvParams.times[0],
-        trienvParams.times[1],
-      );
-
-      sub.frequency.setValueCurveAtTime(
-        frqCurve(fenvParams.levels[0], fenvParams.levels[1], fenvParams.curve),
-        0,
-        fenvParams.times[0],
-      );
-      sub.frequency.setValueCurveAtTime(
-        frqCurve(fenvParams.levels[1], fenvParams.levels[2], fenvParams.curve),
-        fenvParams.times[0],
-        fenvParams.times[1],
-      );
-
-      const highpass = new Tone.Filter({
-        type: 'highpass',
-        frequency: 350,
-        Q: 0.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-
-      const punchGain = new Tone.Gain();
-      const punch = new Tone.Oscillator({
-        frequency: pfenvParams.levels[0],
-        // oscillator: { type: 'sine' },
-        oscillator: { type: 'sine', phase: 270 },
-      })
-        .chain(
-          ...[
-            //,
-            new Tone.Gain(2),
-            highpass,
-          ].filter((n) => n),
-          punchGain,
-        )
-        .start();
-
-      punch.volume.setValueCurveAtTime(
-        volCurve(envParams.levels[0], envParams.curve, envParams.levels[1]),
-        0,
-        envParams.times[0],
-      );
-      punch.volume.setValueCurveAtTime(
-        volCurve(envParams.levels[1], envParams.curve),
-        envParams.times[0],
-        envParams.times[1],
-      );
-
-      punch.frequency.setValueCurveAtTime(
-        frqCurve(
-          pfenvParams.levels[0],
-          pfenvParams.levels[1],
-          pfenvParams.curve,
-        ),
-        0,
-        pfenvParams.times[0],
-      );
-      punch.frequency.setValueCurveAtTime(
-        frqCurve(
-          pfenvParams.levels[1],
-          pfenvParams.levels[2],
-          pfenvParams.curve,
-        ),
-        pfenvParams.times[0],
-        pfenvParams.times[1],
-      );
-
-      const comp = new Tone.Compressor({
-        threshold: -8, // -100-0 : -24
-        ratio: 8, // 1-20 : 12
-        attack: 1e-1,
-        release: 1e-1,
-        knee: 8, // 0-40 : 30
-      });
-
-      const bdGain = new Tone.Gain();
-      Tone.fanIn(
-        ...[
-          //
-          sigGain,
-          subGain,
-          punchGain,
-        ].filter((n) => n),
-        new Tone.Gain().chain(
-          ...[
-            //,
-            new Tone.Gain(2.5),
-            new Tone.Limiter(-8),
-            // comp,
-            new Tone.Gain(amp),
-            new Tone.Channel(),
-          ].filter((n) => n),
-          bdGain,
-        ),
-      );
-      Tone.fanIn(bdGain, Tone.getDestination());
-    }, 10.5);
-
-    smplr.add(KickNote, buffer);
-  };
 
   // --- snare
   const snareVol = new Tone.Volume();
@@ -690,16 +178,8 @@ const sketch = (p) => {
         )
         .start();
 
-      osc1.volume.setValueCurveAtTime(
-        volCurve(atkEnvParams.level, atkEnvParams.curve),
-        0,
-        atkEnvParams.release,
-      );
-      osc2.volume.setValueCurveAtTime(
-        volCurve(atkEnvParams.level, atkEnvParams.curve),
-        0,
-        atkEnvParams.release,
-      );
+      osc1.volume.setValueCurveAtTime(volCurve(atkEnvParams.level, atkEnvParams.curve), 0, atkEnvParams.release);
+      osc2.volume.setValueCurveAtTime(volCurve(atkEnvParams.level, atkEnvParams.curve), 0, atkEnvParams.release);
 
       const sumGain = new Tone.Gain();
       Tone.fanIn(
@@ -803,11 +283,7 @@ const sketch = (p) => {
           decayGain,
         )
         .start();
-      decayNoise.volume.setValueCurveAtTime(
-        volCurve(0, denvParams.curve),
-        0,
-        denvParams.delay,
-      );
+      decayNoise.volume.setValueCurveAtTime(volCurve(0, denvParams.curve), 0, denvParams.delay);
       decayNoise.volume.setValueCurveAtTime(
         volCurve(denvParams.level, denvParams.curve),
         denvParams.delay,
@@ -1083,11 +559,7 @@ const sketch = (p) => {
           sigGain,
         )
         .start();
-      sig.volume.setValueCurveAtTime(
-        volCurve(envParams.levels[1], envParams.curve),
-        0,
-        envParams.times[1],
-      );
+      sig.volume.setValueCurveAtTime(volCurve(envParams.levels[1], envParams.curve), 0, envParams.times[1]);
 
       Tone.fanIn(sigGain, Tone.getDestination());
     }, 1.125);
@@ -1402,7 +874,7 @@ const sketch = (p) => {
   emitter.once('startOnceCallSeqs', () => {
     transport.scheduleOnce((time) => {
       kickSeq.start(time);
-      kickSeq2.start(time);
+
       snareSeq.start(time);
       // cpRawSeq.start(time);
       // cpReverbSeq.start(time);
@@ -1418,32 +890,14 @@ const sketch = (p) => {
   // --- seq
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      kickSampler.triggerAttack(KickNote, time, ftRand(velocity));
-      // kickSampler.triggerAttackRelease(KickNote, `8n.`, time, ftRand(velocity));
+      kickGen.triggerAttack(time, ftRand(velocity));
+      // kickGen.triggerAttackRelease(`8t.`, time, ftRand(velocity));
     },
     events: [
-      [1, 1, 1, [1, 0.6]],
       [1, 1, 1, 1],
-      [null, null, null, null],
-      [null, null, null, null],
-      //[1, 1, 1, [1, 0.55]],
-    ],
-    subdivision: '1n',
-  });
-
-  const kickSeq2 = new Tone.Sequence({
-    callback: (time, velocity) => {
-      kickSampler2.triggerAttack(time, ftRand(velocity));
-      // kickSampler.triggerAttackRelease(KickNote, `8n.`, time, ftRand(velocity));
-    },
-    events: [
-      [null, null, null, null],
-      [null, null, null, null],
-      [1, 1, 1, [1, 0.6]],
       [1, 1, 1, 1],
-      //[null, null, null, null],
-
-      //[1, 1, 1, [1, 0.55]],
+      [1, 1, 1, 1],
+      [1, 1, 1, [1, 0.6]],
     ],
     subdivision: '1n',
   });
@@ -1550,11 +1004,7 @@ const sketch = (p) => {
   };
 
   const kickCh = toChannel(kickVol, { volume: 0.0, pan: 0.0, channelCount: 1 });
-  const kickCh2 = toChannel(kickVol2, {
-    volume: 0.0,
-    pan: 0.0,
-    channelCount: 1,
-  });
+
   const snareCh = toChannel(snareVol, {
     volume: 2.0,
     pan: -0.1,
@@ -1645,8 +1095,6 @@ const sketch = (p) => {
     // put setup code here
     cnvs = p.createCanvas(w, h);
 
-    //await renderToBuffer(kickSampler2);
-    await setKickBuffer(kickSampler);
     await setSnareBuffer(snareSampler);
     await setCpRawBuffer(cpRawSampler);
     await setCpReverbBuffer(cpReverbSampler);
