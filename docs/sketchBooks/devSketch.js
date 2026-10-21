@@ -47,14 +47,16 @@ class BDProcessor extends AudioWorkletProcessor {
     this.tone = Number(p.tone) || 56;
     this.amp = Number(p.amp) || 2;
 
+    this.silentSamples = 0;
+
     this.stopTime = this.startTime + this.decay;
 
     // sig, sub用の位相と、punch用の位相
-    // this.phase = Math.PI / 2;
-    // this.punchPhase = Math.PI / 2;
-    this.phase = 3 * Math.PI / 2;
-    this.punchPhase = 3 * Math.PI / 2;
-    
+    this.phase = Math.PI / 2;
+    this.punchPhase = Math.PI / 2;
+    //this.phase = (3 * Math.PI) / 2;
+    //this.punchPhase = (3 * Math.PI) / 2;
+
     // HPF (350Hz) の係数事前計算
     const w0 = (2 * Math.PI * 350) / sampleRate;
     const alpha = Math.sin(w0) / Math.SQRT2;
@@ -187,18 +189,110 @@ class BDProcessor extends AudioWorkletProcessor {
         (this.phase + (2 * Math.PI * fenv) / sampleRate) % (Math.PI * 2);
       this.punchPhase =
         (this.punchPhase + (2 * Math.PI * pfenv) / sampleRate) % (Math.PI * 2);
+
+      if (env < 1e-5) {
+        // -80dB 相当
+        this.silentSamples++;
+      } else {
+        this.silentSamples = 0;
+      }
     }
 
     if (outputs[0][1]) {
       outputs[0][1].set(channel);
     }
 
+    if (this.silentSamples >= channel.length) {
+      this.port.postMessage('ended');
+      return false;
+    }
     return true;
   }
 }
 
 registerProcessor('bd-processor', BDProcessor);
 `;
+
+export class MyDrum extends Tone.ToneAudioNode {
+  constructor(workletUrl, processorName, { decay = 30, tone = 56, amp = 2 } = {}) {
+    super();
+    this.name = 'MyDrum';
+    this.input = undefined;
+    this.envelope = new Tone.AmplitudeEnvelope({
+      context: this.context,
+      attack: 0.0,
+      decay: 0.0,
+      sustain: 1.0,
+      release: 0.0,
+    });
+    this.output = this.envelope;
+
+    this._processorName = processorName;
+    this._decay = decay;
+    this._tone = tone;
+    this._amp = amp;
+
+    this._ready = false;
+    this._activeNodes = new Set(); // 鳴っているノードの管理
+
+    this.context.addAudioWorkletModule(workletUrl).then(() => {
+      if (this.disposed) return;
+      this._ready = true;
+    });
+  }
+
+  triggerAttack(time, velocity = 1) {
+    if (!this._ready) return this;
+    const t = this.toSeconds(time);
+
+    // トリガー毎にワンショットノードを生成(Sampler 方式)
+    const node = this.context.createAudioWorkletNode(this._processorName, {
+      outputChannelCount: [2],
+      processorOptions: {
+        startTime: t,
+        decay: this._decay,
+        tone: this._tone,
+        amp: this._amp * velocity, // velocity は amp に畳み込む
+      },
+    });
+    // node.connect(this.envelope.input ?? this.envelope);
+    Tone.connect(node, this.envelope);
+    this._activeNodes.add(node);
+
+    // worklet が 'ended' を postMessage したら切断して回収
+    node.port.onmessage = (e) => {
+      if (e.data === 'ended') {
+        node.disconnect();
+        this._activeNodes.delete(node);
+      }
+    };
+
+    this.envelope.triggerAttack(t, 1);
+    return this;
+  }
+
+  triggerRelease(time) {
+    this.envelope.triggerRelease(this.toSeconds(time));
+    return this;
+  }
+
+  triggerAttackRelease(duration, time, velocity) {
+    const t = this.toSeconds(time);
+    this.triggerAttack(t, velocity);
+    this.triggerRelease(t + this.toSeconds(duration));
+    return this;
+  }
+
+  dispose() {
+    super.dispose();
+    this._activeNodes.forEach((n) => {
+      n.port.postMessage('dispose');
+      n.disconnect();
+    });
+    this._activeNodes.clear();
+    return this;
+  }
+}
 
 async function renderToBuffer() {
   const blobUrl = URL.createObjectURL(new Blob([processorSource], { type: 'application/javascript' }));
@@ -260,18 +354,28 @@ const sketch = (p) => {
   const emitter = new Tone.Emitter();
 
   const kickVol2 = new Tone.Volume();
-  const kickSampler2 = new Tone.Sampler({
-    attack: 0.0,
-    release: '2i',
-    curve: 'exponential',
-  }).chain(
+  // const kickSampler2 = new Tone.Sampler({
+  //   attack: 0.0,
+  //   release: '2i',
+  //   curve: 'exponential',
+  // }).chain(
+  //   ...[
+  //     //
+  //   ].filter((n) => n),
+  //   kickVol2,
+  // );
+  // const kickNote2 = 'A4';
+  // kickSampler2.add(kickNote2, ki2buff);
+
+  const blobUrl = URL.createObjectURL(new Blob([processorSource], { type: 'application/javascript' }));
+
+  const kickSampler2 = new MyDrum(blobUrl, 'bd-processor').chain(
     ...[
       //
     ].filter((n) => n),
     kickVol2,
   );
   const kickNote2 = 'A4';
-  kickSampler2.add(kickNote2, ki2buff);
 
   // --- bd
   const kickVol = new Tone.Volume();
@@ -1271,7 +1375,7 @@ const sketch = (p) => {
 
   const kickSeq2 = new Tone.Sequence({
     callback: (time, velocity) => {
-      kickSampler2.triggerAttack(kickNote2, time, ftRand(velocity));
+      kickSampler2.triggerAttack(time, ftRand(velocity));
       // kickSampler.triggerAttackRelease(KickNote, `8n.`, time, ftRand(velocity));
     },
     events: [
