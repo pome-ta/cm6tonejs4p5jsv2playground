@@ -50,8 +50,8 @@ class BDProcessor extends AudioWorkletProcessor {
     this.stopTime = this.startTime + this.decay;
 
     // sig, sub用の位相と、punch用の位相
-    //this.phase = Math.PI / 2;
-    //this.punchPhase = Math.PI / 2;
+    // this.phase = Math.PI / 2;
+    // this.punchPhase = Math.PI / 2;
     this.phase = 3 * Math.PI / 2;
     this.punchPhase = 3 * Math.PI / 2;
     
@@ -216,7 +216,7 @@ async function renderToBuffer() {
       console.log(context.now());
 
       const node = context.createAudioWorkletNode('bd-processor', {
-        numberOfOutputs: 1,
+        // numberOfOutputs: 1,
         outputChannelCount: [2],
         processorOptions: {
           startTime: context.currentTime,
@@ -433,8 +433,8 @@ const sketch = (p) => {
           ...[
             //,
             new Tone.Gain(2.5),
-            // new Tone.Limiter(-8),
-            comp,
+            new Tone.Limiter(-8),
+            // comp,
             new Tone.Gain(amp),
             new Tone.Channel(),
           ].filter((n) => n),
@@ -1260,7 +1260,7 @@ const sketch = (p) => {
       // kickSampler.triggerAttackRelease(KickNote, `8n.`, time, ftRand(velocity));
     },
     events: [
-      [1, 1, 1, [1, 0.5]],
+      [1, 1, 1, [1, 0.6]],
       [1, 1, 1, 1],
       [null, null, null, null],
       [null, null, null, null],
@@ -1277,7 +1277,7 @@ const sketch = (p) => {
     events: [
       [null, null, null, null],
       [null, null, null, null],
-      [1, 1, 1, [1, 0.5]],
+      [1, 1, 1, [1, 0.6]],
       [1, 1, 1, 1],
       //[null, null, null, null],
 
