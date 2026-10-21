@@ -20,29 +20,17 @@ const expCurve = (start, end, curve, steps) => {
     const _curveRatio = (_exp - 1) / (Math.exp(_curve) - 1);
     return _start + (_end - _start) * _curveRatio;
   };
-  const levels = Array.from({ length: steps + 1 }, (_, i) =>
-    envelope(start, end, i / steps, curve),
-  );
+  const levels = Array.from({ length: steps + 1 }, (_, i) => envelope(start, end, i / steps, curve));
 
   return levels;
 };
 
-const frqCurve = (
-  startfrequency,
-  endfrequency,
-  curveExponent = 0,
-  divSteps = 128,
-) => {
+const frqCurve = (startfrequency, endfrequency, curveExponent = 0, divSteps = 128) => {
   const curve = expCurve(startfrequency, endfrequency, curveExponent, divSteps);
   return curve;
 };
 
-const volCurve = (
-  startGain,
-  curveExponent = 1,
-  endGain = 0,
-  divSteps = 256,
-) => {
+const volCurve = (startGain, curveExponent = 1, endGain = 0, divSteps = 256) => {
   const gainCurve = expCurve(startGain, endGain, curveExponent, divSteps);
   return gainCurve.map((gain) => Tone.gainToDb(gain));
 };
@@ -62,10 +50,11 @@ class BDProcessor extends AudioWorkletProcessor {
     this.stopTime = this.startTime + this.decay;
 
     // sig, sub用の位相と、punch用の位相
-    this.phase = Math.PI / 2;
-    this.punchPhase = Math.PI / 2;
-    console.log('ho')
-
+    //this.phase = Math.PI / 2;
+    //this.punchPhase = Math.PI / 2;
+    this.phase = 3 * Math.PI / 2;
+    this.punchPhase = 3 * Math.PI / 2;
+    
     // HPF (350Hz) の係数事前計算
     const w0 = (2 * Math.PI * 350) / sampleRate;
     const alpha = Math.sin(w0) / Math.SQRT2;
@@ -212,9 +201,7 @@ registerProcessor('bd-processor', BDProcessor);
 `;
 
 async function renderToBuffer() {
-  const blobUrl = URL.createObjectURL(
-    new Blob([processorSource], { type: 'application/javascript' }),
-  );
+  const blobUrl = URL.createObjectURL(new Blob([processorSource], { type: 'application/javascript' }));
   const amp = 2;
   const decay = 30;
   const tone = 56;
@@ -306,16 +293,8 @@ const sketch = (p) => {
       const tone = 56; //58; //56;
       const envParams = scParams([0.11, 1, 0], [0, decay], -225);
       const trienvParams = scParams([0.11, 0.6, 0], [0, decay], -230);
-      const fenvParams = scParams(
-        [tone * 7, tone * 1.35, tone],
-        [0.05, 0.6],
-        -14,
-      );
-      const pfenvParams = scParams(
-        [tone * 7, tone * 1.35, tone],
-        [0.03, 0.6],
-        -10,
-      );
+      const fenvParams = scParams([tone * 7, tone * 1.35, tone], [0.05, 0.6], -14);
+      const pfenvParams = scParams([tone * 7, tone * 1.35, tone], [0.03, 0.6], -10);
 
       const sigGain = new Tone.Gain();
       const sig = new Tone.Oscillator({
@@ -368,11 +347,7 @@ const sketch = (p) => {
         .start();
 
       sub.volume.setValueCurveAtTime(
-        volCurve(
-          trienvParams.levels[0],
-          trienvParams.curve,
-          trienvParams.levels[1],
-        ),
+        volCurve(trienvParams.levels[0], trienvParams.curve, trienvParams.levels[1]),
         0,
         trienvParams.times[0],
       );
@@ -428,20 +403,12 @@ const sketch = (p) => {
       );
 
       punch.frequency.setValueCurveAtTime(
-        frqCurve(
-          pfenvParams.levels[0],
-          pfenvParams.levels[1],
-          pfenvParams.curve,
-        ),
+        frqCurve(pfenvParams.levels[0], pfenvParams.levels[1], pfenvParams.curve),
         0,
         pfenvParams.times[0],
       );
       punch.frequency.setValueCurveAtTime(
-        frqCurve(
-          pfenvParams.levels[1],
-          pfenvParams.levels[2],
-          pfenvParams.curve,
-        ),
+        frqCurve(pfenvParams.levels[1], pfenvParams.levels[2], pfenvParams.curve),
         pfenvParams.times[0],
         pfenvParams.times[1],
       );
@@ -577,16 +544,8 @@ const sketch = (p) => {
         )
         .start();
 
-      osc1.volume.setValueCurveAtTime(
-        volCurve(atkEnvParams.level, atkEnvParams.curve),
-        0,
-        atkEnvParams.release,
-      );
-      osc2.volume.setValueCurveAtTime(
-        volCurve(atkEnvParams.level, atkEnvParams.curve),
-        0,
-        atkEnvParams.release,
-      );
+      osc1.volume.setValueCurveAtTime(volCurve(atkEnvParams.level, atkEnvParams.curve), 0, atkEnvParams.release);
+      osc2.volume.setValueCurveAtTime(volCurve(atkEnvParams.level, atkEnvParams.curve), 0, atkEnvParams.release);
 
       const sumGain = new Tone.Gain();
       Tone.fanIn(
@@ -690,11 +649,7 @@ const sketch = (p) => {
           decayGain,
         )
         .start();
-      decayNoise.volume.setValueCurveAtTime(
-        volCurve(0, denvParams.curve),
-        0,
-        denvParams.delay,
-      );
+      decayNoise.volume.setValueCurveAtTime(volCurve(0, denvParams.curve), 0, denvParams.delay);
       decayNoise.volume.setValueCurveAtTime(
         volCurve(denvParams.level, denvParams.curve),
         denvParams.delay,
@@ -970,11 +925,7 @@ const sketch = (p) => {
           sigGain,
         )
         .start();
-      sig.volume.setValueCurveAtTime(
-        volCurve(envParams.levels[1], envParams.curve),
-        0,
-        envParams.times[1],
-      );
+      sig.volume.setValueCurveAtTime(volCurve(envParams.levels[1], envParams.curve), 0, envParams.times[1]);
 
       Tone.fanIn(sigGain, Tone.getDestination());
     }, 1.125);
@@ -1290,13 +1241,13 @@ const sketch = (p) => {
     transport.scheduleOnce((time) => {
       kickSeq.start(time);
       kickSeq2.start(time);
-      //snareSeq.start(time);
+      snareSeq.start(time);
       // cpRawSeq.start(time);
       // cpReverbSeq.start(time);
       //rimshotSeq.start(time);
       //clavesSeq.start(time);
       // maracasSeq.start(time);
-      //hihatSeq.start(time);
+      hihatSeq.start(time);
 
       // }, transport.context.now());
     }, transport.seconds);
@@ -1309,7 +1260,9 @@ const sketch = (p) => {
       // kickSampler.triggerAttackRelease(KickNote, `8n.`, time, ftRand(velocity));
     },
     events: [
+      [1, 1, 1, [1, 0.5]],
       [1, 1, 1, 1],
+      [null, null, null, null],
       [null, null, null, null],
       //[1, 1, 1, [1, 0.55]],
     ],
@@ -1323,7 +1276,11 @@ const sketch = (p) => {
     },
     events: [
       [null, null, null, null],
+      [null, null, null, null],
+      [1, 1, 1, [1, 0.5]],
       [1, 1, 1, 1],
+      //[null, null, null, null],
+
       //[1, 1, 1, [1, 0.55]],
     ],
     subdivision: '1n',
@@ -1484,8 +1441,8 @@ const sketch = (p) => {
     .chain(
       ...[
         //
-        new Tone.Gain(1.55),
-        new Tone.Limiter(-2),
+        // new Tone.Gain(1.55),
+        // new Tone.Limiter(-2),
         // new Tone.Gain(1.1),
       ].filter((n) => n),
       drumKitVol,
@@ -1562,4 +1519,3 @@ const sketch = (p) => {
 };
 
 new p5(sketch);
-
