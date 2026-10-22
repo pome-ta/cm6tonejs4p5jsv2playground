@@ -5,7 +5,7 @@ import { Bd, Sn } from 'modules/tr808scWorklet/drumKit.js';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 110;
+const BPM = 120;
 
 const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -721,8 +721,32 @@ const sketch = (p) => {
     smplr.add(openHatNote, buffer);
   };
 
+  // const synth2 = new Tone.Synth().sync().toDestination();
+  const synth2 = new Tone.Synth().toDestination();
+  //const now = Tone.now();
+  const now2 = transport.context.now();
+  synth2.triggerAttackRelease('C7', '8n', 0);
+  synth2.triggerAttackRelease('E7', '8n', 0 + 0.5);
+  synth2.triggerAttackRelease('G7', '8n', 0 + 1);
+
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
+    //const synth = new Tone.Synth().sync().toDestination();
+    const synth = new Tone.Synth().toDestination();
+    synth.triggerAttackRelease('C5', '8n', 0);
+    synth.triggerAttackRelease('E5', '8n', 0 + 0.5);
+    synth.triggerAttackRelease('G5', '8n', 0 + 1);
+
+    kickSeq.start(0);
+
+    snareSeq.start(0);
+    // cpRawSeq.start(time);
+    // cpReverbSeq.start(time);
+    //rimshotSeq.start(time);
+    //clavesSeq.start(time);
+    // maracasSeq.start(time);
+    hihatSeq.start(0);
+    /*
     transport.scheduleOnce((time) => {
       kickSeq.start(time);
 
@@ -736,6 +760,7 @@ const sketch = (p) => {
 
       // }, transport.context.now());
     }, transport.seconds);
+    */
   });
 
   // --- seq
@@ -954,9 +979,16 @@ const sketch = (p) => {
     await setCloseHatBuffer(closeHatSampler);
     await setOpenHatBuffer(openHatSampler);
 
-    // xxx: インクルード要検討
-    transport.start();
+    const synth = new Tone.Synth().sync().toDestination();
+    //const synth = new Tone.Synth().toDestination();
+    //const now = Tone.now();
+    const now = transport.context.now();
+    synth.triggerAttackRelease('C3', '8n', 0);
+    synth.triggerAttackRelease('E3', '8n', 0 + 0.5);
+    synth.triggerAttackRelease('G3', '8n', 0 + 1);
+
     emitter.emit('startOnceCallSeqs');
+    transport.start();
 
     tapIndicator.setup();
     spectrumAnalyzer.targetNodes(masterVol);
