@@ -1,4 +1,4 @@
-class SNProcessor extends AudioWorkletProcessor {
+export class SNProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
 
@@ -77,16 +77,24 @@ class SNProcessor extends AudioWorkletProcessor {
   }
 
   curveValue(elapsed, duration, y0, y1, curve) {
-    if (elapsed <= 0) return y0;
-    if (elapsed >= duration) return y1;
+    if (elapsed <= 0) {
+      return y0;
+    }
+    if (elapsed >= duration) {
+      return y1;
+    }
     const t = elapsed / duration;
-    if (Math.abs(curve) < 0.001) return y0 + (y1 - y0) * t;
+    if (Math.abs(curve) < 0.001) {
+      return y0 + (y1 - y0) * t;
+    }
     return y0 + ((y1 - y0) * (Math.exp(curve * t) - 1)) / (Math.exp(curve) - 1);
   }
 
   process(inputs, outputs, parameters) {
     const channel = outputs[0]?.[0];
-    if (!channel) return true;
+    if (!channel) {
+      return true;
+    }
 
     // パラメータの取得
     const amp = parameters.amp[0];
@@ -123,7 +131,7 @@ class SNProcessor extends AudioWorkletProcessor {
       }
 
       // 1. エンベロープの計算
-      // 厳密にはEnv.perc(0.001, ...)ですが、0.001秒はほぼ1サンプルのため1.0からの減衰で近似します
+      // 厳密にはEnv.perc(0.001, ...)ですが、0.001秒はほぼ1サンプルのため1.0からの減衰で近似
       const atkEnv = this.curveValue(elapsed, 0.8, 1.0, 0.0, -95);
       const noiseEnv = this.curveValue(elapsed, 4.2, 1.0, 0.0, -115);
 
@@ -170,5 +178,3 @@ class SNProcessor extends AudioWorkletProcessor {
     ];
   }
 }
-
-registerProcessor('sn-processor', SNProcessor);

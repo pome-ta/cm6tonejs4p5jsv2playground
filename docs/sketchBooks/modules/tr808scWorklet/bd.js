@@ -1,16 +1,13 @@
 import * as Tone from 'tone';
-
-const WORKLET_URL = new URL('./bd-processor.worklet.js', import.meta.url); // このファイル基準
-const PROCESSOR_NAME = 'bd-processor';
+import { loadWorklet } from './workletLoader.js';
 
 export default class Bd extends Tone.ToneAudioNode {
   constructor(options = {}) {
-    super();
-    this.name = 'Bd';
-
-    // デフォルト値とのマージ(Tone流の作法)
     // decay=30, amp=2, gate=0, tone=56;
     const opts = Object.assign({ decay: 30, amp: 2, tone: 56 }, options);
+    super({ context: opts.context ?? Tone.getContext() });
+    this.name = 'Bd';
+
     this.input = undefined;
     this.envelope = new Tone.AmplitudeEnvelope({
       context: this.context,
@@ -54,22 +51,20 @@ export default class Bd extends Tone.ToneAudioNode {
     });
 
     this._worklet = null;
-    this.context.addAudioWorkletModule(WORKLET_URL).then(() => {
-      if (this.disposed) {
-        return;
-      }
-      this._worklet = this.context.createAudioWorkletNode(PROCESSOR_NAME, {
-        outputChannelCount: [2],
-      });
-      this._worklet.onprocessorerror = (e) => console.error(e);
-      Tone.connect(this._worklet, this.envelope); // 永続接続
-      ['trigger', 'decay', 'tone', 'amp'].forEach((name) => {
-        const p = this._worklet.parameters.get(name);
-        if (p) {
-          this[name].setParam(p);
-        }
-      });
-    });
+
+    loadWorklet(this.context)
+      .then(() => {
+        this._worklet = this.context.createAudioWorkletNode('bd-processor', { outputChannelCount: [2] });
+        this._worklet.onprocessorerror = (e) => console.error(e);
+        Tone.connect(this._worklet, this.envelope); // 永続接続
+        ['trigger', 'decay', 'tone', 'amp'].forEach((name) => {
+          const p = this._worklet.parameters.get(name);
+          if (p) {
+            this[name].setParam(p);
+          }
+        });
+      })
+      .catch((e) => console.error('bd-processor load failed', e));
   }
 
   triggerAttack(time, velocity = 1) {
@@ -95,12 +90,12 @@ export default class Bd extends Tone.ToneAudioNode {
   }
 
   dispose() {
-    super.dispose(); // output(=envelope)はここで処理済み
+    super.dispose();
     this._dummyGain.disconnect();
     this.trigger.dispose();
-    this.decay.dispose(); // ← 追加
-    this.amp.dispose(); // ← 追加
-    this.tone.dispose(); // ← 追加
+    this.decay.dispose();
+    this.amp.dispose();
+    this.tone.dispose();
     if (this._worklet) {
       this._worklet.port.postMessage('dispose');
       this._worklet.disconnect();

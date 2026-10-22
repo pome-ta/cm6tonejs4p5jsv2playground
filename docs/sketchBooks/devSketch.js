@@ -5,7 +5,7 @@ import { Bd, Sn } from 'modules/tr808scWorklet/drumKit.js';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 125;
+const BPM = 110;
 
 const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -40,8 +40,9 @@ const scParams = (levels, times, curve) => ({ levels, times, curve });
 
 const sketch = (p) => {
   // --- Tone.js
-  const ctx = p.getAudioContext();
-  Tone.setContext(ctx, true);
+  const p5Ctx = p.getAudioContext();
+  Tone.setContext(p5Ctx, true);
+  const toneCtx = Tone.getContext();
   /* Starting Audio */
   document.addEventListener('pointerup', async () => await Tone.start(), {
     once: true,
@@ -53,8 +54,7 @@ const sketch = (p) => {
 
   // --- bd
   const kickVol = new Tone.Volume();
-  const kickGen = new Bd({ decay: 30, amp: 2, tone: 56 }).chain(
-    // const kickSampler2 = new BD().chain(
+  const kickGen = new Bd({ decay: 58, amp: 1.45, tone: 50, context: toneCtx }).chain(
     ...[
       //
     ].filter((n) => n),
@@ -63,155 +63,19 @@ const sketch = (p) => {
 
   // --- snare
   const snareVol = new Tone.Volume();
-  const snareGen = new Sn().chain(
+  const snareGen = new Sn({
+    amp: 1.12,
+    tone: 300.9,
+    tone2: 167.265,
+    snappy: 0.226,
+    amp2: 0.775,
+    context: toneCtx,
+  }).chain(
     ...[
       //
     ].filter((n) => n),
     snareVol,
   );
-
-  const snareSampler = new Tone.Sampler({
-    attack: 0.0,
-    release: '2i',
-    curve: 'exponential',
-  }).chain(
-    ...[
-      //
-      //snareVol,
-    ].filter((n) => n),
-  );
-  const snareNote = 'A4';
-  const setSnareBuffer = async (smplr) => {
-    const buffer = await Tone.Offline(() => {
-      const amp = 2;
-      const tone = 340;
-      const tone2 = 189;
-      const snappy = 0.3;
-      const amp2 = 1;
-
-      const noiseEnvParams = {
-        attack: 0.001,
-        release: 4.2,
-        level: 1,
-        curve: -115,
-      };
-      const atkEnvParams = {
-        attack: 0.001,
-        release: 0.8,
-        level: 1,
-        curve: -95,
-      };
-      const noiseHighpass = new Tone.Filter({
-        type: 'highpass',
-        frequency: 1800,
-        Q: 0.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-      const noiseLowpass = new Tone.Filter({
-        type: 'lowpass',
-        frequency: 8850,
-        Q: 0.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-
-      const noiseGain = new Tone.Gain();
-      const whiteNoise = new Tone.Noise({
-        noise: { type: 'white' },
-      })
-        .chain(
-          ...[
-            //
-            noiseHighpass,
-            noiseLowpass,
-            new Tone.Gain(snappy),
-          ].filter((n) => n),
-          noiseGain,
-        )
-        .start();
-
-      whiteNoise.volume.setValueCurveAtTime(
-        volCurve(noiseEnvParams.level, noiseEnvParams.curve),
-        noiseEnvParams.attack,
-        noiseEnvParams.release,
-      );
-
-      const osc1Gain = new Tone.Gain();
-      const osc1 = new Tone.Oscillator({
-        frequency: tone2,
-        // oscillator: { type: 'sine' },
-        oscillator: { type: 'sine', phase: 270 },
-      })
-        .chain(
-          ...[
-            //,
-            new Tone.Gain(0.6),
-          ].filter((n) => n),
-          osc1Gain,
-        )
-        .start();
-
-      const osc2Gain = new Tone.Gain();
-      const osc2 = new Tone.Oscillator({
-        frequency: tone,
-        // oscillator: { type: 'sine' },
-        oscillator: { type: 'sine', phase: 270 },
-      })
-        .chain(
-          ...[
-            //,
-            new Tone.Gain(0.7),
-          ].filter((n) => n),
-          osc2Gain,
-        )
-        .start();
-
-      osc1.volume.setValueCurveAtTime(volCurve(atkEnvParams.level, atkEnvParams.curve), 0, atkEnvParams.release);
-      osc2.volume.setValueCurveAtTime(volCurve(atkEnvParams.level, atkEnvParams.curve), 0, atkEnvParams.release);
-
-      const sumGain = new Tone.Gain();
-      Tone.fanIn(
-        ...[
-          //
-          osc1Gain,
-          osc2Gain,
-        ].filter((n) => n),
-        new Tone.Gain().chain(
-          ...[
-            //,
-            new Tone.Gain(amp2),
-          ].filter((n) => n),
-          sumGain,
-        ),
-      );
-      const sigHighpass = new Tone.Filter({
-        type: 'highpass',
-        frequency: 340,
-        Q: 0.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-      const sigGain = new Tone.Gain();
-      Tone.fanIn(
-        ...[
-          //
-          noiseGain,
-          sumGain,
-        ].filter((n) => n),
-        new Tone.Gain().chain(
-          ...[
-            //,
-            new Tone.Gain(amp),
-            new Tone.Gain(2.5),
-            new Tone.Channel(),
-            sigHighpass,
-          ].filter((n) => n),
-          sigGain,
-        ),
-      );
-      Tone.fanIn(sigGain, Tone.getDestination());
-    }, 5.75);
-
-    smplr.add(snareNote, buffer);
-  };
 
   // --- cpRaw
   const cpRawVol = new Tone.Volume();
@@ -312,7 +176,7 @@ const sketch = (p) => {
       Tone.fanIn(sumGain, Tone.getDestination());
     }, 6.125);
 
-    smplr.add(snareNote, buffer);
+    smplr.add(cpRawNote, buffer);
   };
 
   // --- cpReverb
@@ -381,7 +245,7 @@ const sketch = (p) => {
       Tone.fanIn(reverbGain, Tone.getDestination());
     }, 4.125);
 
-    smplr.add(snareNote, buffer);
+    smplr.add(cpReverbNote, buffer);
   };
 
   // --- rimshot
@@ -508,7 +372,7 @@ const sketch = (p) => {
       Tone.fanIn(sigGain, Tone.getDestination());
     }, 1.75);
 
-    smplr.add(snareNote, buffer);
+    smplr.add(rimshotNote, buffer);
   };
 
   // --- claves
@@ -551,7 +415,7 @@ const sketch = (p) => {
       Tone.fanIn(sigGain, Tone.getDestination());
     }, 1.125);
 
-    smplr.add(snareNote, buffer);
+    smplr.add(clavesNote, buffer);
   };
 
   // --- maracas
@@ -610,7 +474,7 @@ const sketch = (p) => {
       Tone.fanIn(sigGain, Tone.getDestination());
     }, 1.125);
 
-    smplr.add(snareNote, buffer);
+    smplr.add(maracasNote, buffer);
   };
   // --- hat
   const closeHatVol = new Tone.Volume();
@@ -721,7 +585,7 @@ const sketch = (p) => {
       Tone.fanIn(sigGain, Tone.getDestination());
     }, 1.25);
 
-    smplr.add(snareNote, buffer);
+    smplr.add(closeHatNote, buffer);
   };
 
   // --- openhihat
@@ -854,7 +718,7 @@ const sketch = (p) => {
       Tone.fanIn(sumGain, Tone.getDestination());
     }, 1.75);
 
-    smplr.add(snareNote, buffer);
+    smplr.add(openHatNote, buffer);
   };
 
   // --- emitter
@@ -1082,7 +946,6 @@ const sketch = (p) => {
     // put setup code here
     cnvs = p.createCanvas(w, h);
 
-    //await setSnareBuffer(snareSampler);
     await setCpRawBuffer(cpRawSampler);
     await setCpReverbBuffer(cpReverbSampler);
     await setRimshotBuffer(rimshotSampler);

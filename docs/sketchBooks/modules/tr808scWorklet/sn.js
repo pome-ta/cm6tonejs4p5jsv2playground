@@ -1,15 +1,13 @@
 import * as Tone from 'tone';
-
-const WORKLET_URL = new URL('./sn-processor.worklet.js', import.meta.url);
-const PROCESSOR_NAME = 'sn-processor';
+import { loadWorklet } from './workletLoader.js';
 
 export default class Sn extends Tone.ToneAudioNode {
   constructor(options = {}) {
-    super();
-    this.name = 'Sn';
-    // デフォルト値とのマージ(Tone流の作法)
     // amp=2, tone=340, tone2=189, snappy=0.3, gate=0, amp2=1;
     const opts = Object.assign({ amp: 2, tone: 340, tone2: 189, snappy: 0.3, amp2: 1 }, options);
+    super({ context: opts.context ?? Tone.getContext() });
+    this.name = 'Sn';
+
     this.input = undefined;
     this.envelope = new Tone.AmplitudeEnvelope({
       context: this.context,
@@ -67,23 +65,21 @@ export default class Sn extends Tone.ToneAudioNode {
       value: opts.amp2,
     });
 
-    this._snWorklet = null;
-    this.context.addAudioWorkletModule(WORKLET_URL).then(() => {
-      if (this.disposed) {
-        return;
-      }
-      this._snWorklet = this.context.createAudioWorkletNode(PROCESSOR_NAME, {
-        outputChannelCount: [2],
-      });
-      this._snWorklet.onprocessorerror = (e) => console.error(e);
-      Tone.connect(this._snWorklet, this.envelope); // 永続接続
-      ['trigger', 'amp', 'tone', 'tone2', 'snappy', 'amp2'].forEach((name) => {
-        const p = this._snWorklet.parameters.get(name);
-        if (p) {
-          this[name].setParam(p);
-        }
-      });
-    });
+    this._worklet = null;
+
+    loadWorklet(this.context)
+      .then(() => {
+        this._worklet = this.context.createAudioWorkletNode('sn-processor', { outputChannelCount: [2] });
+        this._worklet.onprocessorerror = (e) => console.error(e);
+        Tone.connect(this._worklet, this.envelope); // 永続接続
+        ['trigger', 'amp', 'tone', 'tone2', 'snappy', 'amp2'].forEach((name) => {
+          const p = this._worklet.parameters.get(name);
+          if (p) {
+            this[name].setParam(p);
+          }
+        });
+      })
+      .catch((e) => console.error('sn-processor load failed', e));
   }
 
   triggerAttack(time, velocity = 1) {
@@ -109,7 +105,7 @@ export default class Sn extends Tone.ToneAudioNode {
   }
 
   dispose() {
-    super.dispose(); // output(=envelope)はここで処理済み
+    super.dispose();
     this._dummyGain.disconnect();
     this.trigger.dispose();
     this.amp.dispose();
@@ -118,9 +114,9 @@ export default class Sn extends Tone.ToneAudioNode {
     this.snappy.dispose();
     this.amp2.dispose();
 
-    if (this._snWorklet) {
-      this._snWorklet.port.postMessage('dispose');
-      this._snWorklet.disconnect();
+    if (this._worklet) {
+      this._worklet.port.postMessage('dispose');
+      this._worklet.disconnect();
     }
     return this;
   }

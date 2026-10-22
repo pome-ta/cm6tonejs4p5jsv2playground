@@ -1,4 +1,4 @@
-class BDProcessor extends AudioWorkletProcessor {
+export class BDProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
 
@@ -155,7 +155,7 @@ class BDProcessor extends AudioWorkletProcessor {
     if (outputs[0][1]) {
       outputs[0][1].set(channel);
     }
-    return true; // 常駐(決して false を返さない)
+    return true;
   }
 
   static get parameterDescriptors() {
@@ -172,7 +172,7 @@ class BDProcessor extends AudioWorkletProcessor {
         name: 'decay',
         defaultValue: 30,
         minValue: 0.01,
-        maxValue: 72,
+        maxValue: 110,
         automationRate: 'k-rate',
       },
       {
@@ -192,5 +192,3 @@ class BDProcessor extends AudioWorkletProcessor {
     ];
   }
 }
-
-registerProcessor('bd-processor', BDProcessor);
