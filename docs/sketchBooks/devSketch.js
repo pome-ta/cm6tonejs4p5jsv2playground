@@ -5,7 +5,7 @@ import { Bd, Sn } from 'modules/tr808scWorklet/drumKit.js';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 120;
+const BPM = 110;
 
 const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -39,6 +39,15 @@ const volCurve = (startGain, curveExponent = 1, endGain = 0, divSteps = 256) => 
 const scParams = (levels, times, curve) => ({ levels, times, curve });
 
 const sketch = (p) => {
+  // --- Sketch
+  let cnvs;
+  let w = p.windowWidth;
+  let h = p.windowHeight;
+
+  // --- Plugins
+  const tapIndicator = new TapIndicator(p);
+  const spectrumAnalyzer = new SpectrumAnalyzer(p, 2048);
+
   // --- Tone.js
   const p5Ctx = p.getAudioContext();
   Tone.setContext(p5Ctx, true);
@@ -721,48 +730,6 @@ const sketch = (p) => {
     smplr.add(openHatNote, buffer);
   };
 
-  // const synth2 = new Tone.Synth().sync().toDestination();
-  const synth2 = new Tone.Synth().toDestination();
-  //const now = Tone.now();
-  const now2 = transport.context.now();
-  synth2.triggerAttackRelease('C7', '8n', 0);
-  synth2.triggerAttackRelease('E7', '8n', 0 + 0.5);
-  synth2.triggerAttackRelease('G7', '8n', 0 + 1);
-
-  // --- emitter
-  emitter.once('startOnceCallSeqs', () => {
-    //const synth = new Tone.Synth().sync().toDestination();
-    const synth = new Tone.Synth().toDestination();
-    synth.triggerAttackRelease('C5', '8n', 0);
-    synth.triggerAttackRelease('E5', '8n', 0 + 0.5);
-    synth.triggerAttackRelease('G5', '8n', 0 + 1);
-
-    kickSeq.start(0);
-
-    snareSeq.start(0);
-    // cpRawSeq.start(time);
-    // cpReverbSeq.start(time);
-    //rimshotSeq.start(time);
-    //clavesSeq.start(time);
-    // maracasSeq.start(time);
-    hihatSeq.start(0);
-    /*
-    transport.scheduleOnce((time) => {
-      kickSeq.start(time);
-
-      snareSeq.start(time);
-      // cpRawSeq.start(time);
-      // cpReverbSeq.start(time);
-      //rimshotSeq.start(time);
-      //clavesSeq.start(time);
-      // maracasSeq.start(time);
-      hihatSeq.start(time);
-
-      // }, transport.context.now());
-    }, transport.seconds);
-    */
-  });
-
   // --- seq
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
@@ -869,6 +836,19 @@ const sketch = (p) => {
     humanize: 0.006,
   });
 
+  // --- emitter
+  emitter.once('startOnceCallSeqs', () => {
+    kickSeq.start(0);
+    snareSeq.start(0);
+
+    // cpRawSeq.start(0);
+    // cpReverbSeq.start(0);
+    // rimshotSeq.start(0);
+    // clavesSeq.start(0);
+    // maracasSeq.start(0);
+    hihatSeq.start(0);
+  });
+
   // --- drumKit
   const drumKitBusName = 'drums';
 
@@ -957,15 +937,6 @@ const sketch = (p) => {
     ),
   );
 
-  // --- Sketch
-  let cnvs;
-  let w = p.windowWidth;
-  let h = p.windowHeight;
-
-  // --- Plugins
-  const tapIndicator = new TapIndicator(p);
-  const spectrumAnalyzer = new SpectrumAnalyzer(p, 2048);
-
   p.setup = async () => {
     //p.setup = () => {
     // put setup code here
@@ -978,14 +949,6 @@ const sketch = (p) => {
     await setMaracasBuffer(maracasSampler);
     await setCloseHatBuffer(closeHatSampler);
     await setOpenHatBuffer(openHatSampler);
-
-    const synth = new Tone.Synth().sync().toDestination();
-    //const synth = new Tone.Synth().toDestination();
-    //const now = Tone.now();
-    const now = transport.context.now();
-    synth.triggerAttackRelease('C3', '8n', 0);
-    synth.triggerAttackRelease('E3', '8n', 0 + 0.5);
-    synth.triggerAttackRelease('G3', '8n', 0 + 1);
 
     emitter.emit('startOnceCallSeqs');
     transport.start();
