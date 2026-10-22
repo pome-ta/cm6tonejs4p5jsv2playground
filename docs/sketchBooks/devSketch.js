@@ -1,6 +1,6 @@
 // --- # example: 808 ?
 import * as Tone from 'tone';
-import { BD } from 'modules/tr808scWorklet/drumKit.js';
+import { Bd, Sn } from 'modules/tr808scWorklet/drumKit.js';
 
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
@@ -51,29 +51,9 @@ const sketch = (p) => {
 
   const emitter = new Tone.Emitter();
 
-  const kickVol2 = new Tone.Volume();
-  // const kickSampler2 = new Tone.Sampler({
-  //   attack: 0.0,
-  //   release: '2i',
-  //   curve: 'exponential',
-  // }).chain(
-  //   ...[
-  //     //
-  //   ].filter((n) => n),
-  //   kickVol2,
-  // );
-  // const kickNote2 = 'A4';
-  // kickSampler2.add(kickNote2, ki2buff);
-
-  // const blobUrl = URL.createObjectURL(
-  //   new Blob([processorSource], { type: 'application/javascript' }),
-  // );
-
-  // const kickSampler2 = new MyDrum(blobUrl, 'bd-processor').chain(
-
   // --- bd
   const kickVol = new Tone.Volume();
-  const kickGen = new BD({ decay: 30, tone: 56, amp: 2 }).chain(
+  const kickGen = new Bd({ decay: 30, amp: 2, tone: 56 }).chain(
     // const kickSampler2 = new BD().chain(
     ...[
       //
@@ -83,6 +63,13 @@ const sketch = (p) => {
 
   // --- snare
   const snareVol = new Tone.Volume();
+  const snareGen = new Sn().chain(
+    ...[
+      //
+    ].filter((n) => n),
+    snareVol,
+  );
+
   const snareSampler = new Tone.Sampler({
     attack: 0.0,
     release: '2i',
@@ -90,7 +77,7 @@ const sketch = (p) => {
   }).chain(
     ...[
       //
-      snareVol,
+      //snareVol,
     ].filter((n) => n),
   );
   const snareNote = 'A4';
@@ -904,7 +891,7 @@ const sketch = (p) => {
 
   const snareSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      snareSampler.triggerAttack(snareNote, time, ftRand(velocity));
+      snareGen.triggerAttack(time, ftRand(velocity));
       // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
     },
     events: [
@@ -1095,7 +1082,7 @@ const sketch = (p) => {
     // put setup code here
     cnvs = p.createCanvas(w, h);
 
-    await setSnareBuffer(snareSampler);
+    //await setSnareBuffer(snareSampler);
     await setCpRawBuffer(cpRawSampler);
     await setCpReverbBuffer(cpReverbSampler);
     await setRimshotBuffer(rimshotSampler);

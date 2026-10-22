@@ -3,13 +3,14 @@ import * as Tone from 'tone';
 const WORKLET_URL = new URL('./bd-processor.worklet.js', import.meta.url); // このファイル基準
 const PROCESSOR_NAME = 'bd-processor';
 
-export default class BD extends Tone.ToneAudioNode {
+export default class Bd extends Tone.ToneAudioNode {
   constructor(options = {}) {
     super();
-    this.name = 'BD';
-    console.log('class DB');
+    this.name = 'Bd';
+
     // デフォルト値とのマージ(Tone流の作法)
-    const opts = Object.assign({ decay: 30, tone: 56, amp: 2 }, options);
+    // decay=30, amp=2, gate=0, tone=56;
+    const opts = Object.assign({ decay: 30, amp: 2, tone: 56 }, options);
     this.input = undefined;
     this.envelope = new Tone.AmplitudeEnvelope({
       context: this.context,
@@ -37,19 +38,19 @@ export default class BD extends Tone.ToneAudioNode {
       swappable: true,
       value: opts.decay,
     });
-    this.tone = new Tone.Param({
-      context: this.context,
-      param: this._dummyGain.gain,
-      units: 'frequency',
-      swappable: true,
-      value: opts.tone,
-    });
     this.amp = new Tone.Param({
       context: this.context,
       param: this._dummyGain.gain,
       units: 'number',
       swappable: true,
       value: opts.amp,
+    });
+    this.tone = new Tone.Param({
+      context: this.context,
+      param: this._dummyGain.gain,
+      units: 'frequency',
+      swappable: true,
+      value: opts.tone,
     });
 
     this._worklet = null;
@@ -98,8 +99,8 @@ export default class BD extends Tone.ToneAudioNode {
     this._dummyGain.disconnect();
     this.trigger.dispose();
     this.decay.dispose(); // ← 追加
-    this.tone.dispose(); // ← 追加
     this.amp.dispose(); // ← 追加
+    this.tone.dispose(); // ← 追加
     if (this._worklet) {
       this._worklet.port.postMessage('dispose');
       this._worklet.disconnect();

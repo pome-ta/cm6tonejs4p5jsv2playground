@@ -58,8 +58,8 @@ class BDProcessor extends AudioWorkletProcessor {
     }
 
     const decay = parameters.decay[0]; // k-rate は先頭1要素
-    const tone = parameters.tone[0];
     const amp = parameters.amp[0];
+    const tone = parameters.tone[0];
     const trig = parameters.trigger; // a-rate は配列のまま
 
     const blockStart = currentTime;
@@ -110,8 +110,7 @@ class BDProcessor extends AudioWorkletProcessor {
 
       // 4. オシレーターの計算
       const sig = Math.sin(this.phase) * env;
-      const sub =
-        (2 / Math.PI) * Math.asin(Math.sin(this.phase)) * trienv * 0.05;
+      const sub = (2 / Math.PI) * Math.asin(Math.sin(this.phase)) * trienv * 0.05;
 
       // punch (サイン波を生成してHPFに通す)
       const punchOsc = Math.sin(this.punchPhase) * env * 2;
@@ -146,10 +145,8 @@ class BDProcessor extends AudioWorkletProcessor {
       channel[i] = limited * amp;
 
       // 6. 位相の更新
-      this.phase =
-        (this.phase + (2 * Math.PI * fenv) / sampleRate) % (Math.PI * 2);
-      this.punchPhase =
-        (this.punchPhase + (2 * Math.PI * pfenv) / sampleRate) % (Math.PI * 2);
+      this.phase = (this.phase + (2 * Math.PI * fenv) / sampleRate) % (Math.PI * 2);
+      this.punchPhase = (this.punchPhase + (2 * Math.PI * pfenv) / sampleRate) % (Math.PI * 2);
 
       if (env < 0.0001) {
         this.active = false; // 減衰完了で待機に戻る
@@ -162,6 +159,7 @@ class BDProcessor extends AudioWorkletProcessor {
   }
 
   static get parameterDescriptors() {
+    // decay=30, amp=2, gate=0, tone=56;
     return [
       {
         name: 'trigger',
@@ -178,17 +176,17 @@ class BDProcessor extends AudioWorkletProcessor {
         automationRate: 'k-rate',
       },
       {
-        name: 'tone',
-        defaultValue: 56,
-        minValue: 20,
-        maxValue: 200,
-        automationRate: 'k-rate',
-      },
-      {
         name: 'amp',
         defaultValue: 2,
         minValue: 0,
         maxValue: 10,
+        automationRate: 'k-rate',
+      },
+      {
+        name: 'tone',
+        defaultValue: 56,
+        minValue: 20,
+        maxValue: 200,
         automationRate: 'k-rate',
       },
     ];
