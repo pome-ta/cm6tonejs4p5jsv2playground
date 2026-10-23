@@ -1,4 +1,4 @@
-export class CpRawProcessor extends AudioWorkletProcessor {
+export default class CpRawProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
     this.active = false;

@@ -1,4 +1,4 @@
-export class SNProcessor extends AudioWorkletProcessor {
+export default class SnProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
 

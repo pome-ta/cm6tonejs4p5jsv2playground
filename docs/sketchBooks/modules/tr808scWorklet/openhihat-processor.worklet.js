@@ -1,4 +1,4 @@
-export class OHProcessor extends AudioWorkletProcessor {
+export default class OpenhihatProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
     this.active = false;

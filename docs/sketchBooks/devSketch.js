@@ -460,7 +460,7 @@ const sketch = (p) => {
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
     kickSeq.start(0);
-    // snareSeq.start(0);
+    snareSeq.start(0);
 
     cpRawSeq.start(0);
     cpReverbSeq.start(0);
@@ -468,6 +468,7 @@ const sketch = (p) => {
     // clavesSeq.start(0);
     // maracasSeq.start(0);
     hihatSeq.start(0);
+
     transport.start();
   });
 

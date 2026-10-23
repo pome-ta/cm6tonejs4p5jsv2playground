@@ -6,6 +6,7 @@ export default class Hat extends Tone.ToneAudioNode {
     // arg decay=0.42, amp=1, pan=0;
     const opts = Object.assign({ decay: 0.42, amp: 1 }, options);
     super({ context: opts.context ?? Tone.getContext() });
+
     this.name = 'Hat';
 
     this.input = undefined;
@@ -45,10 +46,10 @@ export default class Hat extends Tone.ToneAudioNode {
     });
 
     this._worklet = null;
-
+    const processorName = `${[...this.name].map((c, i) => (i ? c : c.toLowerCase())).join('')}-processor`;
     loadWorklet(this.context)
       .then(() => {
-        this._worklet = this.context.createAudioWorkletNode('hat-processor', { outputChannelCount: [2] });
+        this._worklet = this.context.createAudioWorkletNode(processorName, { outputChannelCount: [2] });
         this._worklet.onprocessorerror = (e) => console.error(e);
         Tone.connect(this._worklet, this.envelope); // 永続接続
         ['trigger', 'decay', 'amp'].forEach((name) => {
@@ -58,7 +59,7 @@ export default class Hat extends Tone.ToneAudioNode {
           }
         });
       })
-      .catch((e) => console.error('hat-processor load failed', e));
+      .catch((e) => console.error(`${processorName} load failed`, e));
   }
 
   triggerAttack(time, velocity = 1) {

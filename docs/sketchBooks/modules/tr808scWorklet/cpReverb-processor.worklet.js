@@ -1,4 +1,4 @@
-export class CpReverbProcessor extends AudioWorkletProcessor {
+export default class CpReverbProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
     this.active = false;

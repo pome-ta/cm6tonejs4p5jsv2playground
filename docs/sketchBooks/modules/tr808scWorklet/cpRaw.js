@@ -6,7 +6,8 @@ export default class CpRaw extends Tone.ToneAudioNode {
     // arg amp=1, gate=0;
     const opts = Object.assign({ amp: 1 }, options);
     super({ context: opts.context ?? Tone.getContext() });
-    this.name = 'cpRaw';
+
+    this.name = 'CpRaw';
 
     this.input = undefined;
     this.envelope = new Tone.AmplitudeEnvelope({
@@ -38,10 +39,10 @@ export default class CpRaw extends Tone.ToneAudioNode {
     });
 
     this._worklet = null;
-
+    const processorName = `${[...this.name].map((c, i) => (i ? c : c.toLowerCase())).join('')}-processor`;
     loadWorklet(this.context)
       .then(() => {
-        this._worklet = this.context.createAudioWorkletNode('cpRaw-processor', { outputChannelCount: [2] });
+        this._worklet = this.context.createAudioWorkletNode(processorName, { outputChannelCount: [2] });
         this._worklet.onprocessorerror = (e) => console.error(e);
         Tone.connect(this._worklet, this.envelope); // 永続接続
         ['trigger', 'amp'].forEach((name) => {
@@ -51,7 +52,7 @@ export default class CpRaw extends Tone.ToneAudioNode {
           }
         });
       })
-      .catch((e) => console.error('cpRaw-processor load failed', e));
+      .catch((e) => console.error(`${processorName} load failed`, e));
   }
 
   triggerAttack(time, velocity = 1) {

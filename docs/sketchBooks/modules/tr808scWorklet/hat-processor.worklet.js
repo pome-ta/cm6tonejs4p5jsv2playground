@@ -1,4 +1,4 @@
-export class HATProcessor extends AudioWorkletProcessor {
+export default class HatProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
     this.active = false;

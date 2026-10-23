@@ -6,6 +6,7 @@ export default class Sn extends Tone.ToneAudioNode {
     // amp=2, tone=340, tone2=189, snappy=0.3, gate=0, amp2=1;
     const opts = Object.assign({ amp: 2, tone: 340, tone2: 189, snappy: 0.3, amp2: 1 }, options);
     super({ context: opts.context ?? Tone.getContext() });
+
     this.name = 'Sn';
 
     this.input = undefined;
@@ -66,10 +67,10 @@ export default class Sn extends Tone.ToneAudioNode {
     });
 
     this._worklet = null;
-
+    const processorName = `${[...this.name].map((c, i) => (i ? c : c.toLowerCase())).join('')}-processor`;
     loadWorklet(this.context)
       .then(() => {
-        this._worklet = this.context.createAudioWorkletNode('sn-processor', { outputChannelCount: [2] });
+        this._worklet = this.context.createAudioWorkletNode(processorName, { outputChannelCount: [2] });
         this._worklet.onprocessorerror = (e) => console.error(e);
         Tone.connect(this._worklet, this.envelope); // 永続接続
         ['trigger', 'amp', 'tone', 'tone2', 'snappy', 'amp2'].forEach((name) => {
@@ -79,7 +80,7 @@ export default class Sn extends Tone.ToneAudioNode {
           }
         });
       })
-      .catch((e) => console.error('sn-processor load failed', e));
+      .catch((e) => console.error(`${processorName} load failed`, e));
   }
 
   triggerAttack(time, velocity = 1) {

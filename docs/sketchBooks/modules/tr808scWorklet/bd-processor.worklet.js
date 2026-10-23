@@ -1,4 +1,4 @@
-export class BDProcessor extends AudioWorkletProcessor {
+export default class BbProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
 
