@@ -1,6 +1,6 @@
 // --- # example: 808 ?
 import * as Tone from 'tone';
-import { Bd, Sn, Hat, Openhihat } from 'modules/tr808scWorklet/drumKit.js';
+import { Bd, Sn, CpRaw, Hat, Openhihat } from 'modules/tr808scWorklet/drumKit.js';
 
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
@@ -11,8 +11,6 @@ const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
   return bias + (Math.random() * 2 - 1) * maxDist;
 };
-
-
 
 const sketch = (p) => {
   // --- Sketch
@@ -68,106 +66,19 @@ const sketch = (p) => {
   );
 
   // --- cpRaw
+
   const cpRawVol = new Tone.Volume();
-  const cpRawSampler = new Tone.Sampler({
-    attack: 0.0,
-    release: '2i',
-    curve: 'exponential',
+  const cpRawGen = new CpRaw({
+    /*
+    amp: 1.12,
+    */
+    context: toneCtx,
   }).chain(
     ...[
       //
     ].filter((n) => n),
     cpRawVol,
   );
-  const cpRawNote = 'A4';
-  const setCpRawBuffer = async (smplr) => {
-    const buffer = await Tone.Offline(() => {
-      const amp = 1;
-
-      const atkenvParams = scParams([0.5, 1, 0], [0, 0.3], -160);
-      const denvParams = {
-        delay: 0.026,
-        attack: 0.0,
-        decay: 6.0,
-        release: 1.0,
-        level: 1,
-        curve: -157,
-      };
-
-      const atkGain = new Tone.Gain();
-      const atkNoise = new Tone.Noise({
-        noise: { type: 'white' },
-      })
-        .chain(
-          ...[
-            //
-            new Tone.Gain(1.4),
-          ].filter((n) => n),
-          atkGain,
-        )
-        .start();
-
-      atkNoise.volume.setValueCurveAtTime(
-        volCurve(atkenvParams.levels[1], atkenvParams.curve),
-        atkenvParams.times[0],
-        atkenvParams.times[1],
-      );
-
-      const decayGain = new Tone.Gain();
-      const decayNoise = new Tone.Noise({
-        noise: { type: 'white' },
-      })
-        .chain(
-          ...[
-            //
-          ].filter((n) => n),
-          decayGain,
-        )
-        .start();
-      decayNoise.volume.setValueCurveAtTime(volCurve(0, denvParams.curve), 0, denvParams.delay);
-      decayNoise.volume.setValueCurveAtTime(
-        volCurve(denvParams.level, denvParams.curve),
-        denvParams.delay,
-        denvParams.decay,
-      );
-
-      const sumHighpass = new Tone.Filter({
-        type: 'highpass',
-        frequency: 500,
-        Q: 0.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-      const sumBandpass = new Tone.Filter({
-        type: 'bandpass',
-        frequency: 1062,
-        Q: 0.5,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-      const sumGain = new Tone.Gain();
-      Tone.fanIn(
-        ...[
-          //
-          atkGain,
-          decayGain,
-        ].filter((n) => n),
-        new Tone.Gain().chain(
-          ...[
-            //,
-            new Tone.Gain(amp),
-            sumHighpass,
-            sumBandpass,
-            new Tone.Gain(2.5),
-            new Tone.Channel(),
-          ].filter((n) => n),
-          sumGain,
-        ),
-      );
-
-      Tone.fanIn(sumGain, Tone.getDestination());
-    }, 6.125);
-
-    smplr.add(cpRawNote, buffer);
-  };
 
   // --- cpReverb
   const cpReverbVol = new Tone.Volume();
@@ -496,8 +407,6 @@ const sketch = (p) => {
     openHatVol,
   );
 
-
-
   // --- seq
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
@@ -526,7 +435,7 @@ const sketch = (p) => {
   });
   const cpRawSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      cpRawSampler.triggerAttack(cpRawNote, time, ftRand(velocity));
+      cpRawGen.triggerAttack(time, ftRand(velocity));
     },
     events: [null, [null, [null, null, 1, null], [null, 1, null, null], null]],
     subdivision: '1n',
@@ -609,7 +518,7 @@ const sketch = (p) => {
     kickSeq.start(0);
     snareSeq.start(0);
 
-    // cpRawSeq.start(0);
+    cpRawSeq.start(0);
     // cpReverbSeq.start(0);
     // rimshotSeq.start(0);
     // clavesSeq.start(0);
@@ -710,7 +619,6 @@ const sketch = (p) => {
     //p.setup = () => {
     // put setup code here
     cnvs = p.createCanvas(w, h);
-
 
     emitter.emit('startOnceCallSeqs');
     //transport.start();
