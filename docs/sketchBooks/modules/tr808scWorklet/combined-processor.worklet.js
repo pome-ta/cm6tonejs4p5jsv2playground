@@ -5,6 +5,7 @@ import CpReverbProcessor from './cpReverb-processor.worklet.js';
 import RimshotProcessor from './rimshot-processor.worklet.js';
 import ClavesProcessor from './claves-processor.worklet.js';
 import MaracasProcessor from './maracas-processor.worklet.js';
+import CowbellProcessor from './cowbell-processor.worklet.js';
 import HatProcessor from './hat-processor.worklet.js';
 import OpenhihatProcessor from './openhihat-processor.worklet.js';
 
@@ -15,5 +16,6 @@ registerProcessor('cpReverb-processor', CpReverbProcessor);
 registerProcessor('rimshot-processor', RimshotProcessor);
 registerProcessor('claves-processor', ClavesProcessor);
 registerProcessor('maracas-processor', MaracasProcessor);
+registerProcessor('cowbell-processor', CowbellProcessor);
 registerProcessor('hat-processor', HatProcessor);
 registerProcessor('openhihat-processor', OpenhihatProcessor);

@@ -4,7 +4,7 @@ import { loadWorklet } from './workletLoader.js';
 export default class Claves extends Tone.ToneAudioNode {
   constructor(options = {}) {
     // arg amp=1;
-    const opts = Object.assign({ decay: 30, amp: 2, tone: 56 }, options);
+    const opts = Object.assign({ amp: 1 }, options);
     super({ context: opts.context ?? Tone.getContext() });
 
     this.name = 'Claves';
@@ -37,7 +37,6 @@ export default class Claves extends Tone.ToneAudioNode {
       swappable: true,
       value: opts.amp,
     });
-
 
     this._worklet = null;
     const processorName = `${[...this.name].map((c, i) => (i ? c : c.toLowerCase())).join('')}-processor`;

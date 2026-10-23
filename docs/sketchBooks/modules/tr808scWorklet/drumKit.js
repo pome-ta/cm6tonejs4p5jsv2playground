@@ -5,8 +5,8 @@ import CpReverb from './cpReverb.js';
 import Rimshot from './rimshot.js';
 import Claves from './claves.js';
 import Maracas from './maracas.js';
-
+import Cowbell from './cowbell.js';
 import Hat from './hat.js';
 import Openhihat from './openhihat.js';
 
-export { Bd, Sn, CpRaw, CpReverb, Rimshot, Claves, Maracas, Hat, Openhihat };
+export { Bd, Sn, CpRaw, CpReverb, Rimshot, Claves, Maracas, Cowbell, Hat, Openhihat };
