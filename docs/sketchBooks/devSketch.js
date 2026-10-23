@@ -1,6 +1,6 @@
 // --- # example: 808 ?
 import * as Tone from 'tone';
-import { Bd, Sn, CpRaw, Hat, Openhihat } from 'modules/tr808scWorklet/drumKit.js';
+import { Bd, Sn, CpRaw, CpReverb, Hat, Openhihat } from 'modules/tr808scWorklet/drumKit.js';
 
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
@@ -66,7 +66,6 @@ const sketch = (p) => {
   );
 
   // --- cpRaw
-
   const cpRawVol = new Tone.Volume();
   const cpRawGen = new CpRaw({
     /*
@@ -82,72 +81,17 @@ const sketch = (p) => {
 
   // --- cpReverb
   const cpReverbVol = new Tone.Volume();
-  const cpReverbSampler = new Tone.Sampler({
-    attack: 0.0,
-    release: '2i',
-    curve: 'exponential',
+  const cpReverbGen = new CpReverb({
+    /*
+    amp: 1.12,
+    */
+    context: toneCtx,
   }).chain(
     ...[
       //
     ].filter((n) => n),
     cpReverbVol,
   );
-  const cpReverbNote = 'A4';
-  const setCpReverbBuffer = async (smplr) => {
-    const buffer = await Tone.Offline(() => {
-      const amp = 1;
-      const gate = 0;
-
-      const revgenParams = {
-        attack: 0.1,
-        release: 4.0,
-        level: 1,
-        curve: -9,
-      };
-
-      const reverbHighpass = new Tone.Filter({
-        type: 'highpass',
-        frequency: 500,
-        Q: 0.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-
-      const reverbLowpass = new Tone.Filter({
-        type: 'lowpass',
-        frequency: 1000,
-        Q: 0.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-
-      const reverbGain = new Tone.Gain();
-      const reverbNoise = new Tone.Noise({
-        noise: { type: 'white' },
-      })
-        .chain(
-          ...[
-            //
-            new Tone.Gain(0.02),
-            // new Tone.Gain(0.2),
-            reverbHighpass,
-            reverbLowpass,
-            new Tone.Gain(amp),
-            new Tone.Channel(),
-          ].filter((n) => n),
-          reverbGain,
-        )
-        .start();
-
-      reverbNoise.volume.setValueCurveAtTime(
-        volCurve(revgenParams.level, revgenParams.curve),
-        revgenParams.attack,
-        revgenParams.release,
-      );
-
-      Tone.fanIn(reverbGain, Tone.getDestination());
-    }, 4.125);
-
-    smplr.add(cpReverbNote, buffer);
-  };
 
   // --- rimshot
   const rimshotVol = new Tone.Volume();
@@ -443,9 +387,9 @@ const sketch = (p) => {
 
   const cpReverbSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      cpReverbSampler.triggerAttack(cpReverbNote, time, ftRand(velocity));
+      cpReverbGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [null, [null, [null, null, 1, null], null, null]],
+    events: [1, [1, [1, null, 1, null], null, null]],
     subdivision: '1n',
   });
   const rimshotSeq = new Tone.Sequence({
@@ -516,10 +460,10 @@ const sketch = (p) => {
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
     kickSeq.start(0);
-    snareSeq.start(0);
+    // snareSeq.start(0);
 
     cpRawSeq.start(0);
-    // cpReverbSeq.start(0);
+    cpReverbSeq.start(0);
     // rimshotSeq.start(0);
     // clavesSeq.start(0);
     // maracasSeq.start(0);
@@ -550,7 +494,7 @@ const sketch = (p) => {
     channelCount: 1,
   });
   const cpReverbCh = toChannel(cpReverbVol, {
-    volume: 5.0,
+    volume: 3.0, // 30 とかでやっと
     pan: 0.0,
     channelCount: 1,
   });
