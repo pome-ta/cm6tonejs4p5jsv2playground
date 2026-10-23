@@ -8,6 +8,7 @@ import {
   Rimshot,
   Claves,
   Maracas,
+  Cowbell,
   Hat,
   Openhihat,
 } from 'modules/tr808scWorklet/drumKit.js';
@@ -146,6 +147,20 @@ const sketch = (p) => {
     maracasVol,
   );
 
+  // --- cowbell
+  const cowbellVol = new Tone.Volume();
+  const cowbellGen = new Cowbell({
+    /*
+    amp: 1.025,
+    */
+    context: toneCtx,
+  }).chain(
+    ...[
+      //
+    ].filter((n) => n),
+    cowbellVol,
+  );
+
   // --- hat
   const closeHatVol = new Tone.Volume();
   const closeHatGen = new Hat({
@@ -214,10 +229,7 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cpReverbGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [
-      null,
-      [null, [null, null, 1, null], [null, null, null, null], null],
-    ],
+    events: [null, [null, [null, null, 1, null], [null, null, null, null], null]],
     subdivision: '1n',
   });
   const rimshotSeq = new Tone.Sequence({
@@ -248,6 +260,20 @@ const sketch = (p) => {
       maracasGen.triggerAttack(time, ftRand(velocity));
     },
     events: [[[[null, null, 1, 1], null, [null, null, 1, 1], null]]],
+    subdivision: '1n',
+    humanize: 0.006,
+  });
+
+  const cowbellSeq = new Tone.Sequence({
+    callback: (time, velocity) => {
+      cowbellGen.triggerAttack(time, ftRand(velocity));
+    },
+    events: [
+      [
+        [null, 1, 1, null],
+        [1, [null, 1], null, 1],
+      ],
+    ],
     subdivision: '1n',
     humanize: 0.006,
   });
@@ -288,12 +314,12 @@ const sketch = (p) => {
   emitter.once('startOnceCallSeqs', () => {
     kickSeq.start(0);
     snareSeq.start(0);
-
     cpRawSeq.start(0);
     cpReverbSeq.start(0);
     rimshotSeq.start(0);
-    clavesSeq.start(0);
+    // clavesSeq.start(0);
     maracasSeq.start(0);
+    cowbellSeq.start(0);
     hihatSeq.start(0);
 
     // --- transport.start
@@ -340,6 +366,11 @@ const sketch = (p) => {
 
   const maracasCh = toChannel(maracasVol, {
     volume: 1.0,
+    pan: 0.0,
+    channelCount: 1,
+  });
+  const cowbellCh = toChannel(cowbellVol, {
+    volume: 0.0,
     pan: 0.0,
     channelCount: 1,
   });
