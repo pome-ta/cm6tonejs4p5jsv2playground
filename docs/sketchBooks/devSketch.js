@@ -1,6 +1,6 @@
 // --- # example: 808 ?
 import * as Tone from 'tone';
-import { Bd, Sn, Hat } from 'modules/tr808scWorklet/drumKit.js';
+import { Bd, Sn, Hat, Openhihat } from 'modules/tr808scWorklet/drumKit.js';
 
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
@@ -507,11 +507,12 @@ const sketch = (p) => {
 
   // --- openhihat
   const openHatVol = new Tone.Volume();
-  const openHatSampler = new Tone.Sampler({
-    attack: 0.0,
-    // release: '2i',
-    release: 0.0,
-    curve: 'exponential',
+  const openHatGen = new Openhihat({
+    /*
+    decay: 0.42,
+    amp: 1.025,
+    */
+    context: toneCtx,
   }).chain(
     ...[
       //
@@ -519,124 +520,7 @@ const sketch = (p) => {
     openHatVol,
   );
 
-  const openHatNote = 'A4';
-  const setOpenHatBuffer = async (smplr) => {
-    const buffer = await Tone.Offline(() => {
-      const decay = 0.5;
-      const amp = 4;
-      const pan = 0;
-      const env1Params = {
-        attack: 0.1,
-        release: decay,
-        level: 1,
-        curve: -13,
-      };
-      const env2Params = scParams([0, 1, 0], [0, decay * 5], -150);
 
-      const frqs = [203.52, 366.31, 301.77, 518.19, 811.16, 538.75];
-      const LFPulse = (frq) => {
-        const osc = new Tone.AudioToGain();
-
-        new Tone.PulseOscillator({
-          frequency: frq,
-          width: 0,
-          volume: Tone.gainToDb(0.6),
-        })
-          .connect(osc)
-          .start();
-        return osc;
-      };
-
-      const sigLowshelf = new Tone.Filter({
-        type: 'lowshelf',
-        frequency: 990,
-        rolloff: -12, // -12, -24, -48, -96
-        gain: -3,
-      });
-      const sigBandpass = new Tone.Filter({
-        type: 'bandpass',
-        frequency: 7700,
-        Q: 0.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-      const sigPeaking = new Tone.Filter({
-        type: 'peaking',
-        frequency: 7200,
-        Q: 0.5,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-
-      const sigHighpass = new Tone.Filter({
-        type: 'highpass',
-        frequency: 8100,
-        Q: 0.7,
-        rolloff: -48, // -12, -24, -48, -96
-      });
-
-      const sigHighshelf = new Tone.Filter({
-        type: 'highshelf',
-        frequency: 9400,
-        Q: 1.7,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-      const sig = new Tone.Gain();
-      const siga = new Tone.Volume();
-      const sigb = new Tone.Volume();
-      Tone.fanIn(
-        ...[...frqs].map((frq) => LFPulse(frq)),
-        new Tone.Gain().chain(
-          ...[
-            //
-            sigLowshelf,
-            sigBandpass,
-            sigPeaking,
-            sigHighpass,
-            sigHighshelf,
-          ].filter((n) => n),
-          sig.fan(siga, sigb),
-        ),
-      );
-
-      new Tone.Gain(0.6).chain(siga);
-      siga.volume.setValueCurveAtTime(
-        volCurve(env1Params.level, env1Params.curve),
-        env1Params.attack,
-        env1Params.release,
-      );
-
-      sigb.volume.setValueCurveAtTime(
-        volCurve(env2Params.levels[1], env2Params.curve),
-        env2Params.times[0],
-        env2Params.times[1],
-      );
-
-      const sumLowpass = new Tone.Filter({
-        type: 'lowpass',
-        frequency: 4000,
-        Q: 0.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-
-      const sumGain = new Tone.Gain();
-      Tone.fanIn(
-        siga,
-        sigb,
-        new Tone.Gain().chain(
-          ...[
-            //,
-            sumLowpass,
-            new Tone.Channel(),
-            new Tone.Gain(amp),
-            new Tone.Gain(2),
-          ].filter((n) => n),
-          sumGain,
-        ),
-      );
-      Tone.fanIn(sumGain, Tone.getDestination());
-    }, 1.75);
-
-    smplr.add(openHatNote, buffer);
-  };
 
   // --- seq
   const kickSeq = new Tone.Sequence({
@@ -716,7 +600,7 @@ const sketch = (p) => {
     [
       1, // close
       (time, velocity) => {
-        openHatSampler?.triggerRelease(0);
+        openHatGen?.triggerRelease(0);
         closeHatGen.triggerAttack(time, ftRand(velocity));
       },
     ],
@@ -725,7 +609,7 @@ const sketch = (p) => {
       -1, // open
       (time, velocity) => {
         closeHatGen?.triggerRelease(0);
-        openHatSampler.triggerAttack(openHatNote, time, ftRand(velocity));
+        openHatGen.triggerAttack(time, ftRand(velocity));
       },
     ],
   ]);
@@ -857,7 +741,7 @@ const sketch = (p) => {
     await setClavesBuffer(clavesSampler);
     await setMaracasBuffer(maracasSampler);
     //await setCloseHatBuffer(closeHatSampler);
-    await setOpenHatBuffer(openHatSampler);
+    //await setOpenHatBuffer(openHatSampler);
 
     emitter.emit('startOnceCallSeqs');
     //transport.start();
