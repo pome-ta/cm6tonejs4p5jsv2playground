@@ -17,12 +17,7 @@ export default class CpRawProcessor extends AudioWorkletProcessor {
       y1: 0,
       y2: 0,
       process: function (input) {
-        const out =
-          this.b0 * input +
-          this.b1 * this.x1 +
-          this.b2 * this.x2 -
-          this.a1 * this.y1 -
-          this.a2 * this.y2;
+        const out = this.b0 * input + this.b1 * this.x1 + this.b2 * this.x2 - this.a1 * this.y1 - this.a2 * this.y2;
         this.x2 = this.x1;
         this.x1 = input;
         this.y2 = this.y1;
@@ -141,7 +136,7 @@ export default class CpRawProcessor extends AudioWorkletProcessor {
       {
         name: 'amp',
         defaultValue: 1.0,
-        minValue: 1.0,  // 計算上は、`1.2` となるらしい
+        minValue: 1.0, // 計算上は、`1.2` となるらしい
         maxValue: 5.0,
         automationRate: 'k-rate',
       },

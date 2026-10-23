@@ -59,8 +59,7 @@ export default class ClavesProcessor extends AudioWorkletProcessor {
       channel[i] = Math.sin(this.phase) * env * amp;
 
       // 2500Hz固定のサイン波[cite: 1]
-      this.phase =
-        (this.phase + (2 * Math.PI * 2500) / sampleRate) % (Math.PI * 2);
+      this.phase = (this.phase + (2 * Math.PI * 2500) / sampleRate) % (Math.PI * 2);
     }
 
     if (outputs[0][1]) {

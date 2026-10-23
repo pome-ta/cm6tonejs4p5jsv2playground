@@ -19,12 +19,7 @@ export default class CowbellProcessor extends AudioWorkletProcessor {
       y1: 0,
       y2: 0,
       process: function (input) {
-        const out =
-          this.b0 * input +
-          this.b1 * this.x1 +
-          this.b2 * this.x2 -
-          this.a1 * this.y1 -
-          this.a2 * this.y2;
+        const out = this.b0 * input + this.b1 * this.x1 + this.b2 * this.x2 - this.a1 * this.y1 - this.a2 * this.y2;
         this.x2 = this.x1;
         this.x1 = input;
         this.y2 = this.y1;
@@ -86,8 +81,7 @@ export default class CowbellProcessor extends AudioWorkletProcessor {
 
     for (let i = 0; i < channel.length; i++) {
       const t = trig.length > 1 ? trig[i] : trig[0];
-      if (this._prevTrig === 0 && t > 0)
-        this._reset(blockStart + i / sampleRate);
+      if (this._prevTrig === 0 && t > 0) this._reset(blockStart + i / sampleRate);
       this._prevTrig = t;
 
       if (!this.active) {
@@ -150,7 +144,7 @@ export default class CowbellProcessor extends AudioWorkletProcessor {
         name: 'amp',
         defaultValue: 1.0,
         minValue: 0.05,
-        maxValue: 1.0,  // 本来は`0.3`
+        maxValue: 1.0, // 本来は`0.3`
         automationRate: 'k-rate',
       },
     ];

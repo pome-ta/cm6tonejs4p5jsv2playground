@@ -21,12 +21,7 @@ export default class HatProcessor extends AudioWorkletProcessor {
       y1: 0,
       y2: 0,
       process: function (input) {
-        const out =
-          this.b0 * input +
-          this.b1 * this.x1 +
-          this.b2 * this.x2 -
-          this.a1 * this.y1 -
-          this.a2 * this.y2;
+        const out = this.b0 * input + this.b1 * this.x1 + this.b2 * this.x2 - this.a1 * this.y1 - this.a2 * this.y2;
         this.x2 = this.x1;
         this.x1 = input;
         this.y2 = this.y1;

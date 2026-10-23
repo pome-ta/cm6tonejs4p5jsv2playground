@@ -17,7 +17,7 @@ import {
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 110;
+const BPM = 100;
 
 const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -126,7 +126,6 @@ const sketch = (p) => {
   );
 
   // --- maracas
-  Maracas;
   const maracasVol = new Tone.Volume();
   const maracasGen = new Maracas({
     amp: 0.387,
@@ -193,13 +192,12 @@ const sketch = (p) => {
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       kickGen.triggerAttack(time, ftRand(velocity));
-      // kickGen.triggerAttackRelease(`8t.`, time, ftRand(velocity));
     },
     events: [
-      [1, 1, 1, 1],
-      [1, 1, 1, 1],
-      [1, 1, 1, 1],
-      [1, 1, 1, [1, 0.6]],
+      [1, null, [1, 0.92], null],
+      [1, null, [1, 0.88], null],
+      [1, null, [1, 0.92], null],
+      [1, null, [1, 0.88], null],
     ],
     subdivision: '1n',
   });
@@ -207,12 +205,8 @@ const sketch = (p) => {
   const snareSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       snareGen.triggerAttack(time, ftRand(velocity));
-      // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
     },
-    events: [
-      [null, 1, null, 1],
-      // [null, [1, [null, 0.45]], null, 1],
-    ],
+    events: [[null, 1, null, 1]],
     subdivision: '1n',
   });
   const cpRawSeq = new Tone.Sequence({
@@ -227,16 +221,12 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cpReverbGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [
-      null,
-      [null, [null, null, 1, null], [null, null, null, null], null],
-    ],
+    events: [null, [null, [null, null, 1, null], [null, null, null, null], null]],
     subdivision: '1n',
   });
   const rimshotSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       rimshotGen.triggerAttack(time, ftRand(velocity));
-      // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
     },
     events: [[null, [1, [null, 0.55]], null, 1]],
     subdivision: '1n',
@@ -245,9 +235,9 @@ const sketch = (p) => {
   const clavesSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       clavesGen.triggerAttack(time, ftRand(velocity));
-      // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
     },
     events: [
+      [null],
       [
         [null, 1, 1, null],
         [1, [null, 1], null, 1],
@@ -274,6 +264,7 @@ const sketch = (p) => {
         [null, 1, 1, null],
         [1, [null, 1], null, 1],
       ],
+      [null],
     ],
     subdivision: '1n',
     humanize: 0.006,
@@ -302,9 +293,9 @@ const sketch = (p) => {
       hihatHandlers.get(Math.sign(velocity))?.(time, Math.abs(velocity));
     },
     events: [
+      [null, 1, null, 1, null, 1, null, 1],
       [null, 1, -1, 1, null, 1, -1, 1],
-      [null, 1, -1, 1, null, 1, -1, 1],
-      [null, 1, -1, 1, null, 1, -1, 1],
+      [null, 1, null, 1, null, 1, null, 1],
       [null, 1, -1, [1, -1], [1, -1], 1, null, [-1, 1]],
     ],
     subdivision: '1n',
@@ -315,22 +306,22 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cymbalGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [1],
+    events: [1, null],
     subdivision: '4m',
   });
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
-    // kickSeq.start(0);
-    // snareSeq.start(0);
-    // cpRawSeq.start(0);
-    cpReverbSeq.start(0);
+    kickSeq.start(0);
+    snareSeq.start(0);
+    cpRawSeq.start(0);
+    // cpReverbSeq.start(0);
     rimshotSeq.start(0);
-    // clavesSeq.start(0);
-    // maracasSeq.start(0);
-    // cowbellSeq.start(0);
-    // hihatSeq.start(0);
-    // cymbalSeq.start(0);
+    clavesSeq.start(0);
+    maracasSeq.start(0);
+    cowbellSeq.start(0);
+    hihatSeq.start(0);
+    cymbalSeq.start(0);
 
     // --- transport.start
     transport.start();
@@ -394,7 +385,7 @@ const sketch = (p) => {
     channelCount: 1,
   });
   const cymbalCh = toChannel(cymbalVol, {
-    volume: 0.0,
+    volume: 4.0,
     pan: -0.4,
     channelCount: 1,
   });

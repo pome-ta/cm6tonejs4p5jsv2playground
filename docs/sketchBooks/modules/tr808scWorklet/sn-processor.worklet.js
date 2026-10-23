@@ -68,8 +68,7 @@ export default class SnProcessor extends AudioWorkletProcessor {
 
   // Biquadフィルターの1サンプル処理ヘルパー
   processFilter(f, input) {
-    const output =
-      f.b0 * input + f.b1 * f.x1 + f.b2 * f.x2 - f.a1 * f.y1 - f.a2 * f.y2;
+    const output = f.b0 * input + f.b1 * f.x1 + f.b2 * f.x2 - f.a1 * f.y1 - f.a2 * f.y2;
     f.x2 = f.x1;
     f.x1 = input;
     f.y2 = f.y1;
@@ -157,10 +156,8 @@ export default class SnProcessor extends AudioWorkletProcessor {
       channel[i] = sig;
 
       // 6. 位相の更新
-      this.phase1 =
-        (this.phase1 + (2 * Math.PI * tone) / sampleRate) % (Math.PI * 2);
-      this.phase2 =
-        (this.phase2 + (2 * Math.PI * tone2) / sampleRate) % (Math.PI * 2);
+      this.phase1 = (this.phase1 + (2 * Math.PI * tone) / sampleRate) % (Math.PI * 2);
+      this.phase2 = (this.phase2 + (2 * Math.PI * tone2) / sampleRate) % (Math.PI * 2);
     }
 
     if (outputs[0][1]) {
