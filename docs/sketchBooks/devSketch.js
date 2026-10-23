@@ -389,7 +389,7 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cpReverbGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [1, [1, [1, null, 1, null], null, null]],
+    events: [null, [null, [null, null, 1, null], [null, null, null, null], null]],
     subdivision: '1n',
   });
   const rimshotSeq = new Tone.Sequence({
@@ -469,6 +469,7 @@ const sketch = (p) => {
     // maracasSeq.start(0);
     hihatSeq.start(0);
 
+    // --- transport.start
     transport.start();
   });
 
@@ -560,13 +561,12 @@ const sketch = (p) => {
     ),
   );
 
-  p.setup = async () => {
-    //p.setup = () => {
+  // p.setup = async () => {
+  p.setup = () => {
     // put setup code here
     cnvs = p.createCanvas(w, h);
 
     emitter.emit('startOnceCallSeqs');
-    //transport.start();
 
     tapIndicator.setup();
     spectrumAnalyzer.targetNodes(masterVol);
