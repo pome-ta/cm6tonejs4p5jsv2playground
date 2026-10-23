@@ -11,6 +11,7 @@ import {
   Cowbell,
   Hat,
   Openhihat,
+  Cymbal,
 } from 'modules/tr808scWorklet/drumKit.js';
 
 import TapIndicator from 'modules/TapIndicator.js';
@@ -190,6 +191,20 @@ const sketch = (p) => {
     ].filter((n) => n),
     openHatVol,
   );
+  // --- cymbal
+  const cymbalVol = new Tone.Volume();
+  const cymbalGen = new Cymbal({
+    /*
+    decay: 0.42,
+    amp: 1.025,
+    */
+    context: toneCtx,
+  }).chain(
+    ...[
+      //
+    ].filter((n) => n),
+    cymbalVol,
+  );
 
   // --- seq
   const kickSeq = new Tone.Sequence({
@@ -229,7 +244,10 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cpReverbGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [null, [null, [null, null, 1, null], [null, null, null, null], null]],
+    events: [
+      null,
+      [null, [null, null, 1, null], [null, null, null, null], null],
+    ],
     subdivision: '1n',
   });
   const rimshotSeq = new Tone.Sequence({
@@ -310,17 +328,26 @@ const sketch = (p) => {
     humanize: 0.006,
   });
 
+  const cymbalSeq = new Tone.Sequence({
+    callback: (time, velocity) => {
+      cymbalGen.triggerAttack(time, ftRand(velocity));
+    },
+    events: [1],
+    subdivision: '4m',
+  });
+
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
     kickSeq.start(0);
     snareSeq.start(0);
     cpRawSeq.start(0);
-    cpReverbSeq.start(0);
+    // cpReverbSeq.start(0);
     rimshotSeq.start(0);
     // clavesSeq.start(0);
     maracasSeq.start(0);
-    cowbellSeq.start(0);
-    hihatSeq.start(0);
+    // cowbellSeq.start(0);
+    // hihatSeq.start(0);
+    cymbalSeq.start(0);
 
     // --- transport.start
     transport.start();
@@ -382,6 +409,11 @@ const sketch = (p) => {
   const openHatCh = toChannel(openHatVol, {
     volume: 0.0,
     pan: 0.4,
+    channelCount: 1,
+  });
+  const cymbalCh = toChannel(cymbalVol, {
+    volume: 0.0,
+    pan: -0.4,
     channelCount: 1,
   });
 

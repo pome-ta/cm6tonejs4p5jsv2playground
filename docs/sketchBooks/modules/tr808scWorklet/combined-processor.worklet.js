@@ -8,6 +8,7 @@ import MaracasProcessor from './maracas-processor.worklet.js';
 import CowbellProcessor from './cowbell-processor.worklet.js';
 import HatProcessor from './hat-processor.worklet.js';
 import OpenhihatProcessor from './openhihat-processor.worklet.js';
+import CymbalProcessor from './cymbal-processor.worklet.js';
 
 registerProcessor('bd-processor', BbProcessor);
 registerProcessor('sn-processor', SnProcessor);
@@ -19,3 +20,4 @@ registerProcessor('maracas-processor', MaracasProcessor);
 registerProcessor('cowbell-processor', CowbellProcessor);
 registerProcessor('hat-processor', HatProcessor);
 registerProcessor('openhihat-processor', OpenhihatProcessor);
+registerProcessor('cymbal-processor', CymbalProcessor);

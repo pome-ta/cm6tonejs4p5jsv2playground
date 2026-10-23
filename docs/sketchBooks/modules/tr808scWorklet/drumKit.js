@@ -8,5 +8,18 @@ import Maracas from './maracas.js';
 import Cowbell from './cowbell.js';
 import Hat from './hat.js';
 import Openhihat from './openhihat.js';
+import Cymbal from './cymbal.js';
 
-export { Bd, Sn, CpRaw, CpReverb, Rimshot, Claves, Maracas, Cowbell, Hat, Openhihat };
+export {
+  Bd,
+  Sn,
+  CpRaw,
+  CpReverb,
+  Rimshot,
+  Claves,
+  Maracas,
+  Cowbell,
+  Hat,
+  Openhihat,
+  Cymbal,
+};
