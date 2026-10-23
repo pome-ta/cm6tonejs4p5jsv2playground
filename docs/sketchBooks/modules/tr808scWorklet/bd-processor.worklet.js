@@ -110,7 +110,8 @@ export default class BbProcessor extends AudioWorkletProcessor {
 
       // 4. オシレーターの計算
       const sig = Math.sin(this.phase) * env;
-      const sub = (2 / Math.PI) * Math.asin(Math.sin(this.phase)) * trienv * 0.05;
+      const sub =
+        (2 / Math.PI) * Math.asin(Math.sin(this.phase)) * trienv * 0.05;
 
       // punch (サイン波を生成してHPFに通す)
       const punchOsc = Math.sin(this.punchPhase) * env * 2;
@@ -145,8 +146,10 @@ export default class BbProcessor extends AudioWorkletProcessor {
       channel[i] = limited * amp;
 
       // 6. 位相の更新
-      this.phase = (this.phase + (2 * Math.PI * fenv) / sampleRate) % (Math.PI * 2);
-      this.punchPhase = (this.punchPhase + (2 * Math.PI * pfenv) / sampleRate) % (Math.PI * 2);
+      this.phase =
+        (this.phase + (2 * Math.PI * fenv) / sampleRate) % (Math.PI * 2);
+      this.punchPhase =
+        (this.punchPhase + (2 * Math.PI * pfenv) / sampleRate) % (Math.PI * 2);
 
       if (env < 0.0001) {
         this.active = false; // 減衰完了で待機に戻る

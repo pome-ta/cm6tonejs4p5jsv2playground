@@ -1,6 +1,16 @@
 // --- # example: 808 ?
 import * as Tone from 'tone';
-import { Bd, Sn, CpRaw, CpReverb, Hat, Openhihat } from 'modules/tr808scWorklet/drumKit.js';
+import {
+  Bd,
+  Sn,
+  CpRaw,
+  CpReverb,
+  Rimshot,
+  Claves,
+  Maracas,
+  Hat,
+  Openhihat,
+} from 'modules/tr808scWorklet/drumKit.js';
 
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
@@ -95,138 +105,25 @@ const sketch = (p) => {
 
   // --- rimshot
   const rimshotVol = new Tone.Volume();
-  const rimshotSampler = new Tone.Sampler({
-    attack: 0.0,
-    release: '2i',
-    curve: 'exponential',
+  const rimshotGen = new Rimshot({
+    /*
+    amp: 1.12,
+    */
+    context: toneCtx,
   }).chain(
     ...[
       //
     ].filter((n) => n),
     rimshotVol,
   );
-  const rimshotNote = 'A4';
-  const setRimshotBuffer = async (smplr) => {
-    const buffer = await Tone.Offline(() => {
-      const amp = 1;
-
-      const envParams = scParams([1, 1, 0], [0.00272, 0.07], -42);
-
-      const tri1Gain = new Tone.Gain();
-      const tri1 = new Tone.Oscillator({
-        frequency: 1667 * 1.1,
-        // oscillator: { type: 'triangle' },
-        oscillator: { type: 'triangle', phase: 270 },
-      })
-        .chain(
-          ...[
-            //,
-          ].filter((n) => n),
-          tri1Gain,
-        )
-        .start();
-
-      const tri2Gain = new Tone.Gain();
-      const tri2 = new Tone.OmniOscillator({
-        frequency: 455 * 1.1,
-        type: 'pulse',
-        width: 0.8,
-      })
-        .chain(
-          ...[
-            //,
-            new Tone.AudioToGain(),
-          ].filter((n) => n),
-          tri2Gain,
-        )
-        .start();
-
-      const punchGain = new Tone.Gain();
-      const punch = new Tone.Noise({
-        noise: { type: 'white' },
-      })
-        .chain(
-          ...[
-            //
-            new Tone.Gain(0.46),
-          ].filter((n) => n),
-          punchGain,
-        )
-        .start();
-
-      tri1.volume.setValueCurveAtTime(
-        volCurve(envParams.levels[0], envParams.curve),
-        envParams.times[0],
-        envParams.times[1],
-      );
-
-      tri2.volume.setValueCurveAtTime(
-        volCurve(envParams.levels[0], envParams.curve),
-        envParams.times[0],
-        envParams.times[1],
-      );
-
-      punch.volume.setValueCurveAtTime(
-        volCurve(envParams.levels[0], envParams.curve),
-        envParams.times[0],
-        envParams.times[1],
-      );
-
-      const sigPeaking = new Tone.Filter({
-        type: 'peaking',
-        frequency: 464,
-        Q: 0.44,
-        rolloff: -12, // -12, -24, -48, -96
-        gain: 8,
-      });
-
-      const sigHighpass = new Tone.Filter({
-        type: 'highpass',
-        frequency: 315,
-        Q: 0.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-
-      const sigLowpass = new Tone.Filter({
-        type: 'lowpass',
-        frequency: 7300,
-        Q: 0.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-
-      const sigGain = new Tone.Gain();
-      Tone.fanIn(
-        ...[
-          //
-          tri1Gain,
-          tri2Gain,
-          punchGain,
-        ].filter((n) => n),
-        new Tone.Gain().chain(
-          ...[
-            //
-            sigPeaking,
-            sigHighpass,
-            sigLowpass,
-            new Tone.Gain(amp),
-            new Tone.Channel(),
-          ].filter((n) => n),
-          sigGain,
-        ),
-      );
-      Tone.fanIn(sigGain, Tone.getDestination());
-    }, 1.75);
-
-    smplr.add(rimshotNote, buffer);
-  };
 
   // --- claves
   const clavesVol = new Tone.Volume();
-  const clavesSampler = new Tone.Sampler({
-    attack: 0.0,
-    // release: '2i',
-    release: 0.0,
-    curve: 'exponential',
+  const clavesGen = new Claves({
+    /*
+    amp: 1.12,
+    */
+    context: toneCtx,
   }).chain(
     ...[
       //
@@ -234,42 +131,14 @@ const sketch = (p) => {
     clavesVol,
   );
 
-  const clavesNote = 'A4';
-  const setClavesBuffer = async (smplr) => {
-    const buffer = await Tone.Offline(() => {
-      const amp = 1;
-
-      const envParams = scParams([1, 1, 0], [0, 0.1], -20);
-      const sigGain = new Tone.Gain();
-      const sig = new Tone.Oscillator({
-        frequency: 2500,
-        oscillator: { type: 'sine' },
-        // oscillator: { type: 'sine', phase: 270 },
-      })
-        .chain(
-          ...[
-            //,
-            new Tone.Gain(amp),
-            new Tone.Channel(),
-          ].filter((n) => n),
-          sigGain,
-        )
-        .start();
-      sig.volume.setValueCurveAtTime(volCurve(envParams.levels[1], envParams.curve), 0, envParams.times[1]);
-
-      Tone.fanIn(sigGain, Tone.getDestination());
-    }, 1.125);
-
-    smplr.add(clavesNote, buffer);
-  };
-
   // --- maracas
+  Maracas;
   const maracasVol = new Tone.Volume();
-  const maracasSampler = new Tone.Sampler({
-    attack: 0.0,
-    // release: '2i',
-    release: 0.0,
-    curve: 'exponential',
+  const maracasGen = new Maracas({
+    /*
+    amp: 1.12,
+    */
+    context: toneCtx,
   }).chain(
     ...[
       //
@@ -277,50 +146,6 @@ const sketch = (p) => {
     maracasVol,
   );
 
-  const maracasNote = 'A4';
-  const setMaracasBuffer = async (smplr) => {
-    const buffer = await Tone.Offline(() => {
-      const amp = 1;
-      const gate = 0;
-
-      const envParams = scParams([0.3, 1, 0], [0.027, 0.07], -250);
-
-      const sigHighpass = new Tone.Filter({
-        type: 'highpass',
-        frequency: 5500,
-        Q: 0.0,
-        rolloff: -12, // -12, -24, -48, -96
-      });
-      const sigGain = new Tone.Gain();
-      const sig = new Tone.Noise({
-        noise: { type: 'white' },
-      })
-        .chain(
-          ...[
-            //
-            new Tone.Gain(amp),
-            sigHighpass,
-            new Tone.Channel(),
-          ].filter((n) => n),
-          sigGain,
-        )
-        .start();
-      sig.volume.setValueCurveAtTime(
-        volCurve(envParams.levels[0], envParams.curve, envParams.levels[1]),
-        0,
-        envParams.times[0],
-      );
-      sig.volume.setValueCurveAtTime(
-        volCurve(envParams.levels[1], envParams.curve),
-        envParams.times[0],
-        envParams.times[1],
-      );
-
-      Tone.fanIn(sigGain, Tone.getDestination());
-    }, 1.125);
-
-    smplr.add(maracasNote, buffer);
-  };
   // --- hat
   const closeHatVol = new Tone.Volume();
   const closeHatGen = new Hat({
@@ -389,12 +214,15 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cpReverbGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [null, [null, [null, null, 1, null], [null, null, null, null], null]],
+    events: [
+      null,
+      [null, [null, null, 1, null], [null, null, null, null], null],
+    ],
     subdivision: '1n',
   });
   const rimshotSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      rimshotSampler.triggerAttack(rimshotNote, time, ftRand(velocity));
+      rimshotGen.triggerAttack(time, ftRand(velocity));
       // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
     },
     events: [[null, [1, [null, 0.55]], null, 1]],
@@ -403,7 +231,7 @@ const sketch = (p) => {
 
   const clavesSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      clavesSampler.triggerAttack(clavesNote, time, ftRand(velocity));
+      clavesGen.triggerAttack(time, ftRand(velocity));
       // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
     },
     events: [
@@ -417,8 +245,7 @@ const sketch = (p) => {
 
   const maracasSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      maracasSampler.triggerAttack(maracasNote, time, ftRand(velocity));
-      // snareSampler.triggerAttack(`B4`, time, ftRand(velocity));
+      maracasGen.triggerAttack(time, ftRand(velocity));
     },
     events: [[[[null, null, 1, 1], null, [null, null, 1, 1], null]]],
     subdivision: '1n',
@@ -464,9 +291,9 @@ const sketch = (p) => {
 
     cpRawSeq.start(0);
     cpReverbSeq.start(0);
-    // rimshotSeq.start(0);
-    // clavesSeq.start(0);
-    // maracasSeq.start(0);
+    rimshotSeq.start(0);
+    clavesSeq.start(0);
+    maracasSeq.start(0);
     hihatSeq.start(0);
 
     // --- transport.start

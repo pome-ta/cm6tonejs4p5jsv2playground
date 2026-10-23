@@ -21,7 +21,12 @@ export default class HatProcessor extends AudioWorkletProcessor {
       y1: 0,
       y2: 0,
       process: function (input) {
-        const out = this.b0 * input + this.b1 * this.x1 + this.b2 * this.x2 - this.a1 * this.y1 - this.a2 * this.y2;
+        const out =
+          this.b0 * input +
+          this.b1 * this.x1 +
+          this.b2 * this.x2 -
+          this.a1 * this.y1 -
+          this.a2 * this.y2;
         this.x2 = this.x1;
         this.x1 = input;
         this.y2 = this.y1;
@@ -159,9 +164,27 @@ export default class HatProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     // arg decay=0.42, amp=1, pan=0;
     return [
-      { name: 'trigger', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: 'a-rate' },
-      { name: 'decay', defaultValue: 0.42, minValue: 0.01, maxValue: 5, automationRate: 'k-rate' },
-      { name: 'amp', defaultValue: 1, minValue: 0, maxValue: 10, automationRate: 'k-rate' },
+      {
+        name: 'trigger',
+        defaultValue: 0,
+        minValue: 0,
+        maxValue: 1,
+        automationRate: 'a-rate',
+      },
+      {
+        name: 'decay',
+        defaultValue: 0.42,
+        minValue: 0.01,
+        maxValue: 5,
+        automationRate: 'k-rate',
+      },
+      {
+        name: 'amp',
+        defaultValue: 1,
+        minValue: 0,
+        maxValue: 10,
+        automationRate: 'k-rate',
+      },
     ];
   }
 }
