@@ -12,31 +12,7 @@ const ftRand = (bias, spread = 1.0) => {
   return bias + (Math.random() * 2 - 1) * maxDist;
 };
 
-const expCurve = (start, end, curve, steps) => {
-  const envelope = (_start, _end, _progress, _curve) => {
-    if (_curve === 0) {
-      return _start + (_end - _start) * _progress;
-    }
-    const _exp = Math.exp(_curve * _progress);
-    const _curveRatio = (_exp - 1) / (Math.exp(_curve) - 1);
-    return _start + (_end - _start) * _curveRatio;
-  };
-  const levels = Array.from({ length: steps + 1 }, (_, i) => envelope(start, end, i / steps, curve));
 
-  return levels;
-};
-
-const frqCurve = (startfrequency, endfrequency, curveExponent = 0, divSteps = 128) => {
-  const curve = expCurve(startfrequency, endfrequency, curveExponent, divSteps);
-  return curve;
-};
-
-const volCurve = (startGain, curveExponent = 1, endGain = 0, divSteps = 256) => {
-  const gainCurve = expCurve(startGain, endGain, curveExponent, divSteps);
-  return gainCurve.map((gain) => Tone.gainToDb(gain));
-};
-
-const scParams = (levels, times, curve) => ({ levels, times, curve });
 
 const sketch = (p) => {
   // --- Sketch
@@ -600,7 +576,7 @@ const sketch = (p) => {
     [
       1, // close
       (time, velocity) => {
-        openHatGen?.triggerRelease(0);
+        openHatGen?.triggerRelease(time);
         closeHatGen.triggerAttack(time, ftRand(velocity));
       },
     ],
@@ -608,7 +584,7 @@ const sketch = (p) => {
     [
       -1, // open
       (time, velocity) => {
-        closeHatGen?.triggerRelease(0);
+        closeHatGen?.triggerRelease(time);
         openHatGen.triggerAttack(time, ftRand(velocity));
       },
     ],
@@ -735,13 +711,6 @@ const sketch = (p) => {
     // put setup code here
     cnvs = p.createCanvas(w, h);
 
-    await setCpRawBuffer(cpRawSampler);
-    await setCpReverbBuffer(cpReverbSampler);
-    await setRimshotBuffer(rimshotSampler);
-    await setClavesBuffer(clavesSampler);
-    await setMaracasBuffer(maracasSampler);
-    //await setCloseHatBuffer(closeHatSampler);
-    //await setOpenHatBuffer(openHatSampler);
 
     emitter.emit('startOnceCallSeqs');
     //transport.start();
