@@ -174,15 +174,15 @@ export default class HatProcessor extends AudioWorkletProcessor {
       {
         name: 'decay',
         defaultValue: 0.42,
-        minValue: 0.01,
-        maxValue: 5,
+        minValue: 0.42, // 固定
+        maxValue: 0.42, // 固定
         automationRate: 'k-rate',
       },
       {
         name: 'amp',
-        defaultValue: 1,
-        minValue: 0,
-        maxValue: 10,
+        defaultValue: 1.0,
+        minValue: 0.3,
+        maxValue: 3.5,
         automationRate: 'k-rate',
       },
     ];

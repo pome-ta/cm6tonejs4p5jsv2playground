@@ -82,7 +82,6 @@ export default class CpReverb extends Tone.ToneAudioNode {
     this._dummyGain.disconnect();
     this.trigger.dispose();
     this.amp.dispose();
-
     if (this._worklet) {
       this._worklet.port.postMessage('dispose');
       this._worklet.disconnect();

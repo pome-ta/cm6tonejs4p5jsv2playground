@@ -81,9 +81,9 @@ export default class ClavesProcessor extends AudioWorkletProcessor {
       },
       {
         name: 'amp',
-        defaultValue: 1,
-        minValue: 0,
-        maxValue: 10,
+        defaultValue: 1.0,
+        minValue: 0.2,
+        maxValue: 1.5,
         automationRate: 'k-rate',
       },
     ];

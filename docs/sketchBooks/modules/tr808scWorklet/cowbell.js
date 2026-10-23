@@ -4,7 +4,7 @@ import { loadWorklet } from './workletLoader.js';
 export default class Cowbell extends Tone.ToneAudioNode {
   constructor(options = {}) {
     // arg amp=1;
-    const opts = Object.assign({ amp: 1 }, options);
+    const opts = Object.assign({ amp: 1.0 }, options);
     super({ context: opts.context ?? Tone.getContext() });
 
     this.name = 'Cowbell';
@@ -43,7 +43,9 @@ export default class Cowbell extends Tone.ToneAudioNode {
 
     loadWorklet(this.context)
       .then(() => {
-        this._worklet = this.context.createAudioWorkletNode(processorName, { outputChannelCount: [2] });
+        this._worklet = this.context.createAudioWorkletNode(processorName, {
+          outputChannelCount: [2],
+        });
         this._worklet.onprocessorerror = (e) => console.error(e);
         Tone.connect(this._worklet, this.envelope); // 永続接続
         ['trigger', 'amp'].forEach((name) => {

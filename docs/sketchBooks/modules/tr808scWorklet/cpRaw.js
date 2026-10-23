@@ -4,7 +4,7 @@ import { loadWorklet } from './workletLoader.js';
 export default class CpRaw extends Tone.ToneAudioNode {
   constructor(options = {}) {
     // arg amp=1, gate=0;
-    const opts = Object.assign({ amp: 1 }, options);
+    const opts = Object.assign({ amp: 1.0 }, options);
     super({ context: opts.context ?? Tone.getContext() });
 
     this.name = 'CpRaw';
@@ -42,7 +42,9 @@ export default class CpRaw extends Tone.ToneAudioNode {
     const processorName = `${[...this.name].map((c, i) => (i ? c : c.toLowerCase())).join('')}-processor`;
     loadWorklet(this.context)
       .then(() => {
-        this._worklet = this.context.createAudioWorkletNode(processorName, { outputChannelCount: [2] });
+        this._worklet = this.context.createAudioWorkletNode(processorName, {
+          outputChannelCount: [2],
+        });
         this._worklet.onprocessorerror = (e) => console.error(e);
         Tone.connect(this._worklet, this.envelope); // 永続接続
         ['trigger', 'amp'].forEach((name) => {
@@ -82,7 +84,6 @@ export default class CpRaw extends Tone.ToneAudioNode {
     this._dummyGain.disconnect();
     this.trigger.dispose();
     this.amp.dispose();
-
     if (this._worklet) {
       this._worklet.port.postMessage('dispose');
       this._worklet.disconnect();

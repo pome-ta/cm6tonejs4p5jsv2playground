@@ -50,7 +50,9 @@ const sketch = (p) => {
   // --- bd
   const kickVol = new Tone.Volume();
   const kickGen = new Bd({
-    /*decay: 58, amp: 1.45, tone: 50, */
+    decay: 58.0,
+    amp: 1.449,
+    tone: 50.0,
     context: toneCtx,
   }).chain(
     ...[
@@ -62,13 +64,11 @@ const sketch = (p) => {
   // --- snare
   const snareVol = new Tone.Volume();
   const snareGen = new Sn({
-    /*
-    amp: 1.12,
+    amp: 1.118,
     tone: 300.9,
     tone2: 167.265,
     snappy: 0.226,
     amp2: 0.775,
-    */
     context: toneCtx,
   }).chain(
     ...[
@@ -80,9 +80,7 @@ const sketch = (p) => {
   // --- cpRaw
   const cpRawVol = new Tone.Volume();
   const cpRawGen = new CpRaw({
-    /*
-    amp: 1.12,
-    */
+    amp: 2.449,
     context: toneCtx,
   }).chain(
     ...[
@@ -94,9 +92,7 @@ const sketch = (p) => {
   // --- cpReverb
   const cpReverbVol = new Tone.Volume();
   const cpReverbGen = new CpReverb({
-    /*
-    amp: 1.12,
-    */
+    amp: 2.245,
     context: toneCtx,
   }).chain(
     ...[
@@ -108,9 +104,7 @@ const sketch = (p) => {
   // --- rimshot
   const rimshotVol = new Tone.Volume();
   const rimshotGen = new Rimshot({
-    /*
-    amp: 1.12,
-    */
+    amp: 0.49,
     context: toneCtx,
   }).chain(
     ...[
@@ -122,9 +116,7 @@ const sketch = (p) => {
   // --- claves
   const clavesVol = new Tone.Volume();
   const clavesGen = new Claves({
-    /*
-    amp: 1.12,
-    */
+    amp: 0.548,
     context: toneCtx,
   }).chain(
     ...[
@@ -137,9 +129,7 @@ const sketch = (p) => {
   Maracas;
   const maracasVol = new Tone.Volume();
   const maracasGen = new Maracas({
-    /*
-    amp: 1.12,
-    */
+    amp: 0.387,
     context: toneCtx,
   }).chain(
     ...[
@@ -151,9 +141,7 @@ const sketch = (p) => {
   // --- cowbell
   const cowbellVol = new Tone.Volume();
   const cowbellGen = new Cowbell({
-    /*
-    amp: 1.025,
-    */
+    amp: 0.122,
     context: toneCtx,
   }).chain(
     ...[
@@ -165,10 +153,8 @@ const sketch = (p) => {
   // --- hat
   const closeHatVol = new Tone.Volume();
   const closeHatGen = new Hat({
-    /*
     decay: 0.42,
     amp: 1.025,
-    */
     context: toneCtx,
   }).chain(
     ...[
@@ -180,10 +166,8 @@ const sketch = (p) => {
   // --- openhihat
   const openHatVol = new Tone.Volume();
   const openHatGen = new Openhihat({
-    /*
-    decay: 0.42,
-    amp: 1.025,
-    */
+    decay: 0.316,
+    amp: 4.899,
     context: toneCtx,
   }).chain(
     ...[
@@ -194,10 +178,9 @@ const sketch = (p) => {
   // --- cymbal
   const cymbalVol = new Tone.Volume();
   const cymbalGen = new Cymbal({
-    /*
-    decay: 0.42,
-    amp: 1.025,
-    */
+    decay: 1.414,
+    amp: 10.488,
+    tone: 0.001,
     context: toneCtx,
   }).chain(
     ...[
@@ -338,16 +321,16 @@ const sketch = (p) => {
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
-    kickSeq.start(0);
-    snareSeq.start(0);
-    cpRawSeq.start(0);
-    // cpReverbSeq.start(0);
+    // kickSeq.start(0);
+    // snareSeq.start(0);
+    // cpRawSeq.start(0);
+    cpReverbSeq.start(0);
     rimshotSeq.start(0);
     // clavesSeq.start(0);
-    maracasSeq.start(0);
+    // maracasSeq.start(0);
     // cowbellSeq.start(0);
     // hihatSeq.start(0);
-    cymbalSeq.start(0);
+    // cymbalSeq.start(0);
 
     // --- transport.start
     transport.start();
@@ -366,33 +349,32 @@ const sketch = (p) => {
   const kickCh = toChannel(kickVol, { volume: 0.0, pan: 0.0, channelCount: 1 });
 
   const snareCh = toChannel(snareVol, {
-    volume: 2.0,
+    volume: 0.0,
     pan: -0.1,
     channelCount: 1,
   });
   const cpRawCh = toChannel(cpRawVol, {
-    volume: 2.0,
+    volume: 0.0,
     pan: 0.0,
     channelCount: 1,
   });
   const cpReverbCh = toChannel(cpReverbVol, {
-    volume: 3.0, // 30 とかでやっと
+    volume: 0.0, // 30 とかでやっと
     pan: 0.0,
     channelCount: 1,
   });
   const rimshotCh = toChannel(rimshotVol, {
-    volume: 3.0,
+    volume: 0.0,
     pan: -0.1,
     channelCount: 1,
   });
   const clavesCh = toChannel(clavesVol, {
-    volume: 12.0,
+    volume: 0.0,
     pan: 0.0,
     channelCount: 1,
   });
-
   const maracasCh = toChannel(maracasVol, {
-    volume: 1.0,
+    volume: 0.0,
     pan: 0.0,
     channelCount: 1,
   });

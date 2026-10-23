@@ -4,7 +4,7 @@ import { loadWorklet } from './workletLoader.js';
 export default class Cymbal extends Tone.ToneAudioNode {
   constructor(options = {}) {
     // arg decay=2, amp=20, pan=0, gate=0, tone=0.002;
-    const opts = Object.assign({ decay: 2, amp: 20, tone: 0.002 }, options);
+    const opts = Object.assign({ decay: 2.0, amp: 20.0, tone: 0.002 }, options);
     super({ context: opts.context ?? Tone.getContext() });
 
     this.name = 'Cymbal';

@@ -11,31 +11,54 @@ export default class RimshotProcessor extends AudioWorkletProcessor {
 
     // 汎用Biquadフィルター生成ヘルパー
     this.createFilter = () => ({
-      b0: 1, b1: 0, b2: 0, a1: 0, a2: 0,
-      x1: 0, x2: 0, y1: 0, y2: 0,
-      process: function(input) {
-        const out = this.b0 * input + this.b1 * this.x1 + this.b2 * this.x2 - this.a1 * this.y1 - this.a2 * this.y2;
-        this.x2 = this.x1; this.x1 = input;
-        this.y2 = this.y1; this.y1 = out;
+      b0: 1,
+      b1: 0,
+      b2: 0,
+      a1: 0,
+      a2: 0,
+      x1: 0,
+      x2: 0,
+      y1: 0,
+      y2: 0,
+      process: function (input) {
+        const out =
+          this.b0 * input +
+          this.b1 * this.x1 +
+          this.b2 * this.x2 -
+          this.a1 * this.y1 -
+          this.a2 * this.y2;
+        this.x2 = this.x1;
+        this.x1 = input;
+        this.y2 = this.y1;
+        this.y1 = out;
         return out;
       },
-      updateCoeffs: function(type, freq, q, db = 0) {
+      updateCoeffs: function (type, freq, q, db = 0) {
         const w0 = (2 * Math.PI * freq) / sampleRate;
         const alpha = Math.sin(w0) / (2 * q);
         const a0 = 1 + alpha;
         if (type === 'Peak') {
           const A = Math.pow(10, db / 40);
           const a0_eq = 1 + alpha / A;
-          this.b0 = (1 + alpha * A) / a0_eq; this.b1 = (-2 * Math.cos(w0)) / a0_eq; this.b2 = (1 - alpha * A) / a0_eq;
-          this.a1 = (-2 * Math.cos(w0)) / a0_eq; this.a2 = (1 - alpha / A) / a0_eq;
+          this.b0 = (1 + alpha * A) / a0_eq;
+          this.b1 = (-2 * Math.cos(w0)) / a0_eq;
+          this.b2 = (1 - alpha * A) / a0_eq;
+          this.a1 = (-2 * Math.cos(w0)) / a0_eq;
+          this.a2 = (1 - alpha / A) / a0_eq;
         } else if (type === 'HPF') {
-          this.b0 = ((1 + Math.cos(w0)) / 2) / a0; this.b1 = -(1 + Math.cos(w0)) / a0; this.b2 = ((1 + Math.cos(w0)) / 2) / a0;
-          this.a1 = (-2 * Math.cos(w0)) / a0; this.a2 = (1 - alpha) / a0;
+          this.b0 = (1 + Math.cos(w0)) / 2 / a0;
+          this.b1 = -(1 + Math.cos(w0)) / a0;
+          this.b2 = (1 + Math.cos(w0)) / 2 / a0;
+          this.a1 = (-2 * Math.cos(w0)) / a0;
+          this.a2 = (1 - alpha) / a0;
         } else if (type === 'LPF') {
-          this.b0 = ((1 - Math.cos(w0)) / 2) / a0; this.b1 = (1 - Math.cos(w0)) / a0; this.b2 = ((1 - Math.cos(w0)) / 2) / a0;
-          this.a1 = (-2 * Math.cos(w0)) / a0; this.a2 = (1 - alpha) / a0;
+          this.b0 = (1 - Math.cos(w0)) / 2 / a0;
+          this.b1 = (1 - Math.cos(w0)) / a0;
+          this.b2 = (1 - Math.cos(w0)) / 2 / a0;
+          this.a1 = (-2 * Math.cos(w0)) / a0;
+          this.a2 = (1 - alpha) / a0;
         }
-      }
+      },
     });
 
     this.peak = this.createFilter();
@@ -55,9 +78,11 @@ export default class RimshotProcessor extends AudioWorkletProcessor {
     this.startTime = sampleTime;
     this.triPhase = Math.PI / 2;
     this.pulsePhase = 0;
-   
+
     // フィルター状態のリセット
-    const clearState = (f) => { f.x1 = f.x2 = f.y1 = f.y2 = 0; };
+    const clearState = (f) => {
+      f.x1 = f.x2 = f.y1 = f.y2 = 0;
+    };
     clearState(this.peak);
     clearState(this.hpf);
     clearState(this.lpf);
@@ -88,14 +113,17 @@ export default class RimshotProcessor extends AudioWorkletProcessor {
       this._prevTrig = t;
 
       if (!this.active) {
-        channel[i] = 0; continue;
+        channel[i] = 0;
+        continue;
       }
 
-      const elapsed = (blockStart + i / sampleRate) - this.startTime;
+      const elapsed = blockStart + i / sampleRate - this.startTime;
 
       // 寿命: 0.00272(hold) + 0.07(decay) = 0.07272s[cite: 1]
       if (elapsed >= 0.07272) {
-        this.active = false; channel[i] = 0; continue;
+        this.active = false;
+        channel[i] = 0;
+        continue;
       }
 
       // Env.new([1, 1, 0], [0.00272, 0.07], -42)[cite: 1]
@@ -107,23 +135,24 @@ export default class RimshotProcessor extends AudioWorkletProcessor {
       // オシレーター群の生成
       // tri1 = LFTri.ar(1667 * 1.1)[cite: 1] = 1833.7 Hz
       const tri1 = (2 / Math.PI) * Math.asin(Math.sin(this.triPhase)) * env;
-     
+
       // tri2 = LFPulse.ar(455 * 1.1, width:0.8)[cite: 1] = 500.5 Hz
       const tri2 = (this.pulsePhase < 0.8 ? 1 : 0) * env;
-     
+
       // punch = WhiteNoise * 0.46[cite: 1]
       const punch = (Math.random() * 2 - 1) * env * 0.46;
 
       // ミックスとフィルター処理
       let sig = tri1 + tri2 + punch; //[cite: 1]
-      sig = this.peak.process(sig);  //[cite: 1]
-      sig = this.hpf.process(sig);   //[cite: 1]
-      sig = this.lpf.process(sig);   //[cite: 1]
+      sig = this.peak.process(sig); //[cite: 1]
+      sig = this.hpf.process(sig); //[cite: 1]
+      sig = this.lpf.process(sig); //[cite: 1]
 
-      channel[i] = sig * amp;        //[cite: 1]
+      channel[i] = sig * amp; //[cite: 1]
 
       // 位相の更新
-      this.triPhase = (this.triPhase + (2 * Math.PI * 1833.7) / sampleRate) % (Math.PI * 2);
+      this.triPhase =
+        (this.triPhase + (2 * Math.PI * 1833.7) / sampleRate) % (Math.PI * 2);
       this.pulsePhase = (this.pulsePhase + 500.5 / sampleRate) % 1;
     }
 
@@ -132,9 +161,22 @@ export default class RimshotProcessor extends AudioWorkletProcessor {
   }
 
   static get parameterDescriptors() {
+    // arg amp=1;
     return [
-      { name: 'trigger', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: 'a-rate' },
-      { name: 'amp', defaultValue: 1, minValue: 0, maxValue: 10, automationRate: 'k-rate' }
+      {
+        name: 'trigger',
+        defaultValue: 0,
+        minValue: 0,
+        maxValue: 1,
+        automationRate: 'a-rate',
+      },
+      {
+        name: 'amp',
+        defaultValue: 1.0,
+        minValue: 0.2,
+        maxValue: 1.2,
+        automationRate: 'k-rate',
+      },
     ];
   }
 }

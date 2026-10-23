@@ -4,7 +4,7 @@ import { loadWorklet } from './workletLoader.js';
 export default class Rimshot extends Tone.ToneAudioNode {
   constructor(options = {}) {
     // arg amp=1;
-    const opts = Object.assign({ amp: 1 }, options);
+    const opts = Object.assign({ amp: 1.0 }, options);
     super({ context: opts.context ?? Tone.getContext() });
 
     this.name = 'Rimshot';

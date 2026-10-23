@@ -102,6 +102,7 @@ export default class MaracasProcessor extends AudioWorkletProcessor {
   }
 
   static get parameterDescriptors() {
+    // arg amp=1, gate=0;
     return [
       {
         name: 'trigger',
@@ -112,9 +113,9 @@ export default class MaracasProcessor extends AudioWorkletProcessor {
       },
       {
         name: 'amp',
-        defaultValue: 1,
-        minValue: 0,
-        maxValue: 10,
+        defaultValue: 1.0,
+        minValue: 0.1,
+        maxValue: 1.5,
         automationRate: 'k-rate',
       },
     ];

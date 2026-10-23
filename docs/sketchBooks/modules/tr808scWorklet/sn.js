@@ -3,8 +3,8 @@ import { loadWorklet } from './workletLoader.js';
 
 export default class Sn extends Tone.ToneAudioNode {
   constructor(options = {}) {
-    // amp=2, tone=340, tone2=189, snappy=0.3, gate=0, amp2=1;
-    const opts = Object.assign({ amp: 2, tone: 340, tone2: 189, snappy: 0.3, amp2: 1 }, options);
+    // arg amp=2, tone=340, tone2=189, snappy=0.3, gate=0, amp2=1;
+    const opts = Object.assign({ amp: 2.0, tone: 340.0, tone2: 189.0, snappy: 0.3, amp2: 1.0 }, options);
     super({ context: opts.context ?? Tone.getContext() });
 
     this.name = 'Sn';

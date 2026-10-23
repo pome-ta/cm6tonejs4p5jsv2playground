@@ -162,7 +162,7 @@ export default class BbProcessor extends AudioWorkletProcessor {
   }
 
   static get parameterDescriptors() {
-    // decay=30, amp=2, gate=0, tone=56;
+    // arg decay=30, amp=2, gate=0, tone=56;
     return [
       {
         name: 'trigger',
@@ -173,23 +173,23 @@ export default class BbProcessor extends AudioWorkletProcessor {
       },
       {
         name: 'decay',
-        defaultValue: 30,
-        minValue: 0.01,
-        maxValue: 110,
+        defaultValue: 30.0,
+        minValue: 6.0,
+        maxValue: 110.0,
         automationRate: 'k-rate',
       },
       {
         name: 'amp',
-        defaultValue: 2,
-        minValue: 0,
-        maxValue: 10,
+        defaultValue: 2.0,
+        minValue: 1.0,
+        maxValue: 2.1,
         automationRate: 'k-rate',
       },
       {
         name: 'tone',
-        defaultValue: 56,
-        minValue: 20,
-        maxValue: 200,
+        defaultValue: 56.0,
+        minValue: 50.0,
+        maxValue: 70.0,
         automationRate: 'k-rate',
       },
     ];

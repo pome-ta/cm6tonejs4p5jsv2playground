@@ -68,7 +68,8 @@ export default class SnProcessor extends AudioWorkletProcessor {
 
   // Biquadフィルターの1サンプル処理ヘルパー
   processFilter(f, input) {
-    const output = f.b0 * input + f.b1 * f.x1 + f.b2 * f.x2 - f.a1 * f.y1 - f.a2 * f.y2;
+    const output =
+      f.b0 * input + f.b1 * f.x1 + f.b2 * f.x2 - f.a1 * f.y1 - f.a2 * f.y2;
     f.x2 = f.x1;
     f.x1 = input;
     f.y2 = f.y1;
@@ -156,8 +157,10 @@ export default class SnProcessor extends AudioWorkletProcessor {
       channel[i] = sig;
 
       // 6. 位相の更新
-      this.phase1 = (this.phase1 + (2 * Math.PI * tone) / sampleRate) % (Math.PI * 2);
-      this.phase2 = (this.phase2 + (2 * Math.PI * tone2) / sampleRate) % (Math.PI * 2);
+      this.phase1 =
+        (this.phase1 + (2 * Math.PI * tone) / sampleRate) % (Math.PI * 2);
+      this.phase2 =
+        (this.phase2 + (2 * Math.PI * tone2) / sampleRate) % (Math.PI * 2);
     }
 
     if (outputs[0][1]) {
@@ -167,14 +170,50 @@ export default class SnProcessor extends AudioWorkletProcessor {
   }
 
   static get parameterDescriptors() {
-    // amp=2, tone=340, tone2=189, snappy=0.3, gate=0, amp2=1;
+    // arg amp=2, tone=340, tone2=189, snappy=0.3, gate=0, amp2=1;
     return [
-      { name: 'trigger', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: 'a-rate' },
-      { name: 'amp', defaultValue: 2, minValue: 0, maxValue: 10, automationRate: 'k-rate' },
-      { name: 'tone', defaultValue: 340, minValue: 20, maxValue: 1000, automationRate: 'k-rate' },
-      { name: 'tone2', defaultValue: 189, minValue: 20, maxValue: 1000, automationRate: 'k-rate' },
-      { name: 'snappy', defaultValue: 0.3, minValue: 0, maxValue: 1, automationRate: 'k-rate' },
-      { name: 'amp2', defaultValue: 1, minValue: 0, maxValue: 10, automationRate: 'k-rate' },
+      {
+        name: 'trigger',
+        defaultValue: 0,
+        minValue: 0,
+        maxValue: 1,
+        automationRate: 'a-rate',
+      },
+      {
+        name: 'amp',
+        defaultValue: 2.0,
+        minValue: 0.5,
+        maxValue: 2.5,
+        automationRate: 'k-rate',
+      },
+      {
+        name: 'tone',
+        defaultValue: 340.0,
+        minValue: 210.8,
+        maxValue: 391.0,
+        automationRate: 'k-rate',
+      },
+      {
+        name: 'tone2',
+        defaultValue: 189.0,
+        minValue: 117.18,
+        maxValue: 217.35,
+        automationRate: 'k-rate',
+      },
+      {
+        name: 'snappy',
+        defaultValue: 0.3,
+        minValue: 0.002,
+        maxValue: 0.45,
+        automationRate: 'k-rate',
+      },
+      {
+        name: 'amp2',
+        defaultValue: 1.0,
+        minValue: 0.6,
+        maxValue: 1.0,
+        automationRate: 'k-rate',
+      },
     ];
   }
 }

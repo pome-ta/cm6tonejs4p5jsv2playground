@@ -20,7 +20,12 @@ export default class OpenhihatProcessor extends AudioWorkletProcessor {
       y1: 0,
       y2: 0,
       process: function (input) {
-        const out = this.b0 * input + this.b1 * this.x1 + this.b2 * this.x2 - this.a1 * this.y1 - this.a2 * this.y2;
+        const out =
+          this.b0 * input +
+          this.b1 * this.x1 +
+          this.b2 * this.x2 -
+          this.a1 * this.y1 -
+          this.a2 * this.y2;
         this.x2 = this.x1;
         this.x1 = input;
         this.y2 = this.y1;
@@ -172,10 +177,29 @@ export default class OpenhihatProcessor extends AudioWorkletProcessor {
   }
 
   static get parameterDescriptors() {
+    // arg decay=0.5, amp=4, pan=0;
     return [
-      { name: 'trigger', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: 'a-rate' },
-      { name: 'decay', defaultValue: 0.5, minValue: 0.01, maxValue: 5, automationRate: 'k-rate' },
-      { name: 'amp', defaultValue: 4, minValue: 0, maxValue: 20, automationRate: 'k-rate' },
+      {
+        name: 'trigger',
+        defaultValue: 0,
+        minValue: 0,
+        maxValue: 1,
+        automationRate: 'a-rate',
+      },
+      {
+        name: 'decay',
+        defaultValue: 0.5,
+        minValue: 0.01,
+        maxValue: 5,
+        automationRate: 'k-rate',
+      },
+      {
+        name: 'amp',
+        defaultValue: 4.0,
+        minValue: 4.0,
+        maxValue: 6.0,
+        automationRate: 'k-rate',
+      },
     ];
   }
 }
