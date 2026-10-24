@@ -90,6 +90,7 @@ const importMap = {
     eruda: 'https://cdn.jsdelivr.net/npm/eruda/+esm',
     // todo: p5.sound と一応揃える
     tone: 'https://cdn.jsdelivr.net/npm/tone@15.0.2/+esm',
+    // tone: 'https://cdn.jsdelivr.net/npm/tone/+esm',
     'modules/': new URL('./sketchBooks/modules/', originalUrl).href,
   },
 };

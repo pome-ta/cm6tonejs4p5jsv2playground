@@ -53,7 +53,6 @@ const sketch = (p) => {
     decay: 58.0,
     amp: 1.449,
     tone: 50.0,
-
     context: toneCtx,
   }).chain(
     ...[
@@ -194,48 +193,23 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       kickGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [
-      [
-        [1.01, 1.02],
-        [1.03, 1.04],
-        [1.05, 1.06],
-        [1.07, 1.08],
-      ],
-    ],
+    events: [[1, null, [1, 1], null]],
     subdivision: '1n',
   });
 
   const snareSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      // snareGen.triggerAttack(time, ftRand(velocity));
-      snareGen.triggerAttack(time, velocity);
-      //snareGen.triggerAttackRelease('8n', time,velocity)
+      snareGen.triggerAttack(time, ftRand(velocity));
     },
-    // events: [[null, 1, null, [1,1]]],
-    events: [
-      [
-        [1.01, 1.02],
-        [1.03, 1.04],
-        [1.05, 1.06],
-        [1.07, 1.08],
-      ],
-    ],
+    events: [[null, 1, null, 1]],
     subdivision: '1n',
-    humanize: 0.006,
-
+    // humanize: 0.006,
   });
   const cpRawSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       cpRawGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [
-      [
-        [1.01, 1.02],
-        [1.03, 1.04],
-        [1.05, 1.06],
-        [1.07, 1.08],
-      ],
-    ],
+    events: [[null, [null, null, null, 1], null, [null, 0.4, null, 0.9]]],
     subdivision: '1n',
   });
 
@@ -250,14 +224,7 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       rimshotGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [
-      [
-        [1.01, 1.02],
-        [1.03, 1.04],
-        [1.05, 1.06],
-        [1.07, 1.08],
-      ],
-    ],
+    events: [],
     subdivision: '1n',
     // humanize: 0.006,
   });
@@ -283,14 +250,7 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cowbellGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [
-      [
-        [1.01, 1.02],
-        [1.03, 1.04],
-        [1.05, 1.06],
-        [1.07, 1.08],
-      ],
-    ],
+    events: [],
     subdivision: '1n',
     humanize: 0.006,
   });
@@ -317,7 +277,14 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       hihatHandlers.get(Math.sign(velocity))?.(time, Math.abs(velocity));
     },
-    events: [],
+    events: [
+      [
+        [0.9, 0.9, 0.9, 0.9],
+        [0.9, 0.9, 0.9, 0.9],
+        [0.9, 0.9, 0.9, 0.9],
+        [0.9, 0.9, 0.9, 0.9],
+      ],
+    ],
     subdivision: '1n',
     humanize: 0.006,
   });
@@ -332,17 +299,15 @@ const sketch = (p) => {
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
-    clickSeq.start(0);
-
-    //kickSeq.start(0);
+    kickSeq.start(0);
     snareSeq.start(0);
-    //cpRawSeq.start(0);
+    cpRawSeq.start(0);
     // cpReverbSeq.start(0);
     // rimshotSeq.start(0);
     // clavesSeq.start(0);
     // maracasSeq.start(0);
-    //cowbellSeq.start(0);
-    // hihatSeq.start(0);
+    // cowbellSeq.start(0);
+    hihatSeq.start(0);
     // cymbalSeq.start(0);
 
     // --- transport.start
@@ -426,33 +391,6 @@ const sketch = (p) => {
     )
     .receive(drumKitBusName);
 
-  // メトロノーム
-  const clickSynth = new Tone.MembraneSynth({
-    pitchDecay: `3i`, // 0 ~ 0.5 秒
-    octaves: 1.25, // 0.5 ~ 8
-    envelope: {
-      attack: 0.0,
-      decay: 1.0,
-      sustain: 0.0,
-      release: `8t`,
-    },
-    oscillator: { type: 'sine' },
-  });
-  const clickSeq = new Tone.Sequence({
-    callback: (time, note) => {
-      clickSynth.triggerAttackRelease(note, '1i', time);
-    },
-    events: [
-      ['A5', 'C5'],
-      ['A4', 'C5'],
-      ['A4', 'C5'],
-      ['A4', 'C5'],
-    ],
-    subdivision: '4n',
-  });
-  const clickVol = new Tone.Volume(-4);
-  clickSynth.chain(clickVol);
-
   // ---  master mixer
   const masterVol = new Tone.Volume();
   const masterLimiter = new Tone.Limiter(-8);
@@ -461,7 +399,6 @@ const sketch = (p) => {
     ...[
       //
       drumKitVol,
-      clickVol,
     ].filter((n) => n),
     masterVol.chain(
       ...[

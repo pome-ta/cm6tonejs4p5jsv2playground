@@ -58,11 +58,14 @@ export default class CpRaw extends Tone.ToneAudioNode {
   }
 
   triggerAttack(time, velocity = 1) {
+    const PULSE_WIDTH = 4 / this.context.sampleRate;
     const t = this.toSeconds(time);
+
     this.trigger.cancelScheduledValues(t);
     this.trigger.setValueAtTime(0, t);
     this.trigger.setValueAtTime(1, t);
-    this.trigger.setValueAtTime(0, t + 1 / this.context.sampleRate);
+    // this.trigger.setValueAtTime(0, t + 1 / this.context.sampleRate);
+    this.trigger.setValueAtTime(0, t + PULSE_WIDTH);
     this.envelope.triggerAttack(t, velocity);
     return this;
   }

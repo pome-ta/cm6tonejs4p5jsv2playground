@@ -42,7 +42,9 @@ export default class CpReverb extends Tone.ToneAudioNode {
     const processorName = `${[...this.name].map((c, i) => (i ? c : c.toLowerCase())).join('')}-processor`;
     loadWorklet(this.context)
       .then(() => {
-        this._worklet = this.context.createAudioWorkletNode(processorName, { outputChannelCount: [2] });
+        this._worklet = this.context.createAudioWorkletNode(processorName, {
+          outputChannelCount: [2],
+        });
         this._worklet.onprocessorerror = (e) => console.error(e);
         Tone.connect(this._worklet, this.envelope); // 永続接続
         ['trigger', 'amp'].forEach((name) => {
@@ -56,11 +58,14 @@ export default class CpReverb extends Tone.ToneAudioNode {
   }
 
   triggerAttack(time, velocity = 1) {
+    const PULSE_WIDTH = 4 / this.context.sampleRate;
     const t = this.toSeconds(time);
+
     this.trigger.cancelScheduledValues(t);
     this.trigger.setValueAtTime(0, t);
     this.trigger.setValueAtTime(1, t);
-    this.trigger.setValueAtTime(0, t + 1 / this.context.sampleRate);
+    // this.trigger.setValueAtTime(0, t + 1 / this.context.sampleRate);
+    this.trigger.setValueAtTime(0, t + PULSE_WIDTH);
     this.envelope.triggerAttack(t, velocity);
     return this;
   }
