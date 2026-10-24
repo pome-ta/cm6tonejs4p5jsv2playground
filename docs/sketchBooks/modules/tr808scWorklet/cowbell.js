@@ -59,7 +59,7 @@ export default class Cowbell extends Tone.ToneAudioNode {
   }
 
   triggerAttack(time, velocity = 1) {
-    const PULSE_WIDTH = 4 / this.context.sampleRate;
+    const PULSE_WIDTH = 3 / this.context.sampleRate;
     const t = this.toSeconds(time);
 
     this.trigger.cancelScheduledValues(t);

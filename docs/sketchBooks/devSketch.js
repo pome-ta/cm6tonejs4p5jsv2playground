@@ -281,7 +281,7 @@ const sketch = (p) => {
       [
         [0.9, 0.9, 0.9, 0.9],
         [0.9, 0.9, 0.9, 0.9],
-        [0.9, 0.9, 0.9, 0.9],
+        [0.9, 0.9, [0.9, 0.8], 0.9],
         [0.9, 0.9, 0.9, 0.9],
       ],
     ],
@@ -327,7 +327,7 @@ const sketch = (p) => {
   const kickCh = toChannel(kickVol, { volume: 0.0, pan: 0.0, channelCount: 1 });
 
   const snareCh = toChannel(snareVol, {
-    volume: 0.0,
+    volume: 2.0,
     pan: -0.1,
     channelCount: 1,
   });
