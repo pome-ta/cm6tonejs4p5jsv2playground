@@ -53,6 +53,7 @@ const sketch = (p) => {
     decay: 58.0,
     amp: 1.449,
     tone: 50.0,
+
     context: toneCtx,
   }).chain(
     ...[
@@ -193,17 +194,16 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       kickGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [
-      [1, null, [1, 0.92], null],
-      [1, null, [1, 0.88], null],
-      [1, null, [1, 0.92], null],
-      [1, null, [1, 0.88], null],
-    ],
+    events: [[1, null, [1, 1], 1]],
     subdivision: '1n',
   });
 
   const snareSeq = new Tone.Sequence({
     callback: (time, velocity) => {
+      if (time < 10) {
+        console.log('sequence callback', time, velocity);
+      }
+
       snareGen.triggerAttack(time, ftRand(velocity));
     },
     events: [[null, 1, null, 1]],
@@ -213,7 +213,7 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cpRawGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [null, [null, [null, null, 1, null], [null, 1, null, null], null]],
+    events: [[1, null, [1, 1], 1]],
     subdivision: '1n',
   });
 
@@ -221,14 +221,14 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cpReverbGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [null, [null, [null, null, 1, null], [null, null, null, null], null]],
+    events: [],
     subdivision: '1n',
   });
   const rimshotSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       rimshotGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [[null, [1, [null, 0.55]], null, 1]],
+    events: [],
     subdivision: '1n',
   });
 
@@ -236,13 +236,7 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       clavesGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [
-      [null],
-      [
-        [null, 1, 1, null],
-        [1, [null, 1], null, 1],
-      ],
-    ],
+    events: [],
     subdivision: '1n',
   });
 
@@ -250,7 +244,7 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       maracasGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [[[[null, null, 1, 1], null, [null, null, 1, 1], null]]],
+    events: [],
     subdivision: '1n',
     humanize: 0.006,
   });
@@ -259,13 +253,7 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cowbellGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [
-      [
-        [null, 1, 1, null],
-        [1, [null, 1], null, 1],
-      ],
-      [null],
-    ],
+    events: [],
     subdivision: '1n',
     humanize: 0.006,
   });
@@ -292,12 +280,7 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       hihatHandlers.get(Math.sign(velocity))?.(time, Math.abs(velocity));
     },
-    events: [
-      [null, 1, null, 1, null, 1, null, 1],
-      [null, 1, -1, 1, null, 1, -1, 1],
-      [null, 1, null, 1, null, 1, null, 1],
-      [null, 1, -1, [1, -1], [1, -1], 1, null, [-1, 1]],
-    ],
+    events: [],
     subdivision: '1n',
     humanize: 0.006,
   });
@@ -306,22 +289,22 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cymbalGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [1, null],
-    subdivision: '4m',
+    events: [],
+    subdivision: '1n',
   });
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
-    kickSeq.start(0);
+    //kickSeq.start(0);
     snareSeq.start(0);
     cpRawSeq.start(0);
     // cpReverbSeq.start(0);
-    rimshotSeq.start(0);
-    clavesSeq.start(0);
-    maracasSeq.start(0);
-    cowbellSeq.start(0);
-    hihatSeq.start(0);
-    cymbalSeq.start(0);
+    // rimshotSeq.start(0);
+    // clavesSeq.start(0);
+    // maracasSeq.start(0);
+    // cowbellSeq.start(0);
+    // hihatSeq.start(0);
+    // cymbalSeq.start(0);
 
     // --- transport.start
     transport.start();
