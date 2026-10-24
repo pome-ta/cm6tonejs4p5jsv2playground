@@ -17,7 +17,7 @@ import {
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 100;
+const BPM = 86;
 
 const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -377,14 +377,22 @@ const sketch = (p) => {
     channelCount: 1,
   });
 
+  const drumKitLowpass = new Tone.Filter({
+    type: 'lowpass',
+    frequency: 7600,
+    Q: 0.1,
+    rolloff: -24, // -12, -24, -48, -96
+  });
   const drumKitVol = new Tone.Volume();
   const drumKitCh = new Tone.Channel({ volume: 2, channelCount: 2 });
   drumKitCh
     .chain(
       ...[
         //
+        // new Tone.Volume(-6),
+        drumKitLowpass,
         // new Tone.Gain(1.55),
-        // new Tone.Limiter(-2),
+        // new Tone.Limiter(-6),
         // new Tone.Gain(1.1),
       ].filter((n) => n),
       drumKitVol,
