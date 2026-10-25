@@ -303,9 +303,7 @@ const sketch = (p) => {
     },
     events: [
       [null, 1],
-      [null, 1],
-      [null, 1],
-      [null, [[1, null, 0.7], null]],
+      [null, [[0.7, null, 1], null]],
     ],
     subdivision: '1n',
   });
@@ -321,22 +319,21 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       lTomGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [],
+    events: [null, [null, null, null, [null, null, [null, 1, null]]]],
     subdivision: '1n',
   });
   const mTomSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       mTomGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [],
+    events: [null, [null, null, null, [null, [null, 1, null], null]]],
     subdivision: '1n',
   });
-
   const hTomSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       hTomGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [],
+    events: [null, [null, null, null, 1]],
     subdivision: '1n',
   });
 
@@ -347,7 +344,6 @@ const sketch = (p) => {
     events: [],
     subdivision: '1n',
   });
-
   const mCngSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       mCngGen.triggerAttack(time, ftRand(velocity));
@@ -401,7 +397,7 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cowbellGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [[[[1, [1, 1]]], null, null, null], null],
+    events: [[[[1, [null, 1]]], null, null, null], null],
     subdivision: '1n',
     humanize: 0.006,
   });
@@ -429,18 +425,6 @@ const sketch = (p) => {
       hihatHandlers.get(Math.sign(velocity))?.(time, Math.abs(velocity));
     },
     events: [
-      [
-        [null, 1],
-        [null, 1],
-        [null, 1],
-        [null, 1],
-      ],
-      [
-        [null, 1],
-        [null, 1],
-        [null, 1],
-        [null, 1],
-      ],
       [
         [null, 1],
         [null, 1],
@@ -507,7 +491,7 @@ const sketch = (p) => {
     channelCount: 1,
   });
   const cpRawCh = toChannel(cpRawVol, {
-    volume: -2.0,
+    volume: 0.0,
     pan: 0.0,
     channelCount: 1,
   });
