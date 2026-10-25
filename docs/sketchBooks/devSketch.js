@@ -5,6 +5,8 @@ import {
   Sn,
   CpRaw,
   CpReverb,
+  Lt,
+  Mt,
   Rimshot,
   Claves,
   Maracas,
@@ -99,6 +101,32 @@ const sketch = (p) => {
       //
     ].filter((n) => n),
     cpReverbVol,
+  );
+
+  // --- LT
+  const lTomVol = new Tone.Volume();
+  const lTomGen = new Lt({
+    amp: 0.387,
+    freq: 86,
+    context: toneCtx,
+  }).chain(
+    ...[
+      //
+    ].filter((n) => n),
+    lTomVol,
+  );
+
+  // --- MT
+  const mTomVol = new Tone.Volume();
+  const mTomGen = new Lt({
+    amp: 0.387,
+    freq: 105,
+    context: toneCtx,
+  }).chain(
+    ...[
+      //
+    ].filter((n) => n),
+    mTomVol,
   );
 
   // --- rimshot
@@ -222,12 +250,26 @@ const sketch = (p) => {
     events: [],
     subdivision: '1n',
   });
-
   const cpReverbSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       cpReverbGen.triggerAttack(time, ftRand(velocity));
     },
     events: [],
+    subdivision: '1n',
+  });
+
+  const lTomSeq = new Tone.Sequence({
+    callback: (time, velocity) => {
+      lTomGen.triggerAttack(time, ftRand(velocity));
+    },
+    events: [[1, null, [1, 1], [1, 1, 1]]],
+    subdivision: '1n',
+  });
+  const mTomSeq = new Tone.Sequence({
+    callback: (time, velocity) => {
+      mTomGen.triggerAttack(time, ftRand(velocity));
+    },
+    events: [[null, [1, 1, 1], null, [1, 1]]],
     subdivision: '1n',
   });
   const rimshotSeq = new Tone.Sequence({
@@ -251,14 +293,7 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       maracasGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [
-      [
-        [[1, 1], null],
-        [null, null],
-        [[1, 1], null],
-        [null, null],
-      ],
-    ],
+    events: [],
     subdivision: '1n',
     humanize: 0.006,
   });
@@ -307,18 +342,18 @@ const sketch = (p) => {
         [null, 1],
         [null, 1],
       ],
-      [
-        [null, 1],
-        [null, 1],
-        [null, 1],
-        [null, 1],
-      ],
-      [
-        [null, 1],
-        [null, 1],
-        [null, 1],
-        [null, 1],
-      ],
+      // [
+      //   [null, 1],
+      //   [null, 1],
+      //   [null, 1],
+      //   [null, 1],
+      // ],
+      // [
+      //   [null, 1],
+      //   [null, 1],
+      //   [null, 1],
+      //   [null, 1],
+      // ],
     ],
     subdivision: '1n',
     humanize: 0.006,
@@ -338,6 +373,8 @@ const sketch = (p) => {
     snareSeq.start(0);
     cpRawSeq.start(0);
     // cpReverbSeq.start(0);
+    lTomSeq.start(0);
+    mTomSeq.start(0);
     rimshotSeq.start(0);
     clavesSeq.start(0);
     maracasSeq.start(0);
@@ -373,6 +410,17 @@ const sketch = (p) => {
   });
   const cpReverbCh = toChannel(cpReverbVol, {
     volume: 0.0, // 30 とかでやっと
+    pan: 0.0,
+    channelCount: 1,
+  });
+  const lTomCh = toChannel(lTomVol, {
+    volume: 0.0,
+    pan: 0.0,
+    channelCount: 1,
+  });
+
+  const mTomCh = toChannel(mTomVol, {
+    volume: 0.0,
     pan: 0.0,
     channelCount: 1,
   });
