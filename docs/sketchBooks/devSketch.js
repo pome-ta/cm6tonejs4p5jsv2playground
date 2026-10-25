@@ -23,7 +23,7 @@ import {
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 125;
+const BPM = 110;
 
 const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -301,7 +301,12 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cpRawGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [[null, 1]],
+    events: [
+      [null, 1],
+      [null, 1],
+      [null, 1],
+      [null, [[1, null, 0.7], null]],
+    ],
     subdivision: '1n',
   });
   const cpReverbSeq = new Tone.Sequence({
@@ -348,7 +353,6 @@ const sketch = (p) => {
       mCngGen.triggerAttack(time, ftRand(velocity));
     },
     events: [],
-
     subdivision: '1n',
   });
   const hCngSeq = new Tone.Sequence({
@@ -503,7 +507,7 @@ const sketch = (p) => {
     channelCount: 1,
   });
   const cpRawCh = toChannel(cpRawVol, {
-    volume: 0.0,
+    volume: -2.0,
     pan: 0.0,
     channelCount: 1,
   });
@@ -552,7 +556,7 @@ const sketch = (p) => {
     channelCount: 1,
   });
   const clavesCh = toChannel(clavesVol, {
-    volume: 8.0,
+    volume: 4.0,
     pan: 0.0,
     channelCount: 1,
   });
@@ -562,7 +566,7 @@ const sketch = (p) => {
     channelCount: 1,
   });
   const cowbellCh = toChannel(cowbellVol, {
-    volume: -8.0,
+    volume: -6.0,
     pan: 0.0,
     channelCount: 1,
   });
