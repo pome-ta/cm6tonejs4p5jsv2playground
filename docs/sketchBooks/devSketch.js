@@ -17,7 +17,7 @@ import {
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 86;
+const BPM = 108;
 
 const ftRand = (bias, spread = 1.0) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
@@ -193,7 +193,12 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       kickGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [[1, null, [1, 1], null]],
+    events: [
+      [1, 1, 1, 1],
+      [1, 1, 1, 1],
+      [1, 1, 1, 1],
+      [1, 1, 1, [1, 0.8]],
+    ],
     subdivision: '1n',
   });
 
@@ -201,7 +206,12 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       snareGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [[null, 1, null, 1]],
+    events: [
+      [null, 1, null, [1, null, null, 0.45]],
+      [null, 1, null, 1],
+      [null, [1, null, null, 0.6], null, 1],
+      [null, 1, null, 1],
+    ],
     subdivision: '1n',
     // humanize: 0.006,
   });
@@ -209,7 +219,7 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cpRawGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [[null, [null, null, null, 1], null, [null, 0.4, null, 0.9]]],
+    events: [],
     subdivision: '1n',
   });
 
@@ -241,7 +251,14 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       maracasGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [],
+    events: [
+      [
+        [[1, 1], null],
+        [null, null],
+        [[1, 1], null],
+        [null, null],
+      ],
+    ],
     subdivision: '1n',
     humanize: 0.006,
   });
@@ -279,10 +296,28 @@ const sketch = (p) => {
     },
     events: [
       [
-        [0.9, 0.9, 0.9, 0.9],
-        [0.9, 0.9, 0.9, 0.9],
-        [0.9, 0.9, [0.9, 0.8], 0.9],
-        [0.9, 0.9, 0.9, 0.9],
+        [null, 1],
+        [null, 1],
+        [null, 1],
+        [null, 1],
+      ],
+      [
+        [null, 1],
+        [null, 1],
+        [null, 1],
+        [null, 1],
+      ],
+      [
+        [null, 1],
+        [null, 1],
+        [null, 1],
+        [null, 1],
+      ],
+      [
+        [null, 1],
+        [null, 1],
+        [null, 1],
+        [null, 1],
       ],
     ],
     subdivision: '1n',
@@ -293,8 +328,8 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cymbalGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [],
-    subdivision: '1n',
+    events: [1],
+    subdivision: '4m',
   });
 
   // --- emitter
@@ -303,12 +338,12 @@ const sketch = (p) => {
     snareSeq.start(0);
     cpRawSeq.start(0);
     // cpReverbSeq.start(0);
-    // rimshotSeq.start(0);
-    // clavesSeq.start(0);
-    // maracasSeq.start(0);
-    // cowbellSeq.start(0);
+    rimshotSeq.start(0);
+    clavesSeq.start(0);
+    maracasSeq.start(0);
+    cowbellSeq.start(0);
     hihatSeq.start(0);
-    // cymbalSeq.start(0);
+    cymbalSeq.start(0);
 
     // --- transport.start
     transport.start();
@@ -352,8 +387,8 @@ const sketch = (p) => {
     channelCount: 1,
   });
   const maracasCh = toChannel(maracasVol, {
-    volume: 0.0,
-    pan: 0.0,
+    volume: 4.0,
+    pan: -0.2,
     channelCount: 1,
   });
   const cowbellCh = toChannel(cowbellVol, {
@@ -389,8 +424,8 @@ const sketch = (p) => {
     .chain(
       ...[
         //
-        // new Tone.Volume(-6),
-        drumKitLowpass,
+        new Tone.Volume(-6),
+        // drumKitLowpass,
         // new Tone.Gain(1.55),
         // new Tone.Limiter(-6),
         // new Tone.Gain(1.1),
