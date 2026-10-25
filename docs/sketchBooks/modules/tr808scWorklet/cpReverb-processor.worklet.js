@@ -134,7 +134,7 @@ export default class CpReverbProcessor extends AudioWorkletProcessor {
       {
         name: 'amp',
         defaultValue: 1.0,
-        minValue: 1.0,  // 計算上は最少が`1.2` となるらしい
+        minValue: 1.0, // 計算上は最少が`1.2` となるらしい
         maxValue: 4.2,
         automationRate: 'k-rate',
       },

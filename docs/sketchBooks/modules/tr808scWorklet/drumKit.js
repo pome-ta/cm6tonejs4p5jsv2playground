@@ -2,10 +2,9 @@ import Bd from './bd.js';
 import Sn from './sn.js';
 import CpRaw from './cpRaw.js';
 import CpReverb from './cpReverb.js';
-import Lt from './lt.js';
-import Mt from './mt.js';
 
-import {Lc, Mc,Hc} from './congas.js';
+import { Lt, Mt, Ht } from './toms.js';
+import { Lc, Mc, Hc } from './congas.js';
 
 import Rimshot from './rimshot.js';
 import Claves from './claves.js';
@@ -22,7 +21,10 @@ export {
   CpReverb,
   Lt,
   Mt,
-  Lc, Mc,Hc,
+  Ht,
+  Lc,
+  Mc,
+  Hc,
   Rimshot,
   Claves,
   Maracas,

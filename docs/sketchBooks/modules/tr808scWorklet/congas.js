@@ -105,7 +105,6 @@ export class Lc extends Tone.ToneAudioNode {
   }
 }
 
-
 export class Mc extends Tone.ToneAudioNode {
   constructor(options = {}) {
     // MC: arg amp=1, freq=250;

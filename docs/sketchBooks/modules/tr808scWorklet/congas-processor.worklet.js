@@ -43,7 +43,8 @@ class CongasProcessor extends AudioWorkletProcessor {
 
     for (let i = 0; i < channel.length; i++) {
       const t = trig.length > 1 ? trig[i] : trig[0];
-      if (this._prevTrig === 0 && t > 0) this._reset(blockStart + i / sampleRate);
+      if (this._prevTrig === 0 && t > 0)
+        this._reset(blockStart + i / sampleRate);
       this._prevTrig = t;
 
       if (!this.active) {
@@ -63,13 +64,20 @@ class CongasProcessor extends AudioWorkletProcessor {
 
       let fenv = freq;
       if (elapsed <= 0.1) {
-        fenv = this.curveValue(elapsed, 0.1, freq * conf.p1, freq * conf.p2, -4);
+        fenv = this.curveValue(
+          elapsed,
+          0.1,
+          freq * conf.p1,
+          freq * conf.p2,
+          -4,
+        );
       } else if (elapsed <= 0.6) {
         fenv = this.curveValue(elapsed - 0.1, 0.5, freq * conf.p2, freq, -4);
       }
 
       channel[i] = Math.sin(this.phase) * env * amp * conf.gain;
-      this.phase = (this.phase + (2 * Math.PI * fenv) / sampleRate) % (Math.PI * 2);
+      this.phase =
+        (this.phase + (2 * Math.PI * fenv) / sampleRate) % (Math.PI * 2);
     }
     if (outputs[0][1]) outputs[0][1].set(channel);
     return true;
@@ -80,9 +88,27 @@ class CongasProcessor extends AudioWorkletProcessor {
     // MC: arg amp=1, freq=250;
     // HC: arg amp=1, freq=370;
     return [
-      { name: 'trigger', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: 'a-rate' },
-      { name: 'amp', defaultValue: 1.0, minValue: 0.1, maxValue: 1.5, automationRate: 'k-rate' },
-      { name: 'freq', defaultValue: 165.0, minValue: 115.5, maxValue: 444.0, automationRate: 'k-rate' },
+      {
+        name: 'trigger',
+        defaultValue: 0,
+        minValue: 0,
+        maxValue: 1,
+        automationRate: 'a-rate',
+      },
+      {
+        name: 'amp',
+        defaultValue: 1.0,
+        minValue: 0.1,
+        maxValue: 1.5,
+        automationRate: 'k-rate',
+      },
+      {
+        name: 'freq',
+        defaultValue: 165.0,
+        minValue: 115.5,
+        maxValue: 444.0,
+        automationRate: 'k-rate',
+      },
     ];
   }
 }
@@ -101,9 +127,27 @@ export class LcProcessor extends CongasProcessor {
   static get parameterDescriptors() {
     // LC: arg amp=1, freq=165;
     return [
-      { name: 'trigger', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: 'a-rate' },
-      { name: 'amp', defaultValue: 1.0, minValue: 0.1, maxValue: 1.5, automationRate: 'k-rate' },
-      { name: 'freq', defaultValue: 165.0, minValue: 115.5, maxValue: 189.75, automationRate: 'k-rate' },
+      {
+        name: 'trigger',
+        defaultValue: 0,
+        minValue: 0,
+        maxValue: 1,
+        automationRate: 'a-rate',
+      },
+      {
+        name: 'amp',
+        defaultValue: 1.0,
+        minValue: 0.1,
+        maxValue: 1.5,
+        automationRate: 'k-rate',
+      },
+      {
+        name: 'freq',
+        defaultValue: 165.0,
+        minValue: 115.5,
+        maxValue: 189.75,
+        automationRate: 'k-rate',
+      },
     ];
   }
 }
@@ -122,9 +166,27 @@ export class McProcessor extends CongasProcessor {
   static get parameterDescriptors() {
     // MC: arg amp=1, freq=250;
     return [
-      { name: 'trigger', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: 'a-rate' },
-      { name: 'amp', defaultValue: 1.0, minValue: 0.1, maxValue: 1.5, automationRate: 'k-rate' },
-      { name: 'freq', defaultValue: 250.0, minValue: 175.0, maxValue: 275.0, automationRate: 'k-rate' },
+      {
+        name: 'trigger',
+        defaultValue: 0,
+        minValue: 0,
+        maxValue: 1,
+        automationRate: 'a-rate',
+      },
+      {
+        name: 'amp',
+        defaultValue: 1.0,
+        minValue: 0.1,
+        maxValue: 1.5,
+        automationRate: 'k-rate',
+      },
+      {
+        name: 'freq',
+        defaultValue: 250.0,
+        minValue: 175.0,
+        maxValue: 275.0,
+        automationRate: 'k-rate',
+      },
     ];
   }
 }
@@ -143,9 +205,27 @@ export class HcProcessor extends CongasProcessor {
   static get parameterDescriptors() {
     // HC: arg amp=1, freq=370;
     return [
-      { name: 'trigger', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: 'a-rate' },
-      { name: 'amp', defaultValue: 1.0, minValue: 0.1, maxValue: 1.5, automationRate: 'k-rate' },
-      { name: 'freq', defaultValue: 370.0, minValue: 259.0, maxValue: 444.0, automationRate: 'k-rate' },
+      {
+        name: 'trigger',
+        defaultValue: 0,
+        minValue: 0,
+        maxValue: 1,
+        automationRate: 'a-rate',
+      },
+      {
+        name: 'amp',
+        defaultValue: 1.0,
+        minValue: 0.1,
+        maxValue: 1.5,
+        automationRate: 'k-rate',
+      },
+      {
+        name: 'freq',
+        defaultValue: 370.0,
+        minValue: 259.0,
+        maxValue: 444.0,
+        automationRate: 'k-rate',
+      },
     ];
   }
 }
