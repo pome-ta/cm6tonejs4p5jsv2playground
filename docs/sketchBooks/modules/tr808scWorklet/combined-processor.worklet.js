@@ -2,7 +2,9 @@ import BbProcessor from './bd-processor.worklet.js';
 import SnProcessor from './sn-processor.worklet.js';
 import CpRawProcessor from './cpRaw-processor.worklet.js';
 import CpReverbProcessor from './cpReverb-processor.worklet.js';
-import {LtProcessor, MtProcessor,HtProcessor} from './toms-processor.worklet.js';
+
+import { LtProcessor, MtProcessor, HtProcessor } from './toms-processor.worklet.js';
+import { LcProcessor, McProcessor, HcProcessor } from './congas-processor.worklet.js';
 
 import RimshotProcessor from './rimshot-processor.worklet.js';
 import ClavesProcessor from './claves-processor.worklet.js';
@@ -16,9 +18,15 @@ registerProcessor('bd-processor', BbProcessor);
 registerProcessor('sn-processor', SnProcessor);
 registerProcessor('cpRaw-processor', CpRawProcessor);
 registerProcessor('cpReverb-processor', CpReverbProcessor);
+
 registerProcessor('lt-processor', LtProcessor);
 registerProcessor('mt-processor', MtProcessor);
 registerProcessor('ht-processor', HtProcessor);
+
+registerProcessor('lc-processor', LcProcessor);
+registerProcessor('mc-processor', McProcessor);
+registerProcessor('hc-processor', HcProcessor);
+
 registerProcessor('rimshot-processor', RimshotProcessor);
 registerProcessor('claves-processor', ClavesProcessor);
 registerProcessor('maracas-processor', MaracasProcessor);

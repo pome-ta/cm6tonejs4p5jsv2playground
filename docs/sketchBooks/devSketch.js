@@ -7,6 +7,7 @@ import {
   CpReverb,
   Lt,
   Mt,
+  Lc, Mc,Hc,
   Rimshot,
   Claves,
   Maracas,
