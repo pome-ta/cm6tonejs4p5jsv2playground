@@ -30,6 +30,35 @@ const ftRand = (bias, spread = 1.0) => {
   return bias + (Math.random() * 2 - 1) * maxDist;
 };
 
+/*
+function decodeSeq(seq) {
+  return Array.from({ length: 16 }, (_, i) => {
+    const shift = BigInt((15 - i) * 4);
+    const value = Number((seq >> shift) & 0xfn);
+
+    return value === 0 ? 0 : value / 9;
+  });
+}
+*/
+
+function decodeSeq(seq) {
+  return Array.from({ length: 4 }, (_, row) =>
+    Array.from({ length: 4 }, (_, col) => {
+      const i = row * 4 + col;
+      const shift = BigInt((15 - i) * 4);
+      const value = Number((seq >> shift) & 0xfn);
+
+      return value === 0 ? 0 : ftRand(value / 9);
+    }),
+  );
+}
+
+console.log(decodeSeq(0x9876_5432_10ab_cdefn));
+console.log(decodeSeq(0x9876_5432_10ab_cdefn));
+
+//0x9000_9000_8000_900An
+//console.log(decodeSeq(0x9000_9000_8000_900An))
+
 const sketch = (p) => {
   // --- Sketch
   let cnvs;
@@ -319,21 +348,21 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       lTomGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [null, [null, null, null, [null, null, [null, 1, null]]]],
+    events: [[[1, 1], null, null, null], null],
     subdivision: '1n',
   });
   const mTomSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       mTomGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [null, [null, null, null, [null, [null, 1, null], null]]],
+    events: [[null, [1, 1], null, null], null],
     subdivision: '1n',
   });
   const hTomSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       hTomGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [null, [null, null, null, 1]],
+    events: [[null, null, [1, 1], null], null],
     subdivision: '1n',
   });
 
@@ -341,21 +370,21 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       lCngGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [],
+    events: [null, [[1, 1], null, null, null]],
     subdivision: '1n',
   });
   const mCngSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       mCngGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [],
+    events: [null, [null, [1, 1], null, null]],
     subdivision: '1n',
   });
   const hCngSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       hCngGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [],
+    events: [null, [null, null, [1, 1], null]],
     subdivision: '1n',
   });
 
@@ -397,7 +426,8 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cowbellGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [[[[1, [null, 1]]], null, null, null], null],
+    //events: [[[[1, [null, 1]]], null, null, null], null],
+    events: [],
     subdivision: '1n',
     humanize: 0.006,
   });
@@ -452,22 +482,26 @@ const sketch = (p) => {
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
+    /*
     kickSeq.start(0);
     snareSeq.start(0);
     cpRawSeq.start(0);
     cpReverbSeq.start(0);
+    */
     lTomSeq.start(0);
     mTomSeq.start(0);
     hTomSeq.start(0);
     lCngSeq.start(0);
     mCngSeq.start(0);
     hCngSeq.start(0);
+    /*
     rimshotSeq.start(0);
     clavesSeq.start(0);
     maracasSeq.start(0);
     cowbellSeq.start(0);
     hihatSeq.start(0);
     cymbalSeq.start(0);
+    */
 
     // --- transport.start
     transport.start();
