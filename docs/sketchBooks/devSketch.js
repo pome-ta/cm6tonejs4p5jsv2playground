@@ -61,7 +61,6 @@ function decodeSeq(seq) {
   );
 }
 
-
 const sketch = (p) => {
   // --- Sketch
   let cnvs;
@@ -304,6 +303,9 @@ const sketch = (p) => {
 
   // --- seq
   const nonEvent = decodeSeq(0x0000_0000_0000_0000n);
+
+  const seqStore = {};
+
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       kickGen.triggerAttack(time, ftRand(velocity));
@@ -316,6 +318,7 @@ const sketch = (p) => {
     ],
     subdivision: '1n',
   });
+  seqStore.bd = kickSeq;
 
   const snareSeq = new Tone.Sequence({
     callback: (time, velocity) => {
@@ -330,6 +333,7 @@ const sketch = (p) => {
     subdivision: '1n',
     // humanize: 0.006,
   });
+  seqStore.sn = snareSeq;
   const cpRawSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       cpRawGen.triggerAttack(time, ftRand(velocity));
@@ -340,6 +344,7 @@ const sketch = (p) => {
     ],
     subdivision: '1n',
   });
+  seqStore.cp = cpRawSeq;
   const cpReverbSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       cpReverbGen.triggerAttack(time, ftRand(velocity));
@@ -347,6 +352,7 @@ const sketch = (p) => {
     events: nonEvent,
     subdivision: '1n',
   });
+  seqStore.cr = cpReverbSeq;
 
   const lTomSeq = new Tone.Sequence({
     callback: (time, velocity) => {
@@ -355,6 +361,7 @@ const sketch = (p) => {
     events: [[[1, 1], null, null, null], null],
     subdivision: '1n',
   });
+  seqStore.lt = lTomSeq;
   const mTomSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       mTomGen.triggerAttack(time, ftRand(velocity));
@@ -362,6 +369,7 @@ const sketch = (p) => {
     events: [[null, [1, 1], null, null], null],
     subdivision: '1n',
   });
+  seqStore.mt = mTomSeq;
   const hTomSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       hTomGen.triggerAttack(time, ftRand(velocity));
@@ -369,6 +377,7 @@ const sketch = (p) => {
     events: [[null, null, [1, 1], null], null],
     subdivision: '1n',
   });
+  seqStore.ht = hTomSeq;
 
   const lCngSeq = new Tone.Sequence({
     callback: (time, velocity) => {
@@ -377,6 +386,7 @@ const sketch = (p) => {
     events: [null, [[1, 1], null, null, null]],
     subdivision: '1n',
   });
+  seqStore.lc = lCngSeq;
   const mCngSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       mCngGen.triggerAttack(time, ftRand(velocity));
@@ -384,6 +394,7 @@ const sketch = (p) => {
     events: [null, [null, [1, 1], null, null]],
     subdivision: '1n',
   });
+  seqStore.mc = mCngSeq;
   const hCngSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       hCngGen.triggerAttack(time, ftRand(velocity));
@@ -391,6 +402,7 @@ const sketch = (p) => {
     events: [null, [null, null, [1, 1], null]],
     subdivision: '1n',
   });
+  seqStore.hc = hCngSeq;
 
   const rimshotSeq = new Tone.Sequence({
     callback: (time, velocity) => {
@@ -403,6 +415,7 @@ const sketch = (p) => {
     subdivision: '1n',
     humanize: 0.006,
   });
+  seqStore.rs = rimshotSeq;
 
   const clavesSeq = new Tone.Sequence({
     callback: (time, velocity) => {
@@ -416,6 +429,7 @@ const sketch = (p) => {
     ],
     subdivision: '1n',
   });
+  seqStore.cl = clavesSeq;
 
   const maracasSeq = new Tone.Sequence({
     callback: (time, velocity) => {
@@ -425,6 +439,7 @@ const sketch = (p) => {
     subdivision: '1n',
     humanize: 0.008,
   });
+  seqStore.ma = maracasSeq;
 
   const cowbellSeq = new Tone.Sequence({
     callback: (time, velocity) => {
@@ -434,6 +449,29 @@ const sketch = (p) => {
     subdivision: '1n',
     humanize: 0.006,
   });
+  seqStore.cb = cowbellSeq;
+
+  const closeHatSeq = new Tone.Sequence({
+    callback: (time, velocity) => {
+      openHatGen?.triggerRelease(time);
+      closeHatGen.triggerAttack(time, ftRand(velocity));
+    },
+    events: [decodeSeq(0x0090_0230_0900_0750n)],
+    subdivision: '1n',
+    humanize: 0.006,
+  });
+  seqStore.ch = closeHatSeq;
+
+  const openHatSeq = new Tone.Sequence({
+    callback: (time, velocity) => {
+      closeHatGen?.triggerRelease(time);
+      openHatGen.triggerAttack(time, ftRand(velocity));
+    },
+    events: [decodeSeq(0x0090_0230_0900_0750n)],
+    subdivision: '1n',
+    humanize: 0.006,
+  });
+  seqStore.oh = openHatSeq;
 
   const hihatHandlers = new Map([
     [
@@ -482,29 +520,30 @@ const sketch = (p) => {
     events: [1],
     subdivision: '4m',
   });
+  seqStore.cy = cymbalSeq;
+
+  const callStore = {};
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
-    
     kickSeq.start(0);
     snareSeq.start(0);
     cpRawSeq.start(0);
     cpReverbSeq.start(0);
-    
+
     lTomSeq.start(0);
     mTomSeq.start(0);
     hTomSeq.start(0);
     lCngSeq.start(0);
     mCngSeq.start(0);
     hCngSeq.start(0);
-    
+
     rimshotSeq.start(0);
     clavesSeq.start(0);
     maracasSeq.start(0);
     cowbellSeq.start(0);
     hihatSeq.start(0);
     cymbalSeq.start(0);
-    
 
     // --- transport.start
     transport.start();
