@@ -18,6 +18,8 @@ import {
   Hat,
   Openhihat,
   Cymbal,
+  decodeSeq,
+  DrumKit,
 } from 'modules/tr808scWorklet/drumKit.js';
 
 import TapIndicator from 'modules/TapIndicator.js';
@@ -35,31 +37,6 @@ const ftRand = (bias, spread = 0.5) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
   return bias + (Math.random() * 2 - 1) * maxDist;
 };
-
-/**
- * 16進数のシーケンスをデコードし、`4×4` の二次元配列に変換
- * 16ビットではなく 64ビット(16桁の 16進数)を対象とし、
- * 4ビットごとに値を抽出してデコード。
- * 抽出値が `0` の場合 :`null`
- * それ以外の場合: `9` で除算
- *
- * `0x9000_9000_8000_900An.` のように 、
- * `n` サフィックスを付けた `BigInt` リテラルを想定
- *
- * @param {bigint} `seq` デコード対象の 16進数シーケンス
- * @returns {number[][]} デコード結果の `4×4` 二次元配列
- */
-function decodeSeq(seq) {
-  return Array.from({ length: 4 }, (_, row) =>
-    Array.from({ length: 4 }, (_, col) => {
-      const i = row * 4 + col;
-      const shift = BigInt((15 - i) * 4);
-      const value = Number((seq >> shift) & 0xfn);
-      const deco = value === 0 ? null : value / 9;
-      return deco;
-    }),
-  );
-}
 
 const sketch = (p) => {
   // --- Sketch
@@ -83,6 +60,18 @@ const sketch = (p) => {
   transport.bpm.value = BPM;
 
   const emitter = new Tone.Emitter();
+
+  const ddd = new DrumKit({}, {}, toneCtx);
+  console.log(ddd);
+
+  /*
+  Object.entries(ddd.instStore).map(([key, val]) => {
+    console.log(val);
+  });
+  */
+  
+  console.log(ddd.mt)
+  console.log(ddd.instStore.ma)
 
   // --- bd
   const kickVol = new Tone.Volume();
