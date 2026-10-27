@@ -14,6 +14,17 @@ import Hat from './hat.js';
 import Openhihat from './openhihat.js';
 import Cymbal from './cymbal.js';
 
+const genOptionsDefault = {
+  bdr:1,
+  snr:1,
+}
+
+
+class DrumKit{
+  constructor() {
+  }
+}
+
 export {
   Bd,
   Sn,

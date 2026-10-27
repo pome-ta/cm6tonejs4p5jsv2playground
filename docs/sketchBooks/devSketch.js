@@ -25,39 +25,42 @@ import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
 const BPM = 110;
 
-const ftRand = (bias, spread = 1.0) => {
+/**
+ * 指定した基準値を中心にランダムな値を生成する。
+ * @param {number} bias - 基準値(通常は 0.0〜1.0)
+ * @param {number} [spread=0.5] - ランダムな変動幅の係数
+ * @returns {number} 生成されたランダム値
+ */
+const ftRand = (bias, spread = 0.5) => {
   const maxDist = Math.min(bias, 1.0 - bias) * spread;
   return bias + (Math.random() * 2 - 1) * maxDist;
 };
 
-/*
-function decodeSeq(seq) {
-  return Array.from({ length: 16 }, (_, i) => {
-    const shift = BigInt((15 - i) * 4);
-    const value = Number((seq >> shift) & 0xfn);
-
-    return value === 0 ? 0 : value / 9;
-  });
-}
-*/
-
+/**
+ * 16進数のシーケンスをデコードし、`4×4` の二次元配列に変換
+ * 16ビットではなく 64ビット(16桁の 16進数)を対象とし、
+ * 4ビットごとに値を抽出してデコード。
+ * 抽出値が `0` の場合 :`null`
+ * それ以外の場合: `9` で除算
+ *
+ * `0x9000_9000_8000_900An.` のように 、
+ * `n` サフィックスを付けた `BigInt` リテラルを想定
+ *
+ * @param {bigint} `seq` デコード対象の 16進数シーケンス
+ * @returns {number[][]} デコード結果の `4×4` 二次元配列
+ */
 function decodeSeq(seq) {
   return Array.from({ length: 4 }, (_, row) =>
     Array.from({ length: 4 }, (_, col) => {
       const i = row * 4 + col;
       const shift = BigInt((15 - i) * 4);
       const value = Number((seq >> shift) & 0xfn);
-
-      return value === 0 ? 0 : ftRand(value / 9);
+      const deco = value === 0 ? null : value / 9;
+      return deco;
     }),
   );
 }
 
-console.log(decodeSeq(0x9876_5432_10ab_cdefn));
-console.log(decodeSeq(0x9876_5432_10ab_cdefn));
-
-//0x9000_9000_8000_900An
-//console.log(decodeSeq(0x9000_9000_8000_900An))
 
 const sketch = (p) => {
   // --- Sketch
@@ -300,6 +303,7 @@ const sketch = (p) => {
   );
 
   // --- seq
+  const nonEvent = decodeSeq(0x0000_0000_0000_0000n);
   const kickSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       kickGen.triggerAttack(time, ftRand(velocity));
@@ -340,7 +344,7 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cpReverbGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [],
+    events: nonEvent,
     subdivision: '1n',
   });
 
@@ -426,8 +430,7 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       cowbellGen.triggerAttack(time, ftRand(velocity));
     },
-    //events: [[[[1, [null, 1]]], null, null, null], null],
-    events: [],
+    events: [decodeSeq(0x0090_0230_0900_0750n)],
     subdivision: '1n',
     humanize: 0.006,
   });
@@ -482,26 +485,26 @@ const sketch = (p) => {
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
-    /*
+    
     kickSeq.start(0);
     snareSeq.start(0);
     cpRawSeq.start(0);
     cpReverbSeq.start(0);
-    */
+    
     lTomSeq.start(0);
     mTomSeq.start(0);
     hTomSeq.start(0);
     lCngSeq.start(0);
     mCngSeq.start(0);
     hCngSeq.start(0);
-    /*
+    
     rimshotSeq.start(0);
     clavesSeq.start(0);
     maracasSeq.start(0);
     cowbellSeq.start(0);
     hihatSeq.start(0);
     cymbalSeq.start(0);
-    */
+    
 
     // --- transport.start
     transport.start();
