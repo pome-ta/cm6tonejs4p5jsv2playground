@@ -37,26 +37,7 @@ const classStore = {
   cy: Cymbal,
 };
 
-function getMergedOptions(instrumentType, customOptions = {}) {
-  const defaultOpts = instrumentDefaultOptions[instrumentType];
-  if (!defaultOpts) {
-    return customOptions;
-  }
 
-  return {
-    ...defaultOpts,
-    ...customOptions,
-    channel: {
-      ...defaultOpts.channel,
-      ...(customOptions.channel || {}),
-    },
-    params: {
-      ...defaultOpts.params,
-      ...(customOptions.params || {}),
-    },
-    effects: customOptions.effects || defaultOpts.effects,
-  };
-}
 
 const instrumentDefaultOptions = {
   bd: {
@@ -196,6 +177,28 @@ const instrumentDefaultOptions = {
   },
 };
 
+
+function getMergedOptions(instrumentType, customOptions = {}) {
+  const defaultOpts = instrumentDefaultOptions[instrumentType];
+  if (!defaultOpts) {
+    return customOptions;
+  }
+
+  return {
+    ...defaultOpts,
+    ...customOptions,
+    channel: {
+      ...defaultOpts.channel,
+      ...(customOptions.channel || {}),
+    },
+    params: {
+      ...defaultOpts.params,
+      ...(customOptions.params || {}),
+    },
+    effects: customOptions.effects || defaultOpts.effects,
+  };
+}
+
 class Instrument {
   #name;
   #gen;
@@ -227,7 +230,7 @@ export class DrumKit {
   constructor(instrumentOptions, context = null) {
     this.instrumentStore = Object.fromEntries(
       Object.entries(classStore).map(([keyName, targetClass]) => {
-        const opts = getMergedOptions(keyName, instrumentOptions.keyStr || {});
+        const opts = getMergedOptions(keyName, instrumentOptions[keyName] || {});
         const instrument = new Instrument(
           targetClass,
           keyName,

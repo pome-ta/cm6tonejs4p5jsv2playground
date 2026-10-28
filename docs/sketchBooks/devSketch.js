@@ -140,7 +140,7 @@ const sketch = (p) => {
 
   const instrumentOptions = {
     bd: {
-      channel: { volume: 0.0, pan: 1.0, channelCount: 1 },
+      channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
       params: {
         decay: 58.0, // 58.0: 6.0 | 30.0 | 110.0
         amp: 1.449, // 1.449: 1.0 | 2.0 | 2.1
@@ -250,7 +250,7 @@ const sketch = (p) => {
       effects: [],
     },
     ch: {
-      channel: { volume: 0.0, pan: 0.4, channelCount: 1 },
+      channel: { volume: 0.0, pan: 0.25, channelCount: 1 },
       params: {
         decay: 0.42, // 0.42: 0.42 | 0.42 | 0.42 固定値
         amp: 1.025, // 1.025: 0.3 | 1.0 | 3.5
@@ -258,7 +258,7 @@ const sketch = (p) => {
       effects: [],
     },
     oh: {
-      channel: { volume: 0.0, pan: 0.4, channelCount: 1 },
+      channel: { volume: 0.0, pan: 0.25, channelCount: 1 },
       params: {
         decay: 0.316, // 0.316: 0.01 | 0.5 | 5.0
         amp: 4.899, // 4.899: 4.0 | 4.0 | 6.0
@@ -266,7 +266,7 @@ const sketch = (p) => {
       effects: [],
     },
     cy: {
-      channel: { volume: 0.0, pan: -0.7, channelCount: 1 },
+      channel: { volume: 0.0, pan: -0.5, channelCount: 1 },
       params: {
         decay: 1.414, // 1.414: 0.5 | 2.0 | 4.0
         amp: 10.488, // 10.488: 0.5 | 20.0 | 22.0
@@ -377,11 +377,11 @@ const sketch = (p) => {
     .chain(
       ...[
         //
-        // new Tone.Volume(-6),
+        new Tone.Volume(-6),
         drumKitLowpass,
         // new Tone.Gain(1.55),
-        // new Tone.Limiter(-6),
-        // new Tone.Volume(3),
+        new Tone.Limiter(-6),
+        new Tone.Volume(3),
       ].filter((n) => n),
       drumKitVol,
     )
@@ -409,6 +409,7 @@ const sketch = (p) => {
     Object.entries(seqEvents).map(([key, _]) => {
       seqStore[key].start(0);
     });
+    console.log(drumKit.bd);
     // --- transport.start
     transport.start();
   });
