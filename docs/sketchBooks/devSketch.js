@@ -61,18 +61,6 @@ const sketch = (p) => {
 
   const emitter = new Tone.Emitter();
 
-  const ddd = new DrumKit({}, {}, toneCtx);
-  console.log(ddd);
-
-  /*
-  Object.entries(ddd.instStore).map(([key, val]) => {
-    console.log(val);
-  });
-  */
-  
-  console.log(ddd.mt)
-  console.log(ddd.instStore.ma)
-
   // --- bd
   const kickVol = new Tone.Volume();
   const kickGen = new Bd({
@@ -512,6 +500,98 @@ const sketch = (p) => {
   seqStore.cy = cymbalSeq;
 
   const callStore = {};
+
+  const drumKit = new DrumKit({}, {}, toneCtx);
+
+  const seqDefault = (instrument) => {
+    const seq = new Tone.Sequence({
+      callback: (time, velocity) => {
+        instrument.gen.triggerAttack(time, ftRand(velocity));
+      },
+      events: [nonEvent],
+      subdivision: '1n',
+      humanize: 0.0,
+    });
+    return seq;
+  };
+
+  const seqCloseHihat = (instStore) => {
+    const closeGen = instStore.ch.gen;
+    const openGen = instStore.oh.gen;
+    const seq = new Tone.Sequence({
+      callback: (time, velocity) => {
+        openGen?.triggerRelease(time);
+        closeGen.triggerAttack(time, ftRand(velocity));
+      },
+      events: [nonEvent],
+      subdivision: '1n',
+      humanize: 0.0,
+    });
+    return seq;
+  };
+
+  const seqOpenHihat = (instStore) => {
+    const openGen = instStore.oh.gen;
+    const closeGen = instStore.ch.gen;
+    const seq = new Tone.Sequence({
+      callback: (time, velocity) => {
+        closeGen?.triggerRelease(time);
+        openGen.triggerAttack(time, ftRand(velocity));
+      },
+      events: [nonEvent],
+      subdivision: '1n',
+      humanize: 0.0,
+    });
+    return seq;
+  };
+
+  const hatHandlers = {
+    ch: seqCloseHihat,
+    oh: seqOpenHihat,
+  };
+  const seqStore = Object.fromEntries(
+    Object.entries(drumKit.instStore).map(([keyName, instrument]) => {
+      const seq = Object.hasOwn(hatHandlers, keyName)
+        ? hatHandlers[keyName](drumKit.instStore)
+        : seqDefault(instrument);
+      return [keyName, seq];
+    }),
+  );
+
+  const seqEvents = {
+    bd: [decodeSeq(0x9000_9000_9000_9070n)],
+    sn: [decodeSeq(0x0000_9000_0000_9000n)],
+    cp: [decodeSeq(0x0000_0000_0000_0000n)],
+    cr: [decodeSeq(0x0000_0000_0000_0000n)],
+    lt: [decodeSeq(0x0000_0000_0000_0000n)],
+    mt: [decodeSeq(0x0000_0000_0000_0000n)],
+    ht: [decodeSeq(0x0000_0000_0000_0000n)],
+    lc: [decodeSeq(0x0000_0000_0000_0000n)],
+    mc: [decodeSeq(0x0000_0000_0000_0000n)],
+    hc: [decodeSeq(0x0000_0000_0000_0000n)],
+    rs: [decodeSeq(0x0000_0000_0000_0000n)],
+    cl: [decodeSeq(0x0000_0000_0000_0000n)],
+    ma: [decodeSeq(0x0000_0000_0000_0000n)],
+    cb: [decodeSeq(0x0000_0000_0000_0000n)],
+    ch: [decodeSeq(0x0000_0000_0000_0000n)],
+    oh: [decodeSeq(0x0000_0000_0000_0000n)],
+    cy: [
+      decodeSeq(0x9000_0000_0000_0000n),
+      decodeSeq(0x0000_0000_0000_0000n),
+      decodeSeq(0x0000_0000_0000_0000n),
+      decodeSeq(0x0000_0000_0000_0000n),
+    ],
+  };
+
+  // events set
+  Object.entries(seqEvents).map(([key, events]) => {
+    seqStore.key.events = events;
+  });
+  /*
+  Object.entries(ddd.instStore).map(([key, val]) => {
+    console.log(val);
+  });
+  */
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
