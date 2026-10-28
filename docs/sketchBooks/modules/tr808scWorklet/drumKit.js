@@ -231,7 +231,6 @@ class Instrument {
     this.#gen = new targetClass(options).chain(...[...effects].filter((n) => n), this.#volNode);
     this.#chNode = new Tone.Channel(chParams);
     this.#volNode.connect(this.#chNode);
-    //this.#chNode.send('drumKit');
   }
 
   get name() {
