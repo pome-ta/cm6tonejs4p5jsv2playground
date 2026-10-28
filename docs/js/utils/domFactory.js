@@ -3,9 +3,14 @@ export default class DomFactory {
   #buildEvent;
 
   constructor(domTag) {
-    this.#element = typeof domTag === 'string' ? document.createElement(domTag) : domTag;
+    this.#element =
+      typeof domTag === 'string'
+        ? document.createElement(domTag)
+        : domTag;
 
-    this.#buildEvent = new CustomEvent('build', { detail: this.#element });
+    this.#buildEvent = new CustomEvent('build', {
+      detail: this.#element,
+    });
   }
 
   get element() {
@@ -18,7 +23,11 @@ export default class DomFactory {
 
   static create(tag, options) {
     const instance = new this(tag);
-    options ? Object.entries(options).forEach(([key, value]) => instance[key](value)) : null;
+    options
+      ? Object.entries(options).forEach(([key, value]) =>
+          instance[key](value),
+        )
+      : null;
     instance.element.dispatchEvent(instance.buildEvent);
 
     return instance.element;
@@ -31,7 +40,9 @@ export default class DomFactory {
   }
 
   setAttrs(attrs) {
-    Object.entries(attrs).forEach(([key, value]) => this.setAttr(key, value));
+    Object.entries(attrs).forEach(([key, value]) =>
+      this.setAttr(key, value),
+    );
 
     return this;
   }
@@ -43,7 +54,9 @@ export default class DomFactory {
   }
 
   setStyles(styles) {
-    Object.entries(styles).forEach(([key, value]) => this.setStyle(key, value));
+    Object.entries(styles).forEach(([key, value]) =>
+      this.setStyle(key, value),
+    );
 
     return this;
   }
@@ -90,13 +103,17 @@ export default class DomFactory {
   }
 
   targetAddEventListeners(args) {
-    [...args].forEach((arg) => this.targetAddEventListener(arg));
+    [...args].forEach((arg) =>
+      this.targetAddEventListener(arg),
+    );
 
     return this;
   }
 
   appendChildren(children) {
-    [...children].forEach((child) => this.#element.appendChild(child));
+    [...children].forEach((child) =>
+      this.#element.appendChild(child),
+    );
 
     return this;
   }

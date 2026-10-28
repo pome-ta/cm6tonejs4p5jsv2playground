@@ -14,7 +14,8 @@ import {
   undo,
 } from '@codemirror/commands';
 
-const IS_TOUCH_DEVICE = window.matchMedia('(hover: none)').matches;
+const IS_TOUCH_DEVICE =
+  window.matchMedia('(hover: none)').matches;
 
 const initDetailsOpen = false;
 //const initDetailsOpen = true;
@@ -23,9 +24,18 @@ let isInstanceMode = true;
 
 // MouseEvent TouchEvent wrapper
 const { touchBegan, touchMoved, touchEnded } = {
-  touchBegan: typeof document.ontouchstart !== 'undefined' ? 'touchstart' : 'mousedown',
-  touchMoved: typeof document.ontouchmove !== 'undefined' ? 'touchmove' : 'mousemove',
-  touchEnded: typeof document.ontouchend !== 'undefined' ? 'touchend' : 'mouseup',
+  touchBegan:
+    typeof document.ontouchstart !== 'undefined'
+      ? 'touchstart'
+      : 'mousedown',
+  touchMoved:
+    typeof document.ontouchmove !== 'undefined'
+      ? 'touchmove'
+      : 'mousemove',
+  touchEnded:
+    typeof document.ontouchend !== 'undefined'
+      ? 'touchend'
+      : 'mouseup',
 };
 
 async function insertFetchDoc(filePath) {
@@ -37,7 +47,9 @@ const mainSketch = './sketchBooks/mainSketch.js';
 const devSketch = './sketchBooks/devSketch.js';
 
 const codeFilePath =
-  `${location.protocol}` === 'file:' || `${location.protocol}` === 'http:' || `${location.hostname}` === 'localhost'
+  `${location.protocol}` === 'file:' ||
+  `${location.protocol}` === 'http:' ||
+  `${location.hostname}` === 'localhost'
     ? devSketch
     : mainSketch;
 
@@ -67,7 +79,11 @@ insertFetchDoc(srcPath).then((loadedSource) => {
 // sandbox 側のAudioContext 解除
 document.addEventListener(touchEnded, () => {
   const auCtx = window.frames[0]?.auCtx;
-  if (!auCtx || (auCtx.state !== 'suspended' && auCtx.state !== 'interrupted')) {
+  if (
+    !auCtx ||
+    (auCtx.state !== 'suspended' &&
+      auCtx.state !== 'interrupted')
+  ) {
     return;
   }
 
@@ -91,32 +107,56 @@ const importMap = {
     // todo: p5.sound と一応揃える
     tone: 'https://cdn.jsdelivr.net/npm/tone@15.0.2/+esm',
     // tone: 'https://cdn.jsdelivr.net/npm/tone/+esm',
-    'modules/': new URL('./sketchBooks/modules/', originalUrl).href,
+    'modules/': new URL('./sketchBooks/modules/', originalUrl)
+      .href,
   },
 };
 const importMapJSON = JSON.stringify(importMap, null, 2);
 
 function replacePlaceholder(html, tag, attrs, marker, content) {
   const attrsPattern = attrs ? `[^>]*${attrs}[^>]*` : '[^>]*';
-  const re = new RegExp(`(<${tag}\\b${attrsPattern}>[\\s\\S]*?)<!--\\s*@${marker}\\s*-->([\\s\\S]*?<\\/${tag}>)`, 'i');
-  return html.replace(re, (_, before, after) => `${before}${content}${after}`);
+  const re = new RegExp(
+    `(<${tag}\\b${attrsPattern}>[\\s\\S]*?)<!--\\s*@${marker}\\s*-->([\\s\\S]*?<\\/${tag}>)`,
+    'i',
+  );
+  return html.replace(
+    re,
+    (_, before, after) => `${before}${content}${after}`,
+  );
 }
 
 let currentBlobScript = null;
 const createIframeHtml = (userCode) => {
-  const blob = new Blob([`${userCode}\n//# sourceURL=${codeFilePath}`], {
-    type: 'text/javascript',
-  });
-  currentBlobScript ? URL.revokeObjectURL(currentBlobScript) : null;
+  const blob = new Blob(
+    [`${userCode}\n//# sourceURL=${codeFilePath}`],
+    {
+      type: 'text/javascript',
+    },
+  );
+  currentBlobScript
+    ? URL.revokeObjectURL(currentBlobScript)
+    : null;
   currentBlobScript = URL.createObjectURL(blob);
 
   const scriptType = isInstanceMode ? 'type="module"' : '';
   const scriptCode = `<script ${scriptType} src="${currentBlobScript}"></script>`;
 
   let sketchHTML = sandboxHTMLstr;
-  sketchHTML = replacePlaceholder(sketchHTML, 'body', '', 'sketch-script', scriptCode);
+  sketchHTML = replacePlaceholder(
+    sketchHTML,
+    'body',
+    '',
+    'sketch-script',
+    scriptCode,
+  );
 
-  sketchHTML = replacePlaceholder(sketchHTML, 'script', 'type=["\']importmap["\']', 'import-map', importMapJSON);
+  sketchHTML = replacePlaceholder(
+    sketchHTML,
+    'script',
+    'type=["\']importmap["\']',
+    'import-map',
+    importMapJSON,
+  );
 
   return sketchHTML;
 };
@@ -174,7 +214,8 @@ window.addEventListener('message', (event) => {
 const callButton = DomFactory.create('button', {
   textContent: '🔄',
   setStyles: {
-    'font-family': 'Consolas, Menlo, Monaco, source-code-pro, Courier New, monospace',
+    'font-family':
+      'Consolas, Menlo, Monaco, source-code-pro, Courier New, monospace',
     padding: '0.5rem 1rem',
     cursor: 'pointer',
   },
@@ -189,12 +230,12 @@ const callButton = DomFactory.create('button', {
     },
   ],
 });
-
 
 const updateButton = DomFactory.create('button', {
   textContent: '🔊',
   setStyles: {
-    'font-family': 'Consolas, Menlo, Monaco, source-code-pro, Courier New, monospace',
+    'font-family':
+      'Consolas, Menlo, Monaco, source-code-pro, Courier New, monospace',
     padding: '0.5rem 1rem',
     cursor: 'pointer',
   },
@@ -210,11 +251,13 @@ const updateButton = DomFactory.create('button', {
   ],
 });
 
-const summaryTextContent = (bool) => `source: ${bool ? 'hide' : 'show'}`;
+const summaryTextContent = (bool) =>
+  `source: ${bool ? 'hide' : 'show'}`;
 
 const summary = DomFactory.create('summary', {
   setStyles: {
-    'font-family': 'Consolas, Menlo, Monaco, source-code-pro, Courier New, monospace',
+    'font-family':
+      'Consolas, Menlo, Monaco, source-code-pro, Courier New, monospace',
     //'font-size': '0.8rem',
     padding: '0.5rem 1rem',
   },
@@ -228,8 +271,13 @@ const wrapSummary = DomFactory.create('div', {
   },
 });
 
-const detailsControl = (isDetailsOpen, summaryElement, divElement) => {
-  summaryElement.textContent = summaryTextContent(isDetailsOpen);
+const detailsControl = (
+  isDetailsOpen,
+  summaryElement,
+  divElement,
+) => {
+  summaryElement.textContent =
+    summaryTextContent(isDetailsOpen);
   divElement.style.display = isDetailsOpen ? '' : 'none';
 };
 
@@ -245,7 +293,11 @@ const details = DomFactory.create('details', {
         targetSummary: summary,
         targetDiv: editorDiv,
         handleEvent: function (e) {
-          detailsControl(e.target.open, this.targetSummary, this.targetDiv);
+          detailsControl(
+            e.target.open,
+            this.targetSummary,
+            this.targetDiv,
+          );
         },
       },
     },
@@ -257,7 +309,11 @@ const details = DomFactory.create('details', {
         targetDiv: editorDiv,
         handleEvent: function (e) {
           e.detail.open = initDetailsOpen;
-          detailsControl(initDetailsOpen, this.targetSummary, this.targetDiv);
+          detailsControl(
+            initDetailsOpen,
+            this.targetSummary,
+            this.targetDiv,
+          );
         },
       },
     },
@@ -371,12 +427,15 @@ const headerControlWrap = DomFactory.create('div', {
     'align-items': 'center',
   },
   //appendChildren: [callButton, details, modeToggleContainer],
-  appendChildren: [updateButton,details, callButton],
+  appendChildren: [updateButton, details, callButton],
 });
 
 const headerHandleEvent = function () {
   const header = document.querySelector('#header');
-  const offsetTop = Math.max(0, window.visualViewport.offsetTop);
+  const offsetTop = Math.max(
+    0,
+    window.visualViewport.offsetTop,
+  );
   //header.style.top = `${offsetTop}px`;
   header.style.transform = `translateY(${offsetTop}px)`;
   //header.style.overflow = 'hidden'
@@ -438,7 +497,8 @@ const buttonFactory = (buttonIconChar, actionHandle) => {
     const icon = DomFactory.create('span', {
       textContent: `${iconChar}`,
       setStyles: {
-        'font-family': 'Consolas, Menlo, Monaco, source-code-pro, Courier New, monospace',
+        'font-family':
+          'Consolas, Menlo, Monaco, source-code-pro, Courier New, monospace',
         'font-size': '1.0rem',
         'font-style': 'normal',
         'font-weight': '400',
@@ -447,16 +507,19 @@ const buttonFactory = (buttonIconChar, actionHandle) => {
       },
     });
 
-    const button = DomFactory.create(createFrame('88%', '98%'), {
-      setStyles: {
-        //'background-color': '#8e8e93', // light gray
-        background: `var(--accessory-button-backGround-normal)`,
-        'mix-blend-mode': `var(--accessory-button-background-blend-mode-normal)`,
-        'box-shadow': `var(--accessory-button-box-shadow)`,
-        'border-radius': `var(--accessory-button-border-radius)`,
+    const button = DomFactory.create(
+      createFrame('88%', '98%'),
+      {
+        setStyles: {
+          //'background-color': '#8e8e93', // light gray
+          background: `var(--accessory-button-backGround-normal)`,
+          'mix-blend-mode': `var(--accessory-button-background-blend-mode-normal)`,
+          'box-shadow': `var(--accessory-button-box-shadow)`,
+          'border-radius': `var(--accessory-button-border-radius)`,
+        },
+        appendChildren: [icon],
       },
-      appendChildren: [icon],
-    });
+    );
 
     return DomFactory.create(createFrame(btnW, btnH), {
       setStyles: {
@@ -570,8 +633,15 @@ const footerHandleEvent = function () {
   footer.style.display = '';
 
   const offsetTop = window.visualViewport.offsetTop;
-  const offsetBottom = window.innerHeight - window.visualViewport.height + offsetTop - window.visualViewport.pageTop;
-  const tOffsetTop = visualViewport.offsetTop + visualViewport.height - document.documentElement.clientHeight;
+  const offsetBottom =
+    window.innerHeight -
+    window.visualViewport.height +
+    offsetTop -
+    window.visualViewport.pageTop;
+  const tOffsetTop =
+    visualViewport.offsetTop +
+    visualViewport.height -
+    document.documentElement.clientHeight;
   //footer.style.bottom = `${offsetBottom}px`;
   footer.style.transform = `translateY(${tOffsetTop}px)`;
 };
@@ -619,12 +689,20 @@ const footer = DomFactory.create('footer', {
             return;
           }
 
-          const selectionMain = this.targetEditor.state.selection.main;
+          const selectionMain =
+            this.targetEditor.state.selection.main;
           caret = selectionMain.anchor;
-          headLine = this.targetEditor.moveToLineBoundary(selectionMain, 0).anchor;
-          endLine = this.targetEditor.moveToLineBoundary(selectionMain, 1).anchor;
+          headLine = this.targetEditor.moveToLineBoundary(
+            selectionMain,
+            0,
+          ).anchor;
+          endLine = this.targetEditor.moveToLineBoundary(
+            selectionMain,
+            1,
+          ).anchor;
 
-          swipeAreaWidth = document.querySelector('#footer').clientWidth;
+          swipeAreaWidth =
+            document.querySelector('#footer').clientWidth;
           stepValue = swipeAreaWidth / divStep;
           startX = e.changedTouches[0].clientX;
         },
@@ -644,16 +722,26 @@ const footer = DomFactory.create('footer', {
           const swipeX = e.changedTouches[0].clientX;
 
           const moveDistance = swipeX - startX;
-          const moveCache = Math.abs(moveDistance) < stepValue ? caret : caret + Math.round(moveDistance / stepValue);
+          const moveCache =
+            Math.abs(moveDistance) < stepValue
+              ? caret
+              : caret + Math.round(moveDistance / stepValue);
 
           if (caret === moveCache) {
             return;
           }
 
-          const moveValue = moveCache < headLine ? headLine : moveCache >= endLine ? endLine : moveCache;
+          const moveValue =
+            moveCache < headLine
+              ? headLine
+              : moveCache >= endLine
+              ? endLine
+              : moveCache;
 
           this.targetEditor.dispatch({
-            selection: EditorSelection.create([EditorSelection.cursor(moveValue)]),
+            selection: EditorSelection.create([
+              EditorSelection.cursor(moveValue),
+            ]),
           });
           this.targetEditor.focus();
         },
@@ -690,7 +778,10 @@ document.addEventListener('DOMContentLoaded', () => {
   insertFetchDoc(codeFilePath).then((loadedSource) => {
     // todo: 事前に`doc` が存在するなら、`doc` 以降に挿入
     editor.dispatch({
-      changes: { from: editor.state?.doc.length, insert: loadedSource },
+      changes: {
+        from: editor.state?.doc.length,
+        insert: loadedSource,
+      },
     });
     sandbox.src = createIframeURL(loadedSource);
   });
