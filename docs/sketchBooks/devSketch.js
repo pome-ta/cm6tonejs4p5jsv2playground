@@ -61,6 +61,7 @@ const sketch = (p) => {
 
   const emitter = new Tone.Emitter();
 
+  /*
   // --- bd
   const kickVol = new Tone.Volume();
   const kickGen = new Bd({
@@ -277,10 +278,11 @@ const sketch = (p) => {
     ].filter((n) => n),
     cymbalVol,
   );
+  */
 
   // --- seq
   const nonEvent = decodeSeq(0x0000_0000_0000_0000n);
-
+  /*
   const seqStore = {};
 
   const kickSeq = new Tone.Sequence({
@@ -500,6 +502,7 @@ const sketch = (p) => {
   seqStore.cy = cymbalSeq;
 
   const callStore = {};
+  */
 
   const drumKit = new DrumKit({}, {}, toneCtx);
 
@@ -562,19 +565,59 @@ const sketch = (p) => {
     bd: [decodeSeq(0x9000_9000_9000_9070n)],
     sn: [decodeSeq(0x0000_9000_0000_9000n)],
     cp: [decodeSeq(0x0000_0000_0000_0000n)],
-    cr: [decodeSeq(0x0000_0000_0000_0000n)],
-    lt: [decodeSeq(0x0000_0000_0000_0000n)],
-    mt: [decodeSeq(0x0000_0000_0000_0000n)],
-    ht: [decodeSeq(0x0000_0000_0000_0000n)],
-    lc: [decodeSeq(0x0000_0000_0000_0000n)],
-    mc: [decodeSeq(0x0000_0000_0000_0000n)],
-    hc: [decodeSeq(0x0000_0000_0000_0000n)],
-    rs: [decodeSeq(0x0000_0000_0000_0000n)],
-    cl: [decodeSeq(0x0000_0000_0000_0000n)],
-    ma: [decodeSeq(0x0000_0000_0000_0000n)],
-    cb: [decodeSeq(0x0000_0000_0000_0000n)],
-    ch: [decodeSeq(0x0000_0000_0000_0000n)],
-    oh: [decodeSeq(0x0000_0000_0000_0000n)],
+    cr: [
+      //
+      decodeSeq(0x0000_0000_0000_0000n),
+    ],
+    lt: [
+      //
+      decodeSeq(0x0000_0000_0000_0000n),
+    ],
+
+    mt: [
+      // prettier-ignore
+      decodeSeq(0x0000_0000_0000_0000n),
+    ],
+    ht: [
+      //
+      decodeSeq(0x0000_0000_0000_0000n),
+    ],
+    lc: [
+      //
+      decodeSeq(0x0000_0000_0000_0000n),
+    ],
+    mc: [
+      //
+      decodeSeq(0x0000_0000_0000_0000n),
+    ],
+    hc: [
+      //
+      decodeSeq(0x0000_0000_0000_0000n),
+    ],
+    rs: [
+      //
+      decodeSeq(0x0000_0000_0000_0000n),
+    ],
+    cl: [
+      //
+      decodeSeq(0x0000_0000_0000_0000n),
+    ],
+    ma: [
+      //
+      decodeSeq(0x0000_0000_0000_0000n),
+    ],
+    cb: [
+      //
+      decodeSeq(0x0000_0000_0000_0000n),
+    ],
+    ch: [
+      //
+      decodeSeq(0x0000_0000_0000_0000n),
+    ],
+    oh: [
+      //
+      decodeSeq(0x0000_0000_0000_0000n),
+    ],
     cy: [
       decodeSeq(0x9000_0000_0000_0000n),
       decodeSeq(0x0000_0000_0000_0000n),
@@ -585,16 +628,16 @@ const sketch = (p) => {
 
   // events set
   Object.entries(seqEvents).map(([key, events]) => {
-    seqStore.key.events = events;
+    seqStore[key].events = events;
   });
-  /*
-  Object.entries(ddd.instStore).map(([key, val]) => {
-    console.log(val);
-  });
-  */
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
+    Object.entries(seqEvents).map(([key, _]) => {
+      seqStore[key].start(0);
+    });
+    /*
+
     kickSeq.start(0);
     snareSeq.start(0);
     cpRawSeq.start(0);
@@ -613,6 +656,7 @@ const sketch = (p) => {
     cowbellSeq.start(0);
     hihatSeq.start(0);
     cymbalSeq.start(0);
+    */
 
     // --- transport.start
     transport.start();
@@ -620,6 +664,8 @@ const sketch = (p) => {
 
   // --- drumKit
   const drumKitBusName = 'drums';
+
+  /*
 
   const toChannel = (fromNode, channelOptions, busName = drumKitBusName) => {
     const channel = new Tone.Channel(channelOptions);
@@ -713,6 +759,11 @@ const sketch = (p) => {
     volume: 4.0,
     pan: -0.4,
     channelCount: 1,
+  });
+  */
+
+  Object.entries(drumKit.instStore).map(([key, instrument]) => {
+    instrument.chNode.send(drumKitBusName);
   });
 
   const drumKitLowpass = new Tone.Filter({
