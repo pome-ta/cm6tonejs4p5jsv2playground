@@ -4,7 +4,10 @@ import { loadWorklet } from './workletLoader.js';
 export default class Cymbal extends Tone.ToneAudioNode {
   constructor(options = {}) {
     // arg decay=2, amp=20, pan=0, gate=0, tone=0.002;
-    const opts = Object.assign({ decay: 2.0, amp: 20.0, tone: 0.002 }, options);
+    const opts = Object.assign(
+      { decay: 2.0, amp: 20.0, tone: 0.002 },
+      options,
+    );
     super({ context: opts.context ?? Tone.getContext() });
 
     this.name = 'Cymbal';
@@ -51,14 +54,20 @@ export default class Cymbal extends Tone.ToneAudioNode {
       value: opts.tone,
     });
     this._worklet = null;
-    const processorName = `${[...this.name].map((c, i) => (i ? c : c.toLowerCase())).join('')}-processor`;
+    const processorName = `${[...this.name]
+      .map((c, i) => (i ? c : c.toLowerCase()))
+      .join('')}-processor`;
 
     loadWorklet(this.context)
       .then(() => {
-        this._worklet = this.context.createAudioWorkletNode(processorName, {
-          outputChannelCount: [2],
-        });
-        this._worklet.onprocessorerror = (e) => console.error(e);
+        this._worklet = this.context.createAudioWorkletNode(
+          processorName,
+          {
+            outputChannelCount: [2],
+          },
+        );
+        this._worklet.onprocessorerror = (e) =>
+          console.error(e);
         Tone.connect(this._worklet, this.envelope); // 永続接続
         ['trigger', 'decay', 'amp', 'tone'].forEach((name) => {
           const p = this._worklet.parameters.get(name);
@@ -67,7 +76,9 @@ export default class Cymbal extends Tone.ToneAudioNode {
           }
         });
       })
-      .catch((e) => console.error(`${processorName} load failed`, e));
+      .catch((e) =>
+        console.error(`${processorName} load failed`, e),
+      );
   }
 
   triggerAttack(time, velocity = 1) {

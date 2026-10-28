@@ -69,7 +69,11 @@ export default class CpRawProcessor extends AudioWorkletProcessor {
     if (elapsed >= duration) return y1;
     const t = elapsed / duration;
     if (Math.abs(curve) < 0.001) return y0 + (y1 - y0) * t;
-    return y0 + ((y1 - y0) * (Math.exp(curve * t) - 1)) / (Math.exp(curve) - 1);
+    return (
+      y0 +
+      ((y1 - y0) * (Math.exp(curve * t) - 1)) /
+        (Math.exp(curve) - 1)
+    );
   }
 
   process(inputs, outputs, parameters) {
@@ -93,7 +97,8 @@ export default class CpRawProcessor extends AudioWorkletProcessor {
         continue;
       }
 
-      const elapsed = blockStart + i / sampleRate - this.startTime;
+      const elapsed =
+        blockStart + i / sampleRate - this.startTime;
 
       // 寿命は decay=6s が最大[cite: 1]
       if (elapsed >= 6.0) {
@@ -103,12 +108,24 @@ export default class CpRawProcessor extends AudioWorkletProcessor {
       }
 
       // atkenv: Env.new([0.5,1,0],[0, 0.3], -160)[cite: 1] -> 0秒で1になり、0.3秒で減衰
-      const atkenv = this.curveValue(elapsed, 0.3, 1.0, 0.0, -160);
+      const atkenv = this.curveValue(
+        elapsed,
+        0.3,
+        1.0,
+        0.0,
+        -160,
+      );
 
       // denv: Env.dadsr(0.026, 0, 6, ...)[cite: 1] -> 0.026秒の遅延後、6秒かけて減衰
       let denv = 0;
       if (elapsed > 0.026) {
-        denv = this.curveValue(elapsed - 0.026, 6.0, 1.0, 0.0, -157);
+        denv = this.curveValue(
+          elapsed - 0.026,
+          6.0,
+          1.0,
+          0.0,
+          -157,
+        );
       }
 
       const noise = Math.random() * 2 - 1;

@@ -45,9 +45,13 @@ const sketch = (p) => {
   Tone.setContext(p5Ctx, true);
   const toneCtx = Tone.getContext();
   /* Starting Audio */
-  document.addEventListener('pointerup', async () => await Tone.start(), {
-    once: true,
-  });
+  document.addEventListener(
+    'pointerup',
+    async () => await Tone.start(),
+    {
+      once: true,
+    },
+  );
   const transport = Tone.getTransport();
   transport.bpm.value = BPM;
 
@@ -319,14 +323,20 @@ const sketch = (p) => {
     callback: (time, velocity) => {
       lTomGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [null, [null, null, null, [null, null, [null, 1, null]]]],
+    events: [
+      null,
+      [null, null, null, [null, null, [null, 1, null]]],
+    ],
     subdivision: '1n',
   });
   const mTomSeq = new Tone.Sequence({
     callback: (time, velocity) => {
       mTomGen.triggerAttack(time, ftRand(velocity));
     },
-    events: [null, [null, null, null, [null, [null, 1, null], null]]],
+    events: [
+      null,
+      [null, null, null, [null, [null, 1, null], null]],
+    ],
     subdivision: '1n',
   });
   const hTomSeq = new Tone.Sequence({
@@ -422,7 +432,10 @@ const sketch = (p) => {
 
   const hihatSeq = new Tone.Sequence({
     callback: (time, velocity) => {
-      hihatHandlers.get(Math.sign(velocity))?.(time, Math.abs(velocity));
+      hihatHandlers.get(Math.sign(velocity))?.(
+        time,
+        Math.abs(velocity),
+      );
     },
     events: [
       [
@@ -476,14 +489,22 @@ const sketch = (p) => {
   // --- drumKit
   const drumKitBusName = 'drums';
 
-  const toChannel = (fromNode, channelOptions, busName = drumKitBusName) => {
+  const toChannel = (
+    fromNode,
+    channelOptions,
+    busName = drumKitBusName,
+  ) => {
     const channel = new Tone.Channel(channelOptions);
     fromNode.connect(channel);
     channel.send(busName);
     return channel;
   };
 
-  const kickCh = toChannel(kickVol, { volume: 0.0, pan: 0.0, channelCount: 1 });
+  const kickCh = toChannel(kickVol, {
+    volume: 0.0,
+    pan: 0.0,
+    channelCount: 1,
+  });
 
   const snareCh = toChannel(snareVol, {
     volume: 2.0,
@@ -578,7 +599,10 @@ const sketch = (p) => {
     rolloff: -24, // -12, -24, -48, -96
   });
   const drumKitVol = new Tone.Volume();
-  const drumKitCh = new Tone.Channel({ volume: 2, channelCount: 2 });
+  const drumKitCh = new Tone.Channel({
+    volume: 2,
+    channelCount: 2,
+  });
   drumKitCh
     .chain(
       ...[
@@ -639,4 +663,3 @@ const sketch = (p) => {
 };
 
 new p5(sketch);
-

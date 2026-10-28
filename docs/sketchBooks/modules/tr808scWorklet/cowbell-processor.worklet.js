@@ -73,7 +73,11 @@ export default class CowbellProcessor extends AudioWorkletProcessor {
     if (elapsed >= duration) return y1;
     const t = elapsed / duration;
     if (Math.abs(curve) < 0.001) return y0 + (y1 - y0) * t;
-    return y0 + ((y1 - y0) * (Math.exp(curve * t) - 1)) / (Math.exp(curve) - 1);
+    return (
+      y0 +
+      ((y1 - y0) * (Math.exp(curve * t) - 1)) /
+        (Math.exp(curve) - 1)
+    );
   }
 
   process(inputs, outputs, parameters) {
@@ -95,7 +99,8 @@ export default class CowbellProcessor extends AudioWorkletProcessor {
         continue;
       }
 
-      const elapsed = blockStart + i / sampleRate - this.startTime;
+      const elapsed =
+        blockStart + i / sampleRate - this.startTime;
 
       // 寿命: 0.01 + 9.5 = 9.51s
       if (elapsed >= 9.51) {
@@ -105,14 +110,26 @@ export default class CowbellProcessor extends AudioWorkletProcessor {
       }
 
       // atkenv = EnvGen.kr(Env.perc(0, 1, 1, -215))
-      const atkenv = this.curveValue(elapsed, 1.0, 1.0, 0.0, -215);
+      const atkenv = this.curveValue(
+        elapsed,
+        1.0,
+        1.0,
+        0.0,
+        -215,
+      );
 
       // env = EnvGen.kr(Env.perc(0.01, 9.5, 1, -90))
       let env = 0;
       if (elapsed <= 0.01) {
         env = elapsed / 0.01; // Linear attack approximation
       } else {
-        env = this.curveValue(elapsed - 0.01, 9.5, 1.0, 0.0, -90);
+        env = this.curveValue(
+          elapsed - 0.01,
+          9.5,
+          1.0,
+          0.0,
+          -90,
+        );
       }
 
       const pul1 = this.phase1 < 0.5 ? 1 : 0;

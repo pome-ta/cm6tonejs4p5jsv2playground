@@ -28,7 +28,11 @@ class CongasProcessor extends AudioWorkletProcessor {
     if (elapsed >= duration) return y1;
     const t = elapsed / duration;
     if (Math.abs(curve) < 0.001) return y0 + (y1 - y0) * t;
-    return y0 + ((y1 - y0) * (Math.exp(curve * t) - 1)) / (Math.exp(curve) - 1);
+    return (
+      y0 +
+      ((y1 - y0) * (Math.exp(curve * t) - 1)) /
+        (Math.exp(curve) - 1)
+    );
   }
 
   process(inputs, outputs, parameters) {
@@ -52,7 +56,8 @@ class CongasProcessor extends AudioWorkletProcessor {
         continue;
       }
 
-      const elapsed = blockStart + i / sampleRate - this.startTime;
+      const elapsed =
+        blockStart + i / sampleRate - this.startTime;
       if (elapsed >= conf.decay) {
         this.active = false;
         channel[i] = 0;
@@ -60,7 +65,13 @@ class CongasProcessor extends AudioWorkletProcessor {
       }
 
       // SC: Env.new([0.15, 1, 0], [0, 18], -250)[cite: 1]
-      const env = this.curveValue(elapsed, conf.decay, 1.0, 0.0, -250);
+      const env = this.curveValue(
+        elapsed,
+        conf.decay,
+        1.0,
+        0.0,
+        -250,
+      );
 
       let fenv = freq;
       if (elapsed <= 0.1) {
@@ -72,12 +83,19 @@ class CongasProcessor extends AudioWorkletProcessor {
           -4,
         );
       } else if (elapsed <= 0.6) {
-        fenv = this.curveValue(elapsed - 0.1, 0.5, freq * conf.p2, freq, -4);
+        fenv = this.curveValue(
+          elapsed - 0.1,
+          0.5,
+          freq * conf.p2,
+          freq,
+          -4,
+        );
       }
 
       channel[i] = Math.sin(this.phase) * env * amp * conf.gain;
       this.phase =
-        (this.phase + (2 * Math.PI * fenv) / sampleRate) % (Math.PI * 2);
+        (this.phase + (2 * Math.PI * fenv) / sampleRate) %
+        (Math.PI * 2);
     }
     if (outputs[0][1]) outputs[0][1].set(channel);
     return true;

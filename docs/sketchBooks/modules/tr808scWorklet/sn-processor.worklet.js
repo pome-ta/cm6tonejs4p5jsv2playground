@@ -69,7 +69,11 @@ export default class SnProcessor extends AudioWorkletProcessor {
   // Biquadフィルターの1サンプル処理ヘルパー
   processFilter(f, input) {
     const output =
-      f.b0 * input + f.b1 * f.x1 + f.b2 * f.x2 - f.a1 * f.y1 - f.a2 * f.y2;
+      f.b0 * input +
+      f.b1 * f.x1 +
+      f.b2 * f.x2 -
+      f.a1 * f.y1 -
+      f.a2 * f.y2;
     f.x2 = f.x1;
     f.x1 = input;
     f.y2 = f.y1;
@@ -88,7 +92,11 @@ export default class SnProcessor extends AudioWorkletProcessor {
     if (Math.abs(curve) < 0.001) {
       return y0 + (y1 - y0) * t;
     }
-    return y0 + ((y1 - y0) * (Math.exp(curve * t) - 1)) / (Math.exp(curve) - 1);
+    return (
+      y0 +
+      ((y1 - y0) * (Math.exp(curve * t) - 1)) /
+        (Math.exp(curve) - 1)
+    );
   }
 
   process(inputs, outputs, parameters) {
@@ -134,8 +142,20 @@ export default class SnProcessor extends AudioWorkletProcessor {
 
       // 1. エンベロープの計算
       // 厳密にはEnv.perc(0.001, ...)ですが、0.001秒はほぼ1サンプルのため1.0からの減衰で近似
-      const atkEnv = this.curveValue(elapsed, 0.8, 1.0, 0.0, -95);
-      const noiseEnv = this.curveValue(elapsed, 4.2, 1.0, 0.0, -115);
+      const atkEnv = this.curveValue(
+        elapsed,
+        0.8,
+        1.0,
+        0.0,
+        -95,
+      );
+      const noiseEnv = this.curveValue(
+        elapsed,
+        4.2,
+        1.0,
+        0.0,
+        -115,
+      );
 
       // 2. 胴鳴り (2つのサイン波)
       const osc1 = Math.sin(this.phase2) * 0.6; // SCコードでは tone2 に osc1 が対応
@@ -159,9 +179,11 @@ export default class SnProcessor extends AudioWorkletProcessor {
 
       // 6. 位相の更新
       this.phase1 =
-        (this.phase1 + (2 * Math.PI * tone) / sampleRate) % (Math.PI * 2);
+        (this.phase1 + (2 * Math.PI * tone) / sampleRate) %
+        (Math.PI * 2);
       this.phase2 =
-        (this.phase2 + (2 * Math.PI * tone2) / sampleRate) % (Math.PI * 2);
+        (this.phase2 + (2 * Math.PI * tone2) / sampleRate) %
+        (Math.PI * 2);
     }
 
     if (outputs[0][1]) {

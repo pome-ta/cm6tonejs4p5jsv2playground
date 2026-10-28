@@ -70,8 +70,6 @@ const sketch = (p) => {
 
   const emitter = new Tone.Emitter();
 
-
-
   // --- drumKit
 
   const createSequenceStore = (instrumentStore) => {
@@ -137,8 +135,8 @@ const sketch = (p) => {
 
     return _store;
   };
-  
-    const drumKit = new DrumKit({}, toneCtx);
+
+  const drumKit = new DrumKit({}, toneCtx);
   const seqStore = createSequenceStore(drumKit.instrumentStore);
 
   const seqEvents = {
@@ -149,7 +147,8 @@ const sketch = (p) => {
       decodeSeq(0x9000_9000_9000_9070n),
     ],
     sn: [
-      decodeSeq(0x0000_9000_0000_9000n), // prettier-ignore
+      decodeSeq(0x0000_9000_0000_9000n),
+      decodeSeq(0x0000_9000_0000_9000n),
     ],
     cp: [
       decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
@@ -206,9 +205,6 @@ const sketch = (p) => {
     seqStore[key].events = events;
   });
 
-
-
-
   const drumKitBusName = 'drums';
 
   Object.entries(drumKit.instrumentStore).map(
@@ -259,7 +255,6 @@ const sketch = (p) => {
       Tone.getDestination(),
     ),
   );
-
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {

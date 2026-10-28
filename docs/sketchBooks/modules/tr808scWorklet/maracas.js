@@ -39,14 +39,20 @@ export default class Maracas extends Tone.ToneAudioNode {
     });
 
     this._worklet = null;
-    const processorName = `${[...this.name].map((c, i) => (i ? c : c.toLowerCase())).join('')}-processor`;
+    const processorName = `${[...this.name]
+      .map((c, i) => (i ? c : c.toLowerCase()))
+      .join('')}-processor`;
 
     loadWorklet(this.context)
       .then(() => {
-        this._worklet = this.context.createAudioWorkletNode(processorName, {
-          outputChannelCount: [2],
-        });
-        this._worklet.onprocessorerror = (e) => console.error(e);
+        this._worklet = this.context.createAudioWorkletNode(
+          processorName,
+          {
+            outputChannelCount: [2],
+          },
+        );
+        this._worklet.onprocessorerror = (e) =>
+          console.error(e);
         Tone.connect(this._worklet, this.envelope); // 永続接続
         ['trigger', 'amp'].forEach((name) => {
           const p = this._worklet.parameters.get(name);
@@ -55,7 +61,9 @@ export default class Maracas extends Tone.ToneAudioNode {
           }
         });
       })
-      .catch((e) => console.error(`${processorName} load failed`, e));
+      .catch((e) =>
+        console.error(`${processorName} load failed`, e),
+      );
   }
 
   triggerAttack(time, velocity = 1) {

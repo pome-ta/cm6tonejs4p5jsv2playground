@@ -19,7 +19,11 @@ export default class ClavesProcessor extends AudioWorkletProcessor {
     if (elapsed >= duration) return y1;
     const t = elapsed / duration;
     if (Math.abs(curve) < 0.001) return y0 + (y1 - y0) * t;
-    return y0 + ((y1 - y0) * (Math.exp(curve * t) - 1)) / (Math.exp(curve) - 1);
+    return (
+      y0 +
+      ((y1 - y0) * (Math.exp(curve * t) - 1)) /
+        (Math.exp(curve) - 1)
+    );
   }
 
   process(inputs, outputs, parameters) {
@@ -44,7 +48,8 @@ export default class ClavesProcessor extends AudioWorkletProcessor {
         continue;
       }
 
-      const elapsed = blockStart + i / sampleRate - this.startTime;
+      const elapsed =
+        blockStart + i / sampleRate - this.startTime;
 
       // SC: Env.new([1, 1, 0], [0, 0.1], -20)[cite: 1]
       // 寿命は0.1秒固定
@@ -60,7 +65,8 @@ export default class ClavesProcessor extends AudioWorkletProcessor {
 
       // 2500Hz固定のサイン波[cite: 1]
       this.phase =
-        (this.phase + (2 * Math.PI * 2500) / sampleRate) % (Math.PI * 2);
+        (this.phase + (2 * Math.PI * 2500) / sampleRate) %
+        (Math.PI * 2);
     }
 
     if (outputs[0][1]) {

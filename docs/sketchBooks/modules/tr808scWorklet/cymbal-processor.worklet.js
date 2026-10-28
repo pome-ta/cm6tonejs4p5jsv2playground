@@ -6,7 +6,9 @@ export default class CymbalProcessor extends AudioWorkletProcessor {
     this._prevTrig = 0;
 
     // 6つの矩形波の周波数と位相[cite: 1]
-    this.freqs = [203.52, 366.31, 301.77, 518.19, 811.16, 538.75];
+    this.freqs = [
+      203.52, 366.31, 301.77, 518.19, 811.16, 538.75,
+    ];
     this.phases = new Array(6).fill(0);
 
     // 汎用Biquadフィルター生成ヘルパー
@@ -64,7 +66,10 @@ export default class CymbalProcessor extends AudioWorkletProcessor {
           this.b2 = (1 - alpha * A) / a0_eq;
           this.a1 = (-2 * Math.cos(w0)) / a0_eq;
           this.a2 = (1 - alpha / A) / a0_eq;
-        } else if (type === 'LowShelf' || type === 'HighShelf') {
+        } else if (
+          type === 'LowShelf' ||
+          type === 'HighShelf'
+        ) {
           // Biquad Cookbookに準拠したシェルフフィルター近似
           const a0_eq = 1 + alpha / A;
           this.b0 = (1 + alpha * A) / a0_eq;
@@ -159,7 +164,11 @@ export default class CymbalProcessor extends AudioWorkletProcessor {
     if (elapsed >= duration) return y1;
     const t = elapsed / duration;
     if (Math.abs(curve) < 0.001) return y0 + (y1 - y0) * t;
-    return y0 + ((y1 - y0) * (Math.exp(curve * t) - 1)) / (Math.exp(curve) - 1);
+    return (
+      y0 +
+      ((y1 - y0) * (Math.exp(curve * t) - 1)) /
+        (Math.exp(curve) - 1)
+    );
   }
 
   process(inputs, outputs, parameters) {
@@ -185,7 +194,8 @@ export default class CymbalProcessor extends AudioWorkletProcessor {
         continue;
       }
 
-      const elapsed = blockStart + i / sampleRate - this.startTime;
+      const elapsed =
+        blockStart + i / sampleRate - this.startTime;
 
       // 寿命: env2b が decay*20 まで伸びるため、それを最大値とする[cite: 1]
       const maxDuration = decay * 20 + 0.1;
@@ -203,18 +213,37 @@ export default class CymbalProcessor extends AudioWorkletProcessor {
       let env2 =
         elapsed < 0.1
           ? this.curveValue(elapsed, 0.1, 0, 0.6, -5)
-          : this.curveValue(elapsed - 0.1, decay * 0.7, 0.6, 0, -5); //[cite: 1]
+          : this.curveValue(
+              elapsed - 0.1,
+              decay * 0.7,
+              0.6,
+              0,
+              -5,
+            ); //[cite: 1]
       let env2b =
         elapsed < 0.1
           ? this.curveValue(elapsed, 0.1, 0, 0.3, -120)
-          : this.curveValue(elapsed - 0.1, decay * 20, 0.3, 0, -120); //[cite: 1]
-      let env3 = this.curveValue(elapsed, decay * 5, 1, 0, -150); //[cite: 1]
+          : this.curveValue(
+              elapsed - 0.1,
+              decay * 20,
+              0.3,
+              0,
+              -120,
+            ); //[cite: 1]
+      let env3 = this.curveValue(
+        elapsed,
+        decay * 5,
+        1,
+        0,
+        -150,
+      ); //[cite: 1]
 
       // 2. 6つの矩形波[cite: 1]
       let oscSum = 0;
       for (let j = 0; j < 6; j++) {
         oscSum += (this.phases[j] < 0.5 ? 1 : 0) * 0.6;
-        this.phases[j] = (this.phases[j] + this.freqs[j] / sampleRate) % 1;
+        this.phases[j] =
+          (this.phases[j] + this.freqs[j] / sampleRate) % 1;
       }
 
       // 3. フィルターチェイン 1

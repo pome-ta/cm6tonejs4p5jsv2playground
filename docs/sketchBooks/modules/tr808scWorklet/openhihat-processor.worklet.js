@@ -5,7 +5,9 @@ export default class OpenhihatProcessor extends AudioWorkletProcessor {
     this.startTime = 0;
     this._prevTrig = 0;
 
-    this.freqs = [203.52, 366.31, 301.77, 518.19, 811.16, 538.75];
+    this.freqs = [
+      203.52, 366.31, 301.77, 518.19, 811.16, 538.75,
+    ];
     this.phases = new Array(6).fill(0);
 
     // 汎用Biquad（LowShelf, LPF 等を追加）
@@ -62,7 +64,10 @@ export default class OpenhihatProcessor extends AudioWorkletProcessor {
           this.b2 = (1 - alpha * A) / a0_eq;
           this.a1 = (-2 * Math.cos(w0)) / a0_eq;
           this.a2 = (1 - alpha / A) / a0_eq;
-        } else if (type === 'LowShelf' || type === 'HighShelf') {
+        } else if (
+          type === 'LowShelf' ||
+          type === 'HighShelf'
+        ) {
           // 簡易実装（PeakEQで代用しつつ急峻さを設定するなどのアプローチも可能ですが、
           // Biquad Cookbookに準拠したShelf計算式を本来は入れます。ここでは音の重心を作るLowShelfとHighShelfを想定します）
           const A = Math.pow(10, db / 40);
@@ -105,7 +110,11 @@ export default class OpenhihatProcessor extends AudioWorkletProcessor {
     if (elapsed >= duration) return y1;
     const t = elapsed / duration;
     if (Math.abs(curve) < 0.001) return y0 + (y1 - y0) * t;
-    return y0 + ((y1 - y0) * (Math.exp(curve * t) - 1)) / (Math.exp(curve) - 1);
+    return (
+      y0 +
+      ((y1 - y0) * (Math.exp(curve * t) - 1)) /
+        (Math.exp(curve) - 1)
+    );
   }
 
   process(inputs, outputs, parameters) {
@@ -130,7 +139,8 @@ export default class OpenhihatProcessor extends AudioWorkletProcessor {
         continue;
       }
 
-      const elapsed = blockStart + i / sampleRate - this.startTime;
+      const elapsed =
+        blockStart + i / sampleRate - this.startTime;
       const maxDecay = decay * 5; // env2が decay*5 まで伸びるため
 
       if (elapsed >= maxDecay) {
@@ -146,13 +156,20 @@ export default class OpenhihatProcessor extends AudioWorkletProcessor {
       } else {
         env1 = this.curveValue(elapsed - 0.1, decay, 1, 0, -3);
       }
-      const env2 = this.curveValue(elapsed, maxDecay, 1.0, 0.0, -150);
+      const env2 = this.curveValue(
+        elapsed,
+        maxDecay,
+        1.0,
+        0.0,
+        -150,
+      );
 
       // 2. 6つの矩形波 (* 0.6 のゲイン調整込み)
       let oscSum = 0;
       for (let j = 0; j < 6; j++) {
         oscSum += (this.phases[j] < 0.5 ? 1 : 0) * 0.6;
-        this.phases[j] = (this.phases[j] + this.freqs[j] / sampleRate) % 1;
+        this.phases[j] =
+          (this.phases[j] + this.freqs[j] / sampleRate) % 1;
       }
 
       // 3. 直列フィルターチェイン

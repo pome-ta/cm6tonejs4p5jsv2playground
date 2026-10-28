@@ -4,7 +4,10 @@ import { loadWorklet } from './workletLoader.js';
 export default class Bd extends Tone.ToneAudioNode {
   constructor(options = {}) {
     // arg decay=30, amp=2, gate=0, tone=56;
-    const opts = Object.assign({ decay: 30.0, amp: 2.0, tone: 56.0 }, options);
+    const opts = Object.assign(
+      { decay: 30.0, amp: 2.0, tone: 56.0 },
+      options,
+    );
     super({ context: opts.context ?? Tone.getContext() });
 
     this.name = 'Bd';
@@ -52,14 +55,20 @@ export default class Bd extends Tone.ToneAudioNode {
     });
 
     this._worklet = null;
-    const processorName = `${[...this.name].map((c, i) => (i ? c : c.toLowerCase())).join('')}-processor`;
+    const processorName = `${[...this.name]
+      .map((c, i) => (i ? c : c.toLowerCase()))
+      .join('')}-processor`;
 
     loadWorklet(this.context)
       .then(() => {
-        this._worklet = this.context.createAudioWorkletNode(processorName, {
-          outputChannelCount: [2],
-        });
-        this._worklet.onprocessorerror = (e) => console.error(e);
+        this._worklet = this.context.createAudioWorkletNode(
+          processorName,
+          {
+            outputChannelCount: [2],
+          },
+        );
+        this._worklet.onprocessorerror = (e) =>
+          console.error(e);
         Tone.connect(this._worklet, this.envelope); // 永続接続
         ['trigger', 'decay', 'tone', 'amp'].forEach((name) => {
           const p = this._worklet.parameters.get(name);
@@ -68,7 +77,9 @@ export default class Bd extends Tone.ToneAudioNode {
           }
         });
       })
-      .catch((e) => console.error(`${processorName} load failed`, e));
+      .catch((e) =>
+        console.error(`${processorName} load failed`, e),
+      );
   }
 
   triggerAttack(time, velocity = 1) {

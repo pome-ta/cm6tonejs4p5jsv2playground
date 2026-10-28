@@ -4,7 +4,10 @@ import { loadWorklet } from './workletLoader.js';
 export class Lc extends Tone.ToneAudioNode {
   constructor(options = {}) {
     // LC: arg amp=1, freq=165;
-    const opts = Object.assign({ amp: 1.0, freq: 165.0 }, options);
+    const opts = Object.assign(
+      { amp: 1.0, freq: 165.0 },
+      options,
+    );
     super({ context: opts.context ?? Tone.getContext() });
 
     this.name = 'Lc';
@@ -47,14 +50,20 @@ export class Lc extends Tone.ToneAudioNode {
     });
 
     this._worklet = null;
-    const processorName = `${[...this.name].map((c, i) => (i ? c : c.toLowerCase())).join('')}-processor`;
+    const processorName = `${[...this.name]
+      .map((c, i) => (i ? c : c.toLowerCase()))
+      .join('')}-processor`;
 
     loadWorklet(this.context)
       .then(() => {
-        this._worklet = this.context.createAudioWorkletNode(processorName, {
-          outputChannelCount: [2],
-        });
-        this._worklet.onprocessorerror = (e) => console.error(e);
+        this._worklet = this.context.createAudioWorkletNode(
+          processorName,
+          {
+            outputChannelCount: [2],
+          },
+        );
+        this._worklet.onprocessorerror = (e) =>
+          console.error(e);
         Tone.connect(this._worklet, this.envelope); // 永続接続
         ['trigger', 'amp', 'freq'].forEach((name) => {
           const p = this._worklet.parameters.get(name);
@@ -63,7 +72,9 @@ export class Lc extends Tone.ToneAudioNode {
           }
         });
       })
-      .catch((e) => console.error(`${processorName} load failed`, e));
+      .catch((e) =>
+        console.error(`${processorName} load failed`, e),
+      );
   }
 
   triggerAttack(time, velocity = 1) {
@@ -108,7 +119,10 @@ export class Lc extends Tone.ToneAudioNode {
 export class Mc extends Tone.ToneAudioNode {
   constructor(options = {}) {
     // MC: arg amp=1, freq=250;
-    const opts = Object.assign({ amp: 1.0, freq: 250.0 }, options);
+    const opts = Object.assign(
+      { amp: 1.0, freq: 250.0 },
+      options,
+    );
     super({ context: opts.context ?? Tone.getContext() });
 
     this.name = 'Mc';
@@ -151,14 +165,20 @@ export class Mc extends Tone.ToneAudioNode {
     });
 
     this._worklet = null;
-    const processorName = `${[...this.name].map((c, i) => (i ? c : c.toLowerCase())).join('')}-processor`;
+    const processorName = `${[...this.name]
+      .map((c, i) => (i ? c : c.toLowerCase()))
+      .join('')}-processor`;
 
     loadWorklet(this.context)
       .then(() => {
-        this._worklet = this.context.createAudioWorkletNode(processorName, {
-          outputChannelCount: [2],
-        });
-        this._worklet.onprocessorerror = (e) => console.error(e);
+        this._worklet = this.context.createAudioWorkletNode(
+          processorName,
+          {
+            outputChannelCount: [2],
+          },
+        );
+        this._worklet.onprocessorerror = (e) =>
+          console.error(e);
         Tone.connect(this._worklet, this.envelope); // 永続接続
         ['trigger', 'amp', 'freq'].forEach((name) => {
           const p = this._worklet.parameters.get(name);
@@ -167,7 +187,9 @@ export class Mc extends Tone.ToneAudioNode {
           }
         });
       })
-      .catch((e) => console.error(`${processorName} load failed`, e));
+      .catch((e) =>
+        console.error(`${processorName} load failed`, e),
+      );
   }
 
   triggerAttack(time, velocity = 1) {
@@ -212,7 +234,10 @@ export class Mc extends Tone.ToneAudioNode {
 export class Hc extends Tone.ToneAudioNode {
   constructor(options = {}) {
     // HC: arg amp=1, freq=370;
-    const opts = Object.assign({ amp: 1.0, freq: 370.0 }, options);
+    const opts = Object.assign(
+      { amp: 1.0, freq: 370.0 },
+      options,
+    );
     super({ context: opts.context ?? Tone.getContext() });
 
     this.name = 'Hc';
@@ -255,14 +280,20 @@ export class Hc extends Tone.ToneAudioNode {
     });
 
     this._worklet = null;
-    const processorName = `${[...this.name].map((c, i) => (i ? c : c.toLowerCase())).join('')}-processor`;
+    const processorName = `${[...this.name]
+      .map((c, i) => (i ? c : c.toLowerCase()))
+      .join('')}-processor`;
 
     loadWorklet(this.context)
       .then(() => {
-        this._worklet = this.context.createAudioWorkletNode(processorName, {
-          outputChannelCount: [2],
-        });
-        this._worklet.onprocessorerror = (e) => console.error(e);
+        this._worklet = this.context.createAudioWorkletNode(
+          processorName,
+          {
+            outputChannelCount: [2],
+          },
+        );
+        this._worklet.onprocessorerror = (e) =>
+          console.error(e);
         Tone.connect(this._worklet, this.envelope); // 永続接続
         ['trigger', 'amp', 'freq'].forEach((name) => {
           const p = this._worklet.parameters.get(name);
@@ -271,7 +302,9 @@ export class Hc extends Tone.ToneAudioNode {
           }
         });
       })
-      .catch((e) => console.error(`${processorName} load failed`, e));
+      .catch((e) =>
+        console.error(`${processorName} load failed`, e),
+      );
   }
 
   triggerAttack(time, velocity = 1) {

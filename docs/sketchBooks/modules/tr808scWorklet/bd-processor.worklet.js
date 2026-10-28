@@ -48,7 +48,11 @@ export default class BbProcessor extends AudioWorkletProcessor {
     if (Math.abs(curve) < 0.001) {
       return y0 + (y1 - y0) * t;
     }
-    return y0 + ((y1 - y0) * (Math.exp(curve * t) - 1)) / (Math.exp(curve) - 1);
+    return (
+      y0 +
+      ((y1 - y0) * (Math.exp(curve * t) - 1)) /
+        (Math.exp(curve) - 1)
+    );
   }
 
   process(inputs, outputs, parameters) {
@@ -89,29 +93,68 @@ export default class BbProcessor extends AudioWorkletProcessor {
       }
 
       // 1. ボリュームエンベロープ
-      const env = this.curveValue(elapsed, decay, 1.0, 0.0, -225);
-      const trienv = this.curveValue(elapsed, decay, 0.6, 0.0, -230);
+      const env = this.curveValue(
+        elapsed,
+        decay,
+        1.0,
+        0.0,
+        -225,
+      );
+      const trienv = this.curveValue(
+        elapsed,
+        decay,
+        0.6,
+        0.0,
+        -230,
+      );
 
       // 2. ピッチエンベロープ (sig, sub用)
       let fenv = tone;
       if (elapsed <= 0.05) {
-        fenv = this.curveValue(elapsed, 0.05, tone * 7, tone * 1.35, -14);
+        fenv = this.curveValue(
+          elapsed,
+          0.05,
+          tone * 7,
+          tone * 1.35,
+          -14,
+        );
       } else if (elapsed <= 0.05 + 0.6) {
-        fenv = this.curveValue(elapsed - 0.05, 0.6, tone * 1.35, tone, -14);
+        fenv = this.curveValue(
+          elapsed - 0.05,
+          0.6,
+          tone * 1.35,
+          tone,
+          -14,
+        );
       }
 
       // 3. ピッチエンベロープ (punch用)
       let pfenv = tone;
       if (elapsed <= 0.03) {
-        pfenv = this.curveValue(elapsed, 0.03, tone * 7, tone * 1.35, -10);
+        pfenv = this.curveValue(
+          elapsed,
+          0.03,
+          tone * 7,
+          tone * 1.35,
+          -10,
+        );
       } else if (elapsed <= 0.03 + 0.6) {
-        pfenv = this.curveValue(elapsed - 0.03, 0.6, tone * 1.35, tone, -10);
+        pfenv = this.curveValue(
+          elapsed - 0.03,
+          0.6,
+          tone * 1.35,
+          tone,
+          -10,
+        );
       }
 
       // 4. オシレーターの計算
       const sig = Math.sin(this.phase) * env;
       const sub =
-        (2 / Math.PI) * Math.asin(Math.sin(this.phase)) * trienv * 0.05;
+        (2 / Math.PI) *
+        Math.asin(Math.sin(this.phase)) *
+        trienv *
+        0.05;
 
       // punch (サイン波を生成してHPFに通す)
       const punchOsc = Math.sin(this.punchPhase) * env * 2;
@@ -147,9 +190,11 @@ export default class BbProcessor extends AudioWorkletProcessor {
 
       // 6. 位相の更新
       this.phase =
-        (this.phase + (2 * Math.PI * fenv) / sampleRate) % (Math.PI * 2);
+        (this.phase + (2 * Math.PI * fenv) / sampleRate) %
+        (Math.PI * 2);
       this.punchPhase =
-        (this.punchPhase + (2 * Math.PI * pfenv) / sampleRate) % (Math.PI * 2);
+        (this.punchPhase + (2 * Math.PI * pfenv) / sampleRate) %
+        (Math.PI * 2);
 
       if (env < 0.0001) {
         this.active = false; // 減衰完了で待機に戻る

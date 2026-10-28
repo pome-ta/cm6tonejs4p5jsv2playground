@@ -93,7 +93,11 @@ export default class RimshotProcessor extends AudioWorkletProcessor {
     if (elapsed >= duration) return y1;
     const t = elapsed / duration;
     if (Math.abs(curve) < 0.001) return y0 + (y1 - y0) * t;
-    return y0 + ((y1 - y0) * (Math.exp(curve * t) - 1)) / (Math.exp(curve) - 1);
+    return (
+      y0 +
+      ((y1 - y0) * (Math.exp(curve * t) - 1)) /
+        (Math.exp(curve) - 1)
+    );
   }
 
   process(inputs, outputs, parameters) {
@@ -117,7 +121,8 @@ export default class RimshotProcessor extends AudioWorkletProcessor {
         continue;
       }
 
-      const elapsed = blockStart + i / sampleRate - this.startTime;
+      const elapsed =
+        blockStart + i / sampleRate - this.startTime;
 
       // 寿命: 0.00272(hold) + 0.07(decay) = 0.07272s[cite: 1]
       if (elapsed >= 0.07272) {
@@ -129,12 +134,21 @@ export default class RimshotProcessor extends AudioWorkletProcessor {
       // Env.new([1, 1, 0], [0.00272, 0.07], -42)[cite: 1]
       let env = 1.0;
       if (elapsed > 0.00272) {
-        env = this.curveValue(elapsed - 0.00272, 0.07, 1.0, 0.0, -42);
+        env = this.curveValue(
+          elapsed - 0.00272,
+          0.07,
+          1.0,
+          0.0,
+          -42,
+        );
       }
 
       // オシレーター群の生成
       // tri1 = LFTri.ar(1667 * 1.1)[cite: 1] = 1833.7 Hz
-      const tri1 = (2 / Math.PI) * Math.asin(Math.sin(this.triPhase)) * env;
+      const tri1 =
+        (2 / Math.PI) *
+        Math.asin(Math.sin(this.triPhase)) *
+        env;
 
       // tri2 = LFPulse.ar(455 * 1.1, width:0.8)[cite: 1] = 500.5 Hz
       const tri2 = (this.pulsePhase < 0.8 ? 1 : 0) * env;
@@ -152,8 +166,10 @@ export default class RimshotProcessor extends AudioWorkletProcessor {
 
       // 位相の更新
       this.triPhase =
-        (this.triPhase + (2 * Math.PI * 1833.7) / sampleRate) % (Math.PI * 2);
-      this.pulsePhase = (this.pulsePhase + 500.5 / sampleRate) % 1;
+        (this.triPhase + (2 * Math.PI * 1833.7) / sampleRate) %
+        (Math.PI * 2);
+      this.pulsePhase =
+        (this.pulsePhase + 500.5 / sampleRate) % 1;
     }
 
     if (outputs[0][1]) outputs[0][1].set(channel);

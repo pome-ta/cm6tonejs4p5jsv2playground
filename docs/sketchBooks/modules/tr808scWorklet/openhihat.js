@@ -4,7 +4,10 @@ import { loadWorklet } from './workletLoader.js';
 export default class Openhihat extends Tone.ToneAudioNode {
   constructor(options = {}) {
     // arg decay=0.5, amp=4, pan=0;
-    const opts = Object.assign({ decay: 0.5, amp: 4.0 }, options);
+    const opts = Object.assign(
+      { decay: 0.5, amp: 4.0 },
+      options,
+    );
     super({ context: opts.context ?? Tone.getContext() });
     this.name = 'Openhihat';
 
@@ -45,13 +48,19 @@ export default class Openhihat extends Tone.ToneAudioNode {
     });
 
     this._worklet = null;
-    const processorName = `${[...this.name].map((c, i) => (i ? c : c.toLowerCase())).join('')}-processor`;
+    const processorName = `${[...this.name]
+      .map((c, i) => (i ? c : c.toLowerCase()))
+      .join('')}-processor`;
     loadWorklet(this.context)
       .then(() => {
-        this._worklet = this.context.createAudioWorkletNode(processorName, {
-          outputChannelCount: [2],
-        });
-        this._worklet.onprocessorerror = (e) => console.error(e);
+        this._worklet = this.context.createAudioWorkletNode(
+          processorName,
+          {
+            outputChannelCount: [2],
+          },
+        );
+        this._worklet.onprocessorerror = (e) =>
+          console.error(e);
         Tone.connect(this._worklet, this.envelope); // 永続接続
         ['trigger', 'decay', 'amp'].forEach((name) => {
           const p = this._worklet.parameters.get(name);
@@ -60,7 +69,9 @@ export default class Openhihat extends Tone.ToneAudioNode {
           }
         });
       })
-      .catch((e) => console.error(`${processorName} load failed`, e));
+      .catch((e) =>
+        console.error(`${processorName} load failed`, e),
+      );
   }
 
   triggerAttack(time, velocity = 1) {

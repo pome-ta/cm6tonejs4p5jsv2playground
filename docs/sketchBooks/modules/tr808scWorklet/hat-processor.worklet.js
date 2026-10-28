@@ -6,7 +6,9 @@ export default class HatProcessor extends AudioWorkletProcessor {
     this._prevTrig = 0;
 
     // 6つの矩形波の周波数と位相アキュムレータ
-    this.freqs = [203.52, 366.31, 301.77, 518.19, 811.16, 538.75];
+    this.freqs = [
+      203.52, 366.31, 301.77, 518.19, 811.16, 538.75,
+    ];
     this.phases = new Array(6).fill(0);
 
     // 汎用Biquadフィルターの生成ファクトリ
@@ -93,7 +95,11 @@ export default class HatProcessor extends AudioWorkletProcessor {
     if (Math.abs(curve) < 0.001) {
       return y0 + (y1 - y0) * t;
     }
-    return y0 + ((y1 - y0) * (Math.exp(curve * t) - 1)) / (Math.exp(curve) - 1);
+    return (
+      y0 +
+      ((y1 - y0) * (Math.exp(curve * t) - 1)) /
+        (Math.exp(curve) - 1)
+    );
   }
 
   process(inputs, outputs, parameters) {
@@ -120,7 +126,8 @@ export default class HatProcessor extends AudioWorkletProcessor {
         continue;
       }
 
-      const elapsed = blockStart + i / sampleRate - this.startTime;
+      const elapsed =
+        blockStart + i / sampleRate - this.startTime;
       if (elapsed >= decay) {
         this.active = false;
         channel[i] = 0;
@@ -132,14 +139,21 @@ export default class HatProcessor extends AudioWorkletProcessor {
       if (elapsed < 0.005) {
         env = this.curveValue(elapsed, 0.005, 0, 1, -30);
       } else {
-        env = this.curveValue(elapsed - 0.005, decay, 1, 0, -30);
+        env = this.curveValue(
+          elapsed - 0.005,
+          decay,
+          1,
+          0,
+          -30,
+        );
       }
 
       // 2. 6つの矩形波 (LFPulse は 0 or 1)
       let oscSum = 0;
       for (let j = 0; j < 6; j++) {
         oscSum += this.phases[j] < 0.5 ? 1 : 0;
-        this.phases[j] = (this.phases[j] + this.freqs[j] / sampleRate) % 1;
+        this.phases[j] =
+          (this.phases[j] + this.freqs[j] / sampleRate) % 1;
       }
 
       // 3. フィルターチェイン

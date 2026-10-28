@@ -52,7 +52,11 @@ export default class MaracasProcessor extends AudioWorkletProcessor {
     if (elapsed >= duration) return y1;
     const t = elapsed / duration;
     if (Math.abs(curve) < 0.001) return y0 + (y1 - y0) * t;
-    return y0 + ((y1 - y0) * (Math.exp(curve * t) - 1)) / (Math.exp(curve) - 1);
+    return (
+      y0 +
+      ((y1 - y0) * (Math.exp(curve * t) - 1)) /
+        (Math.exp(curve) - 1)
+    );
   }
 
   process(inputs, outputs, parameters) {
@@ -74,7 +78,8 @@ export default class MaracasProcessor extends AudioWorkletProcessor {
         continue;
       }
 
-      const elapsed = blockStart + i / sampleRate - this.startTime;
+      const elapsed =
+        blockStart + i / sampleRate - this.startTime;
 
       // 寿命: 0.027 + 0.07 = 0.097s
       if (elapsed >= 0.097) {
@@ -88,7 +93,13 @@ export default class MaracasProcessor extends AudioWorkletProcessor {
       if (elapsed <= 0.027) {
         env = this.curveValue(elapsed, 0.027, 0.3, 1.0, -250);
       } else {
-        env = this.curveValue(elapsed - 0.027, 0.07, 1.0, 0.0, -250);
+        env = this.curveValue(
+          elapsed - 0.027,
+          0.07,
+          1.0,
+          0.0,
+          -250,
+        );
       }
 
       let sig = (Math.random() * 2 - 1) * env;

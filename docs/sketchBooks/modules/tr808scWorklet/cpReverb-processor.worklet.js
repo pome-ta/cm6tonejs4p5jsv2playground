@@ -68,7 +68,11 @@ export default class CpReverbProcessor extends AudioWorkletProcessor {
     if (elapsed >= duration) return y1;
     const t = elapsed / duration;
     if (Math.abs(curve) < 0.001) return y0 + (y1 - y0) * t;
-    return y0 + ((y1 - y0) * (Math.exp(curve * t) - 1)) / (Math.exp(curve) - 1);
+    return (
+      y0 +
+      ((y1 - y0) * (Math.exp(curve * t) - 1)) /
+        (Math.exp(curve) - 1)
+    );
   }
 
   process(inputs, outputs, parameters) {
@@ -92,7 +96,8 @@ export default class CpReverbProcessor extends AudioWorkletProcessor {
         continue;
       }
 
-      const elapsed = blockStart + i / sampleRate - this.startTime;
+      const elapsed =
+        blockStart + i / sampleRate - this.startTime;
 
       // 寿命: attack 0.1s + decay 4.0s = 4.1s[cite: 1]
       if (elapsed >= 4.1) {
@@ -106,7 +111,13 @@ export default class CpReverbProcessor extends AudioWorkletProcessor {
       if (elapsed <= 0.1) {
         revgen = this.curveValue(elapsed, 0.1, 0.0, 1.0, -9);
       } else {
-        revgen = this.curveValue(elapsed - 0.1, 4.0, 1.0, 0.0, -9);
+        revgen = this.curveValue(
+          elapsed - 0.1,
+          4.0,
+          1.0,
+          0.0,
+          -9,
+        );
       }
 
       let reverb = (Math.random() * 2 - 1) * revgen * 0.02; //[cite: 1]
