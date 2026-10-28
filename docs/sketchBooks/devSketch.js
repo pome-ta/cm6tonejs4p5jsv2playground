@@ -88,12 +88,13 @@ const sketch = (p) => {
     };
 
     const _closeHat = (instStore) => {
-      const closeGen = instStore.ch.gen;
-      const openGen = instStore.oh.gen;
       const seq = new Tone.Sequence({
         callback: (time, velocity) => {
-          openGen?.triggerRelease(time);
-          closeGen.triggerAttack(time, ftRand(velocity));
+          instStore.oh.gen?.triggerRelease(time);
+          instStore.ch.gen.triggerAttack(
+            time,
+            ftRand(velocity),
+          );
         },
         events: [_non],
         subdivision: '1n',
@@ -103,12 +104,13 @@ const sketch = (p) => {
     };
 
     const _openHat = (instStore) => {
-      const openGen = instStore.oh.gen;
-      const closeGen = instStore.ch.gen;
       const seq = new Tone.Sequence({
         callback: (time, velocity) => {
-          closeGen?.triggerRelease(time);
-          openGen.triggerAttack(time, ftRand(velocity));
+          instStore.ch.gen?.triggerRelease(time);
+          instStore.oh.gen.triggerAttack(
+            time,
+            ftRand(velocity),
+          );
         },
         events: [_non],
         subdivision: '1n',
@@ -187,10 +189,10 @@ const sketch = (p) => {
       decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
     ],
     ch: [
-      decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
+      decodeSeq(0x0090_0000_0000_0000n), // prettier-ignore
     ],
     oh: [
-      decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
+      decodeSeq(0x0009_0000_0000_0000n), // prettier-ignore
     ],
     cy: [
       decodeSeq(0x9000_0000_0000_0000n),
