@@ -138,15 +138,34 @@ const sketch = (p) => {
     return _store;
   };
 
+  const bdComp = new Tone.Compressor({
+    threshold: -8, // -100-0 : -24
+    ratio: 8, // 1-20 : 12
+    attack: 1e-1,
+    release: 1e-1,
+    knee: 8, // 0-40 : 30
+  });
+
+  const snComp = new Tone.Compressor({
+    threshold: -12, // -100-0 : -24
+    ratio: 16, // 1-20 : 12
+    attack: 1e-2,
+    release: 1e-4,
+    knee: 20, // 0-40 : 30
+  });
+
   const instrumentOptions = {
     bd: {
-      channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
+      channel: { volume: -1.0, pan: 0.0, channelCount: 1 },
       params: {
-        decay: 12.0, // 58.0: 6.0 | 30.0 | 110.0
+        decay: 8.0, // 58.0: 6.0 | 30.0 | 110.0
         amp: 1.849, // 1.449: 1.0 | 2.0 | 2.1
         tone: 50.0, // 50.0: 50.0 | 56.0 | 70.0
       },
-      effects: [],
+      effects: [
+        //
+        bdComp,
+      ],
     },
     sn: {
       channel: { volume: 2.0, pan: -0.1, channelCount: 1 },
@@ -157,7 +176,10 @@ const sketch = (p) => {
         snappy: 0.226, // 0.226: 0.002 | 0.3 | 0.45
         amp2: 0.775, // 0.775: 0.6 | 1.0 | 1.0
       },
-      effects: [],
+      effects: [
+        //
+        snComp,
+      ],
     },
     cp: {
       channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
@@ -236,7 +258,7 @@ const sketch = (p) => {
       effects: [],
     },
     ma: {
-      channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
+      channel: { volume: 0.0, pan: -0.25, channelCount: 1 },
       params: {
         amp: 0.387, // 0.387: 0.1 | 1.0 | 1.5
       },
@@ -250,7 +272,7 @@ const sketch = (p) => {
       effects: [],
     },
     ch: {
-      channel: { volume: 0.0, pan: 0.25, channelCount: 1 },
+      channel: { volume: 0.0, pan: 0.125, channelCount: 1 },
       params: {
         decay: 0.42, // 0.42: 0.42 | 0.42 | 0.42 固定値
         amp: 1.025, // 1.025: 0.3 | 1.0 | 3.5
@@ -258,7 +280,7 @@ const sketch = (p) => {
       effects: [],
     },
     oh: {
-      channel: { volume: 0.0, pan: 0.25, channelCount: 1 },
+      channel: { volume: 0.0, pan: 0.125, channelCount: 1 },
       params: {
         decay: 0.316, // 0.316: 0.01 | 0.5 | 5.0
         amp: 4.899, // 4.899: 4.0 | 4.0 | 6.0
@@ -272,7 +294,9 @@ const sketch = (p) => {
         amp: 10.488, // 10.488: 0.5 | 20.0 | 22.0
         tone: 0.001, // 0.001: 0.0002 | 0.002 | 0.005
       },
-      effects: [],
+      effects: [
+        //
+      ],
     },
   };
 
@@ -280,15 +304,15 @@ const sketch = (p) => {
   const seqEvents = {
     bd: [
       decodeSeq(0x9000_9000_9000_9000n),
-      decodeSeq(0x9000_9000_9000_9003n),
+      decodeSeq(0x9000_9000_9000_9001n),
       decodeSeq(0x9000_9000_9000_9000n),
-      decodeSeq(0x9000_9000_9000_9070n),
+      decodeSeq(0x9000_9000_9000_9050n),
     ],
     sn: [
-      decodeSeq(0x0000_9002_0000_9000n),
+      decodeSeq(0x0000_9000_0000_9000n),
       decodeSeq(0x0000_9000_0001_9000n),
       decodeSeq(0x0000_9002_0000_9000n),
-      decodeSeq(0x0100_9000_0400_9000n),
+      decodeSeq(0x0100_9000_0100_9000n),
     ],
     cp: [
       decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
@@ -315,13 +339,14 @@ const sketch = (p) => {
       decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
     ],
     rs: [
-      decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
+      decodeSeq(0x0000_9000_0000_9000n), // prettier-ignore
     ],
     cl: [
       decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
     ],
     ma: [
-      decodeSeq(0x0520_0000_0520_0000n), // prettier-ignore
+      decodeSeq(0x0660_0000_0660_0000n),
+      // decodeSeq(0x0005_0620_0000_0000n),
     ],
     cb: [
       decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
@@ -330,27 +355,51 @@ const sketch = (p) => {
       decodeSeq(0x0080_0080_0070_0090n),
       decodeSeq(0x0080_0070_0080_0001n),
       decodeSeq(0x0080_0080_0070_0080n),
-      decodeSeq(0x0080_0070_0080_0001n),
+      decodeSeq(0x0080_0070_0080_0080n),
     ],
     oh: [
       decodeSeq(0x0000_0000_0000_0000n),
-      decodeSeq(0x0000_0000_0000_0070n),
+      decodeSeq(0x0000_0000_0000_0050n),
       decodeSeq(0x0000_0000_0000_0000n),
-      decodeSeq(0x0000_0000_0000_0070n),
+      decodeSeq(0x0000_0000_0000_0000n),
     ],
     cy: [
       decodeSeq(0x9000_0000_0000_0000n),
+      null,
+      null,
+      null,
+      null,
       null,
       null,
       null, // prettier-ignore
     ],
   };
 
+  const callSeqStore = {
+    bd: true,
+    sn: true,
+    cp: true,
+    cr: true,
+    lt: true,
+    mt: true,
+    ht: true,
+    lc: true,
+    mc: true,
+    hc: true,
+    rs: true,
+    cl: true,
+    ma: true,
+    cb: true,
+    ch: true,
+    oh: true,
+    cy: true,
+  };
+
   const seqHumanizes = {
     // bd: 0.5,
     ma: 0.005,
-    ch: 0.005,
-    // ohh: 0.5,
+    ch: 0.004,
+    // oh: 0.5,
   };
 
   const seqStore = createSequenceStore(drumKit.instrumentStore);
@@ -365,7 +414,7 @@ const sketch = (p) => {
 
   const drumKitBusName = 'drums';
   Object.entries(drumKit.instrumentStore).map(
-    ([key, instrument]) => {
+    ([_, instrument]) => {
       instrument.chNode.send(drumKitBusName);
     },
   );
@@ -387,8 +436,9 @@ const sketch = (p) => {
       ...[
         //
         new Tone.Volume(-6),
+        // new Tone.Limiter(-6),
         drumKitLowpass,
-        // new Tone.Gain(1.55),
+        // // new Tone.Gain(1.55),
         new Tone.Limiter(-6),
         new Tone.Volume(3),
       ].filter((n) => n),
@@ -415,10 +465,9 @@ const sketch = (p) => {
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
-    Object.entries(seqEvents).map(([key, _]) => {
-      seqStore[key].start(0);
+    Object.entries(callSeqStore).map(([key, isCall]) => {
+      isCall && seqStore[key]?.start(0);
     });
-    console.log(drumKit.bd);
     // --- transport.start
     transport.start();
   });
