@@ -5,7 +5,7 @@ import { DrumKit } from 'modules/tr808scWorklet/drumKit.js';
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 110;
+const BPM = 125;
 
 /**
  * 指定した基準値を中心にランダムな値を生成する。
@@ -142,8 +142,8 @@ const sketch = (p) => {
     bd: {
       channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
       params: {
-        decay: 58.0, // 58.0: 6.0 | 30.0 | 110.0
-        amp: 1.449, // 1.449: 1.0 | 2.0 | 2.1
+        decay: 12.0, // 58.0: 6.0 | 30.0 | 110.0
+        amp: 1.849, // 1.449: 1.0 | 2.0 | 2.1
         tone: 50.0, // 50.0: 50.0 | 56.0 | 70.0
       },
       effects: [],
@@ -152,7 +152,7 @@ const sketch = (p) => {
       channel: { volume: 2.0, pan: -0.1, channelCount: 1 },
       params: {
         amp: 1.118, // 1.118: 0.5 | 2.0 | 2.5
-        tone: 300.9, // 300.9: 210.8 | 340.0 | 391.0
+        tone: 210.8, // 300.9: 210.8 | 340.0 | 391.0
         tone2: 167.265, // 167.265: 117.18 | 189.0 | 217.35
         snappy: 0.226, // 0.226: 0.002 | 0.3 | 0.45
         amp2: 0.775, // 0.775: 0.6 | 1.0 | 1.0
@@ -280,13 +280,15 @@ const sketch = (p) => {
   const seqEvents = {
     bd: [
       decodeSeq(0x9000_9000_9000_9000n),
-      decodeSeq(0x9000_9000_9000_9000n),
+      decodeSeq(0x9000_9000_9000_9003n),
       decodeSeq(0x9000_9000_9000_9000n),
       decodeSeq(0x9000_9000_9000_9070n),
     ],
     sn: [
-      decodeSeq(0x0000_9000_0000_9000n),
-      decodeSeq(0x0000_9000_0000_9000n),
+      decodeSeq(0x0000_9002_0000_9000n),
+      decodeSeq(0x0000_9000_0001_9000n),
+      decodeSeq(0x0000_9002_0000_9000n),
+      decodeSeq(0x0100_9000_0400_9000n),
     ],
     cp: [
       decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
@@ -319,16 +321,22 @@ const sketch = (p) => {
       decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
     ],
     ma: [
-      decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
+      decodeSeq(0x0520_0000_0520_0000n), // prettier-ignore
     ],
     cb: [
       decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
     ],
     ch: [
-      decodeSeq(0x0090_0090_0090_0090n), // prettier-ignore
+      decodeSeq(0x0080_0080_0070_0090n),
+      decodeSeq(0x0080_0070_0080_0001n),
+      decodeSeq(0x0080_0080_0070_0080n),
+      decodeSeq(0x0080_0070_0080_0001n),
     ],
     oh: [
-      decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
+      decodeSeq(0x0000_0000_0000_0000n),
+      decodeSeq(0x0000_0000_0000_0070n),
+      decodeSeq(0x0000_0000_0000_0000n),
+      decodeSeq(0x0000_0000_0000_0070n),
     ],
     cy: [
       decodeSeq(0x9000_0000_0000_0000n),
@@ -340,7 +348,8 @@ const sketch = (p) => {
 
   const seqHumanizes = {
     // bd: 0.5,
-    // ch: 0.5,
+    ma: 0.005,
+    ch: 0.005,
     // ohh: 0.5,
   };
 
@@ -364,7 +373,7 @@ const sketch = (p) => {
   const drumKitLowpass = new Tone.Filter({
     type: 'lowpass',
     // type: 'highpass',
-    frequency: 8800,
+    frequency: 8600,
     Q: 0.1,
     rolloff: -24, // -12, -24, -48, -96
   });
