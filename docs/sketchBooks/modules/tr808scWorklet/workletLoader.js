@@ -20,6 +20,7 @@ const WORKLET_URL = new URL(
 const loadPromises = new WeakMap(); // BaseContext -> Promise<void>
 
 export function loadWorklet(context) {
+  console.log(loadPromises)
   let p = loadPromises.get(context);
   if (!p) {
     p = context.addAudioWorkletModule(WORKLET_URL.href);
