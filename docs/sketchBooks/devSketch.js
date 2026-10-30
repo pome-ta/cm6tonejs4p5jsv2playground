@@ -59,13 +59,9 @@ const sketch = (p) => {
   Tone.setContext(p5Ctx, true);
   const toneCtx = Tone.getContext();
   /* Starting Audio */
-  document.addEventListener(
-    'pointerup',
-    async () => await Tone.start(),
-    {
-      once: true,
-    },
-  );
+  document.addEventListener('pointerup', async () => await Tone.start(), {
+    once: true,
+  });
 
   const transport = Tone.getTransport();
   transport.bpm.value = BPM;
@@ -100,13 +96,11 @@ const sketch = (p) => {
     context: toneCtx,
   });
 
-  /*
-
   const bins = new Tone.BitCrusher({
     bits: 4,
     //context: toneCtx,
   });
-  */
+
   clickSynth.chain(
     ...[
       //
