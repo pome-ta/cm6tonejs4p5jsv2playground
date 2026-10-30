@@ -7,6 +7,11 @@ import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
 const BPM = 125;
 
+const CTX = new window.AudioContext();
+const TCTX = Tone.getContext();
+console.log(CTX);
+console.log(TCTX);
+
 /**
  * 指定した基準値を中心にランダムな値を生成する。
  * @param {number} bias - 基準値(通常は 0.0〜1.0)
@@ -65,6 +70,7 @@ const sketch = (p) => {
       once: true,
     },
   );
+
   const transport = Tone.getTransport();
   transport.bpm.value = BPM;
 
@@ -154,6 +160,20 @@ const sketch = (p) => {
     knee: 20, // 0-40 : 30
   });
 
+  const closeHatLowpass = new Tone.Filter({
+    type: 'lowpass',
+    // type: 'highpass',
+    frequency: 8600,
+    Q: 0.1,
+    rolloff: -24, // -12, -24, -48, -96
+  });
+  const openHatLowpass = new Tone.Filter({
+    type: 'lowpass',
+    // type: 'highpass',
+    frequency: 8000,
+    Q: 0.1,
+    rolloff: -24, // -12, -24, -48, -96
+  });
   const instrumentOptions = {
     bd: {
       channel: { volume: -1.0, pan: 0.0, channelCount: 1 },
@@ -277,15 +297,21 @@ const sketch = (p) => {
         decay: 0.42, // 0.42: 0.42 | 0.42 | 0.42 固定値
         amp: 1.025, // 1.025: 0.3 | 1.0 | 3.5
       },
-      effects: [],
+      effects: [
+        //
+        closeHatLowpass,
+      ],
     },
     oh: {
-      channel: { volume: 0.0, pan: 0.125, channelCount: 1 },
+      channel: { volume: -0.5, pan: 0.125, channelCount: 1 },
       params: {
         decay: 0.316, // 0.316: 0.01 | 0.5 | 5.0
         amp: 4.899, // 4.899: 4.0 | 4.0 | 6.0
       },
-      effects: [],
+      effects: [
+        //
+        openHatLowpass,
+      ],
     },
     cy: {
       channel: { volume: 0.0, pan: -0.5, channelCount: 1 },
@@ -296,11 +322,13 @@ const sketch = (p) => {
       },
       effects: [
         //
+        //new Tone.BitCrusher({ context: toneCtx }),
       ],
     },
   };
 
   const drumKit = new DrumKit(instrumentOptions, toneCtx);
+  //const drumKit = new DrumKit(instrumentOptions, TCTX);
   const seqEvents = {
     bd: [
       decodeSeq(0x9000_9000_9000_9000n),
@@ -386,7 +414,7 @@ const sketch = (p) => {
     lc: true,
     mc: true,
     hc: true,
-    rs: true,
+    // rs: true,
     cl: true,
     ma: true,
     cb: true,
@@ -419,13 +447,6 @@ const sketch = (p) => {
     },
   );
 
-  const drumKitLowpass = new Tone.Filter({
-    type: 'lowpass',
-    // type: 'highpass',
-    frequency: 8600,
-    Q: 0.1,
-    rolloff: -24, // -12, -24, -48, -96
-  });
   const drumKitVol = new Tone.Volume();
   const drumKitCh = new Tone.Channel({
     volume: 0.0,
@@ -437,7 +458,6 @@ const sketch = (p) => {
         //
         new Tone.Volume(-6),
         // new Tone.Limiter(-6),
-        drumKitLowpass,
         // // new Tone.Gain(1.55),
         new Tone.Limiter(-6),
         new Tone.Volume(3),
