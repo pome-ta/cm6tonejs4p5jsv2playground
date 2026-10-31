@@ -98,15 +98,12 @@ const sketch = (p) => {
     //context: toneCtx,
   });
 
-
-
   const bd = new Bd({
     decay: 58.0, // 58.0: 6.0 | 30.0 | 110.0
     amp: 1.449, // 1.449: 1.0 | 2.0 | 2.1
     tone: 50.0, // 50.0: 50.0 | 56.0 | 70.0
     context: toneCtx,
   });
-
 
   clickSynth.chain(
     ...[
