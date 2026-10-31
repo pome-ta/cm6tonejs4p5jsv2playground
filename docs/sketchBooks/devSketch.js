@@ -59,9 +59,13 @@ const sketch = (p) => {
   Tone.setContext(p5Ctx, true);
   const toneCtx = Tone.getContext();
   /* Starting Audio */
-  document.addEventListener('pointerup', async () => await Tone.start(), {
-    once: true,
-  });
+  document.addEventListener(
+    'pointerup',
+    async () => await Tone.start(),
+    {
+      once: true,
+    },
+  );
 
   const transport = Tone.getTransport();
   transport.bpm.value = BPM;
@@ -89,6 +93,13 @@ const sketch = (p) => {
   });
   const clickVol = new Tone.Volume(-4);
 
+  const bins = new Tone.BitCrusher({
+    bits: 4,
+    //context: toneCtx,
+  });
+
+
+
   const bd = new Bd({
     decay: 58.0, // 58.0: 6.0 | 30.0 | 110.0
     amp: 1.449, // 1.449: 1.0 | 2.0 | 2.1
@@ -96,10 +107,6 @@ const sketch = (p) => {
     context: toneCtx,
   });
 
-  const bins = new Tone.BitCrusher({
-    bits: 4,
-    //context: toneCtx,
-  });
 
   clickSynth.chain(
     ...[
