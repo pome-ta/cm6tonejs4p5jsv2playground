@@ -53,6 +53,9 @@ export default class Bd extends Tone.ToneAudioNode {
       swappable: true,
       value: opts.tone,
     });
+    
+    
+    console.log(this.context._workletPromises)
 
     this._worklet = null;
     const processorName = `${[...this.name]
@@ -67,8 +70,13 @@ export default class Bd extends Tone.ToneAudioNode {
             outputChannelCount: [2],
           },
         );
-        this._worklet.onprocessorerror = (e) =>
+        console.log('this._worklet')
+        console.log(this._worklet)
+        this._worklet.onprocessorerror = (e) => {
+          console.log('onprocessorerror');
           console.error(e);
+        };
+
         Tone.connect(this._worklet, this.envelope); // 永続接続
         ['trigger', 'decay', 'tone', 'amp'].forEach((name) => {
           const p = this._worklet.parameters.get(name);
@@ -77,9 +85,10 @@ export default class Bd extends Tone.ToneAudioNode {
           }
         });
       })
-      .catch((e) =>
-        console.error(`${processorName} load failed`, e),
-      );
+      .catch((e) => {
+        console.log('catch');
+        console.error(`${processorName} load failed`, e);
+      });
   }
 
   triggerAttack(time, velocity = 1) {

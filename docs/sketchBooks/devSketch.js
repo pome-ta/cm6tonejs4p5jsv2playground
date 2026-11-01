@@ -1,7 +1,7 @@
 // --- # example: 808 ?
 import * as Tone from 'tone';
 //import { DrumKit } from 'modules/tr808scWorklet/drumKit.js';
-import { Bd } from 'modules/tr808scWorklet/drumKit.js';
+import { Bd, Sn } from 'modules/tr808scWorklet/drumKit.js';
 
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
@@ -93,16 +93,39 @@ const sketch = (p) => {
   });
   const clickVol = new Tone.Volume(-4);
 
-  const bins = new Tone.BitCrusher({
+  const binsOpt = {
     bits: 4,
-    //context: toneCtx,
-  });
+    context: toneCtx,
+  };
+  const bins = new Tone.BitCrusher(binsOpt);
 
-  const bd = new Bd({
+  let bd;
+  const bdOpt = {
     decay: 58.0, // 58.0: 6.0 | 30.0 | 110.0
     amp: 1.449, // 1.449: 1.0 | 2.0 | 2.1
     tone: 50.0, // 50.0: 50.0 | 56.0 | 70.0
     context: toneCtx,
+  };
+  bd = new Bd(bdOpt);
+
+  let sn;
+  const snOpt = {
+    amp: 1.118, // 1.118: 0.5 | 2.0 | 2.5
+    tone: 300.9, // 300.9: 210.8 | 340.0 | 391.0
+    tone2: 167.265, // 167.265: 117.18 | 189.0 | 217.35
+    snappy: 0.226, // 0.226: 0.002 | 0.3 | 0.45
+    amp2: 0.775, // 0.775: 0.6 | 1.0 | 1.0
+    context: toneCtx,
+  };
+  sn = new Sn(snOpt);
+
+  const seq = new Tone.Sequence({
+    callback: (time, velocity) => {
+      bd?.triggerAttack(time, ftRand(velocity));
+      sn?.triggerAttack(time, ftRand(velocity));
+    },
+    events: [1, 1, 1, 1],
+    subdivision: '4n',
   });
 
   clickSynth.chain(
@@ -535,6 +558,8 @@ const sketch = (p) => {
       //
       clickVol,
       //drumKitVol,
+      bd,
+      sn,
     ].filter((n) => n),
     masterVol.chain(
       ...[
@@ -551,6 +576,7 @@ const sketch = (p) => {
       isCall && seqStore[key]?.start(0);
     });
     */
+    seq.start(0);
     clickSeq.start(0);
     // --- transport.start
     transport.start();
