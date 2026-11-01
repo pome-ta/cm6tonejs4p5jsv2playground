@@ -1,4 +1,4 @@
-import { isAnyAudioNode, isAnyAudioParam } from 'https://cdn.jsdelivr.net/npm/standardized-audio-context@25.3.72/+esm';
+import { isAnyAudioNode, isAnyAudioParam } from 'standardized-audio-context';
 
 // https://github.com/processing/p5.sound.js/blob/c01819d9c5adef3362f819c8f368a27a7a7bfef5/src/core/p5soundNode.js#L29
 /**

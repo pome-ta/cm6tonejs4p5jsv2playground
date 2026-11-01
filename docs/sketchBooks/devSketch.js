@@ -66,6 +66,8 @@ const sketch = (p) => {
       once: true,
     },
   );
+  
+  console.log(Tone.getContext().rawContext instanceof AudioContext); // false なら SAC のまま
 
   const transport = Tone.getTransport();
   transport.bpm.value = BPM;
@@ -97,7 +99,10 @@ const sketch = (p) => {
     bits: 4,
     context: toneCtx,
   };
-  //const bins = new Tone.BitCrusher(binsOpt);
+  const bins = new Tone.BitCrusher(binsOpt);
+
+
+
 
   let bd;
   const bdOpt = {
