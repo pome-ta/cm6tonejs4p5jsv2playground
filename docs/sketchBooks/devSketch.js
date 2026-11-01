@@ -97,7 +97,7 @@ const sketch = (p) => {
     bits: 4,
     context: toneCtx,
   };
-  const bins = new Tone.BitCrusher(binsOpt);
+  //const bins = new Tone.BitCrusher(binsOpt);
 
   let bd;
   const bdOpt = {
