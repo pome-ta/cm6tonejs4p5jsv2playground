@@ -57,10 +57,17 @@ const sketch = (p) => {
   const p5Ctx = p.getAudioContext();
   Tone.setContext(p5Ctx, true);
   const toneCtx = Tone.getContext();
+
+  toneCtx.on('statechange', (state) => {
+    console.log(state); // "running" など
+  });
   /* Starting Audio */
   document.addEventListener(
     'pointerup',
-    async () => await Tone.start(),
+    async () => {
+      await Tone.start();
+      transport.start();
+    },
     {
       once: true,
     },
@@ -317,7 +324,7 @@ const sketch = (p) => {
       },
       effects: [
         //
-        new Tone.BitCrusher({ bins: 4.0, context: toneCtx }),
+        new Tone.BitCrusher({ bins: 10.0, context: toneCtx }),
       ],
     },
   };
