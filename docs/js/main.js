@@ -68,7 +68,6 @@ const editor = createEditorView(editorDiv);
 editorDiv.cmEditorView = editor;
 
 /* --- iframe(Sandbox) */
-
 const srcPath = './sketchBooks/sketchCanvas.html';
 
 let sandboxHTMLstr;
@@ -108,11 +107,11 @@ const importMap = {
   imports: {
     eruda: 'https://cdn.jsdelivr.net/npm/eruda/+esm',
     // todo: p5.sound と一応揃える
-    tone: `${toneCDN}index.js`,
-    //tone: 'https://cdn.jsdelivr.net/npm/tone@15.0.2/+esm',
+    // tone: `${toneCDN}index.js`,
+    tone: 'https://cdn.jsdelivr.net/npm/tone@15.0.2/+esm',
     'standardized-audio-context':
       'https://cdn.jsdelivr.net/npm/standardized-audio-context@25.3.70/+esm',
-    tslib: 'https://cdn.jsdelivr.net/npm/tslib@2.8.1/+esm',
+    // tslib: 'https://cdn.jsdelivr.net/npm/tslib@2.8.1/+esm',
     'modules/': new URL('./sketchBooks/modules/', originalUrl)
       .href,
   },
@@ -741,8 +740,8 @@ const footer = DomFactory.create('footer', {
             moveCache < headLine
               ? headLine
               : moveCache >= endLine
-              ? endLine
-              : moveCache;
+                ? endLine
+                : moveCache;
 
           this.targetEditor.dispatch({
             selection: EditorSelection.create([

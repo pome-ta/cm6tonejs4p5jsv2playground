@@ -2,17 +2,24 @@ import * as Tone from 'tone';
 import { loadWorklet } from './workletLoader.js';
 
 export default class Bd extends Tone.ToneAudioNode {
-  constructor(options = {}) {
+  name = 'Bd';
+  #paramNames = ['trigger', 'decay', 'amp', 'tone'];
+  input = undefined;
+  onprocessorerror = (e) => console.error(e);
+
+  static getDefaults() {
     // arg decay=30, amp=2, gate=0, tone=56;
-    const opts = Object.assign(
-      { decay: 30.0, amp: 2.0, tone: 56.0 },
-      options,
-    );
-    super({ context: opts.context ?? Tone.getContext() });
+    return Object.assign(Tone.ToneAudioNode.getDefaults(), {
+      decay: 30.0,
+      amp: 2.0,
+      tone: 56.0,
+      workletOptions: { outputChannelCount: [2] },
+    });
+  }
+  constructor(options) {
+    const opts = Object.assign(Bd.getDefaults(), options);
+    super(opts);
 
-    this.name = 'Bd';
-
-    this.input = undefined;
     this.envelope = new Tone.AmplitudeEnvelope({
       context: this.context,
       attack: 0.0,
@@ -53,42 +60,45 @@ export default class Bd extends Tone.ToneAudioNode {
       swappable: true,
       value: opts.tone,
     });
-    
-    
-    console.log(this.context._workletPromises)
 
-    this._worklet = null;
     const processorName = `${[...this.name]
       .map((c, i) => (i ? c : c.toLowerCase()))
       .join('')}-processor`;
 
     loadWorklet(this.context)
       .then(() => {
-        this._worklet = this.context.createAudioWorkletNode(
-          processorName,
-          {
-            outputChannelCount: [2],
-          },
-        );
-        console.log('this._worklet')
-        console.log(this._worklet)
-        this._worklet.onprocessorerror = (e) => {
-          console.log('onprocessorerror');
-          console.error(e);
-        };
+        if (this.disposed) {
+          return; // ToneAudioWorklet と同じガード
+        }
 
-        Tone.connect(this._worklet, this.envelope); // 永続接続
-        ['trigger', 'decay', 'tone', 'amp'].forEach((name) => {
-          const p = this._worklet.parameters.get(name);
-          if (p) {
-            this[name].setParam(p);
-          }
-        });
+        // this._worklet = this.context.createAudioWorkletNode(
+        //   processorName,
+        //   opts.workletOptions,
+        // );
+        this._worklet = new AudioWorkletNode(
+          this.context.rawContext, // Tone 経由ではなく raw の context
+          processorName,
+          opts.workletOptions,
+        );
+
+        this._worklet.onprocessorerror = (e) =>
+          this.onprocessorerror(e.message);
+
+        this.onReady(this._worklet);
       })
-      .catch((e) => {
-        console.log('catch');
-        console.error(`${processorName} load failed`, e);
-      });
+      .catch((e) =>
+        console.error(`${processorName} setup failed`, e),
+      );
+  }
+
+  onReady(node) {
+    Tone.connect(node, this.output); // ソース → output Gain
+    this.#paramNames.forEach((n) => {
+      const p = node.parameters.get(n);
+      if (p) {
+        this[n].setParam(p);
+      }
+    });
   }
 
   triggerAttack(time, velocity = 1) {
@@ -119,10 +129,7 @@ export default class Bd extends Tone.ToneAudioNode {
   dispose() {
     super.dispose();
     this._dummyGain.disconnect();
-    this.trigger.dispose();
-    this.decay.dispose();
-    this.amp.dispose();
-    this.tone.dispose();
+    this.#paramNames.forEach((n) => this[n].dispose());
     if (this._worklet) {
       this._worklet.port.postMessage('dispose');
       this._worklet.disconnect();

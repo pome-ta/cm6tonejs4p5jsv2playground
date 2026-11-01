@@ -1,7 +1,6 @@
 // --- # example: 808 ?
 import * as Tone from 'tone';
-//import { DrumKit } from 'modules/tr808scWorklet/drumKit.js';
-import { Bd, Sn } from 'modules/tr808scWorklet/drumKit.js';
+import { DrumKit } from 'modules/tr808scWorklet/drumKit.js';
 
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
@@ -66,103 +65,12 @@ const sketch = (p) => {
       once: true,
     },
   );
-  
-  console.log(Tone.getContext().rawContext instanceof AudioContext); // false なら SAC のまま
 
   const transport = Tone.getTransport();
   transport.bpm.value = BPM;
 
   const emitter = new Tone.Emitter();
 
-  // メトロノーム
-  const clickSynth = new Tone.MembraneSynth({
-    pitchDecay: `3i`, // 0 ~ 0.5 秒
-    octaves: 1.25, // 0.5 ~ 8
-    envelope: {
-      attack: 0.0,
-      decay: 1.0,
-      sustain: 0.0,
-      release: `8t`,
-    },
-    oscillator: { type: 'sine' },
-  });
-  const clickSeq = new Tone.Sequence({
-    callback: (time, note) => {
-      clickSynth.triggerAttackRelease(note, '8n', time);
-    },
-    events: ['A5', 'A4', 'A4', 'A4'],
-    subdivision: '4n',
-  });
-  const clickVol = new Tone.Volume(-4);
-
-  const binsOpt = {
-    bits: 4,
-    context: toneCtx,
-  };
-  const bins = new Tone.BitCrusher(binsOpt);
-
-
-
-
-  let bd;
-  const bdOpt = {
-    decay: 58.0, // 58.0: 6.0 | 30.0 | 110.0
-    amp: 1.449, // 1.449: 1.0 | 2.0 | 2.1
-    tone: 50.0, // 50.0: 50.0 | 56.0 | 70.0
-    context: toneCtx,
-  };
-  bd = new Bd(bdOpt);
-
-  let sn;
-  const snOpt = {
-    amp: 1.118, // 1.118: 0.5 | 2.0 | 2.5
-    tone: 300.9, // 300.9: 210.8 | 340.0 | 391.0
-    tone2: 167.265, // 167.265: 117.18 | 189.0 | 217.35
-    snappy: 0.226, // 0.226: 0.002 | 0.3 | 0.45
-    amp2: 0.775, // 0.775: 0.6 | 1.0 | 1.0
-    context: toneCtx,
-  };
-  sn = new Sn(snOpt);
-
-  const seq = new Tone.Sequence({
-    callback: (time, velocity) => {
-      bd?.triggerAttack(time, ftRand(velocity));
-      sn?.triggerAttack(time, ftRand(velocity));
-    },
-    events: [1, 1, 1, 1],
-    subdivision: '4n',
-  });
-
-  clickSynth.chain(
-    ...[
-      //
-      //bins,
-    ].filter((n) => n),
-    clickVol,
-  );
-
-  console.log(bd);
-  //console.log(bins);
-  /*
-  console.log(toneCtx);
-
-  console.log(bins.context);
-  console.log(bins.context.rawContext);
-  console.log(toneCtx.rawContext);
-  console.log(window.auCtx);
-  console.log(bins.context === toneCtx);
-  console.log(
-    `b x s: ${bins.context.rawContext === toneCtx.rawContext}`,
-  );
-  console.log(
-    `b x a: ${bins.context.rawContext === window.auCtx}`,
-  );
-  console.log(`s x a: ${toneCtx.rawContext === window.auCtx}`);
-  */
-
-  //window.auCtx
-
-  /*
   // --- drumKit
   const createSequenceStore = (instrumentStore) => {
     const _default = (inst) => {
@@ -409,13 +317,13 @@ const sketch = (p) => {
       },
       effects: [
         //
-        //new Tone.BitCrusher({ bits:4, context: toneCtx }),
+        new Tone.BitCrusher({ bins: 4.0, context: toneCtx }),
       ],
     },
   };
 
-  //const drumKit = new DrumKit(instrumentOptions, toneCtx);
-  const drumKit = new DrumKit(instrumentOptions);
+  const drumKit = new DrumKit(instrumentOptions, toneCtx);
+
   const seqEvents = {
     bd: [
       decodeSeq(0x9000_9000_9000_9000n),
@@ -552,7 +460,6 @@ const sketch = (p) => {
       drumKitVol,
     )
     .receive(drumKitBusName);
-  */
 
   // ---  master mixer
   const masterVol = new Tone.Volume();
@@ -561,10 +468,7 @@ const sketch = (p) => {
   Tone.fanIn(
     ...[
       //
-      clickVol,
-      //drumKitVol,
-      bd,
-      sn,
+      drumKitVol,
     ].filter((n) => n),
     masterVol.chain(
       ...[
@@ -576,13 +480,9 @@ const sketch = (p) => {
 
   // --- emitter
   emitter.once('startOnceCallSeqs', () => {
-    /*
     Object.entries(callSeqStore).map(([key, isCall]) => {
       isCall && seqStore[key]?.start(0);
     });
-    */
-    seq.start(0);
-    clickSeq.start(0);
     // --- transport.start
     transport.start();
   });
@@ -591,7 +491,6 @@ const sketch = (p) => {
   p.setup = () => {
     // put setup code here
     cnvs = p.createCanvas(w, h);
-    console.log('set up');
 
     emitter.emit('startOnceCallSeqs');
     // transport.start();
