@@ -66,7 +66,7 @@ const sketch = (p) => {
     'pointerup',
     async () => {
       await Tone.start();
-      transport.start();
+      transport?.start();
     },
     {
       once: true,
@@ -178,7 +178,7 @@ const sketch = (p) => {
   });
   const instrumentOptions = {
     bd: {
-      channel: { volume: -1.0, pan: 0.0, channelCount: 1 },
+      channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
       params: {
         decay: 8.0, // 58.0: 6.0 | 30.0 | 110.0
         amp: 1.849, // 1.449: 1.0 | 2.0 | 2.1
@@ -316,7 +316,7 @@ const sketch = (p) => {
       ],
     },
     cy: {
-      channel: { volume: 0.0, pan: -0.5, channelCount: 1 },
+      channel: { volume: 1.0, pan: -0.5, channelCount: 1 },
       params: {
         decay: 1.414, // 1.414: 0.5 | 2.0 | 4.0
         amp: 10.488, // 10.488: 0.5 | 20.0 | 22.0
@@ -324,7 +324,9 @@ const sketch = (p) => {
       },
       effects: [
         //
-        new Tone.BitCrusher({ bins: 10.0, context: toneCtx }),
+        // new Tone.BitCrusher({ bins: 6.0, context: toneCtx }),
+        new Tone.BitCrusher({ bins: 6.0 }),
+        new Tone.Distortion({ distortion: 0.8 }),
       ],
     },
   };
@@ -462,7 +464,7 @@ const sketch = (p) => {
         // new Tone.Limiter(-6),
         // // new Tone.Gain(1.55),
         new Tone.Limiter(-6),
-        new Tone.Volume(3),
+        new Tone.Volume(6),
       ].filter((n) => n),
       drumKitVol,
     )
@@ -491,7 +493,7 @@ const sketch = (p) => {
       isCall && seqStore[key]?.start(0);
     });
     // --- transport.start
-    transport.start();
+    transport?.start();
   });
 
   // p.setup = async () => {
