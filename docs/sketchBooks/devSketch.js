@@ -48,62 +48,26 @@ const sketch = (p) => {
   const emitter = new Tone.Emitter();
 
   // --- drumKit
-  const bdComp = new Tone.Compressor({
-    threshold: -8, // -100-0 : -24
-    ratio: 8, // 1-20 : 12
-    attack: 1e-1,
-    release: 1e-1,
-    knee: 8, // 0-40 : 30
-  });
-
-  const snComp = new Tone.Compressor({
-    threshold: -12, // -100-0 : -24
-    ratio: 16, // 1-20 : 12
-    attack: 1e-2,
-    release: 1e-4,
-    knee: 20, // 0-40 : 30
-  });
-
-  const closeHatLowpass = new Tone.Filter({
-    type: 'lowpass',
-    // type: 'highpass',
-    frequency: 8600,
-    Q: 0.1,
-    rolloff: -24, // -12, -24, -48, -96
-  });
-  const openHatLowpass = new Tone.Filter({
-    type: 'lowpass',
-    // type: 'highpass',
-    frequency: 8000,
-    Q: 0.1,
-    rolloff: -24, // -12, -24, -48, -96
-  });
   const instrumentOptions = {
     bd: {
       channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
       params: {
-        decay: 8.0, // 58.0: 6.0 | 30.0 | 110.0
-        amp: 1.849, // 1.449: 1.0 | 2.0 | 2.1
+        decay: 58.0, // 58.0: 6.0 | 30.0 | 110.0
+        amp: 1.449, // 1.449: 1.0 | 2.0 | 2.1
         tone: 50.0, // 50.0: 50.0 | 56.0 | 70.0
       },
-      effects: [
-        //
-        bdComp,
-      ],
+      effects: [],
     },
     sn: {
       channel: { volume: 2.0, pan: -0.1, channelCount: 1 },
       params: {
         amp: 1.118, // 1.118: 0.5 | 2.0 | 2.5
-        tone: 210.8, // 300.9: 210.8 | 340.0 | 391.0
+        tone: 300.9, // 300.9: 210.8 | 340.0 | 391.0
         tone2: 167.265, // 167.265: 117.18 | 189.0 | 217.35
         snappy: 0.226, // 0.226: 0.002 | 0.3 | 0.45
         amp2: 0.775, // 0.775: 0.6 | 1.0 | 1.0
       },
-      effects: [
-        //
-        snComp,
-      ],
+      effects: [],
     },
     cp: {
       channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
@@ -168,72 +132,59 @@ const sketch = (p) => {
       effects: [],
     },
     rs: {
-      channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
+      channel: { volume: 0.0, pan: -0.1, channelCount: 1 },
       params: {
         amp: 0.49, // 0.49: 0.2 | 1.0 | 1.2
       },
       effects: [],
     },
     cl: {
-      channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
+      channel: { volume: 4.0, pan: 0.0, channelCount: 1 },
       params: {
         amp: 0.548, // 0.548: 0.2 | 1.0 | 1.5
       },
       effects: [],
     },
     ma: {
-      channel: { volume: 0.0, pan: -0.25, channelCount: 1 },
+      channel: { volume: 4.0, pan: -0.2, channelCount: 1 },
       params: {
         amp: 0.387, // 0.387: 0.1 | 1.0 | 1.5
       },
       effects: [],
     },
     cb: {
-      channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
+      channel: { volume: -6.0, pan: 0.0, channelCount: 1 },
       params: {
         amp: 0.122, // 0.122: 0.05 | 1.0 | 1.0 (0.3?)
       },
       effects: [],
     },
     ch: {
-      channel: { volume: 0.0, pan: 0.125, channelCount: 1 },
+      channel: { volume: 0.0, pan: 0.3, channelCount: 1 },
       params: {
         decay: 0.42, // 0.42: 0.42 | 0.42 | 0.42 固定値
         amp: 1.025, // 1.025: 0.3 | 1.0 | 3.5
       },
-      effects: [
-        //
-        closeHatLowpass,
-      ],
+      effects: [],
     },
     oh: {
-      channel: { volume: -0.5, pan: 0.125, channelCount: 1 },
+      channel: { volume: 0.0, pan: 0.4, channelCount: 1 },
       params: {
         decay: 0.316, // 0.316: 0.01 | 0.5 | 5.0
         amp: 4.899, // 4.899: 4.0 | 4.0 | 6.0
       },
-      effects: [
-        //
-        openHatLowpass,
-      ],
+      effects: [],
     },
     cy: {
-      channel: { volume: 1.0, pan: -0.5, channelCount: 1 },
+      channel: { volume: 0.0, pan: -0.4, channelCount: 1 },
       params: {
         decay: 1.414, // 1.414: 0.5 | 2.0 | 4.0
         amp: 10.488, // 10.488: 0.5 | 20.0 | 22.0
         tone: 0.001, // 0.001: 0.0002 | 0.002 | 0.005
       },
-      effects: [
-        //
-        // new Tone.BitCrusher({ bins: 6.0, context: toneCtx }),
-        new Tone.BitCrusher({ bins: 6.0 }),
-        new Tone.Distortion({ distortion: 0.8 }),
-      ],
+      effects: [],
     },
   };
-
-  const drumKit = new DrumKit(instrumentOptions, toneCtx);
 
   const seqEvents = {
     bd: [
@@ -336,6 +287,8 @@ const sketch = (p) => {
     // oh: 0.5,
   };
 
+  const drumKit = new DrumKit(instrumentOptions, toneCtx);
+
   const seqStore = createSequenceStore(drumKit.instrumentStore);
   // events set
   Object.entries(seqEvents).map(([key, events]) => {
@@ -374,7 +327,6 @@ const sketch = (p) => {
 
   // ---  master mixer
   const masterVol = new Tone.Volume();
-  const masterLimiter = new Tone.Limiter(-8);
 
   Tone.fanIn(
     ...[
