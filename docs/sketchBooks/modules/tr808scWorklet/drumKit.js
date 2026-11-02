@@ -16,7 +16,6 @@ import Hat from './hat.js';
 import Openhihat from './openhihat.js';
 import Cymbal from './cymbal.js';
 
-
 const classStore = {
   bd: Bd,
   sn: Sn,
@@ -36,8 +35,6 @@ const classStore = {
   oh: Openhihat,
   cy: Cymbal,
 };
-
-
 
 const instrumentDefaultOptions = {
   bd: {
@@ -177,7 +174,6 @@ const instrumentDefaultOptions = {
   },
 };
 
-
 function getMergedOptions(instrumentType, customOptions = {}) {
   const defaultOpts = instrumentDefaultOptions[instrumentType];
   if (!defaultOpts) {
@@ -207,7 +203,10 @@ class Instrument {
   constructor(targetClass, name, chParams, options, effects) {
     this.#name = String(name);
     this.#volNode = new Tone.Volume();
-    this.#gen = new targetClass(options).chain(...[...effects].filter((n) => n), this.#volNode);
+    this.#gen = new targetClass(options).chain(
+      ...[...effects].filter((n) => n),
+      this.#volNode,
+    );
     this.#chNode = new Tone.Channel(chParams);
     this.#volNode.connect(this.#chNode);
   }
@@ -229,21 +228,44 @@ class Instrument {
 export class DrumKit {
   constructor(instrumentOptions, context = null) {
     this.instrumentStore = Object.fromEntries(
-      Object.entries(classStore).map(([keyName, targetClass]) => {
-        const opts = getMergedOptions(keyName, instrumentOptions[keyName] || {});
-        const instrument = new Instrument(
-          targetClass,
-          keyName,
-          opts.channel,
-          { ...opts.params, context },
-          opts.effects,
-        );
+      Object.entries(classStore).map(
+        ([keyName, targetClass]) => {
+          const opts = getMergedOptions(
+            keyName,
+            instrumentOptions[keyName] || {},
+          );
+          const instrument = new Instrument(
+            targetClass,
+            keyName,
+            opts.channel,
+            { ...opts.params, context },
+            opts.effects,
+          );
 
-        this[keyName] = instrument;
-        return [keyName, instrument];
-      }),
+          this[keyName] = instrument;
+          return [keyName, instrument];
+        },
+      ),
     );
   }
 }
 
-export { Bd, Sn, CpRaw, CpReverb, Lt, Mt, Ht, Lc, Mc, Hc, Rimshot, Claves, Maracas, Cowbell, Hat, Openhihat, Cymbal };
+export {
+  Bd,
+  Sn,
+  CpRaw,
+  CpReverb,
+  Lt,
+  Mt,
+  Ht,
+  Lc,
+  Mc,
+  Hc,
+  Rimshot,
+  Claves,
+  Maracas,
+  Cowbell,
+  Hat,
+  Openhihat,
+  Cymbal,
+};
