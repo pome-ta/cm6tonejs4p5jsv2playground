@@ -10,7 +10,7 @@ import {
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 125;
+const BPM = 110;
 
 const sketch = (p) => {
   // --- Sketch
@@ -84,7 +84,7 @@ const sketch = (p) => {
       effects: [],
     },
     lt: {
-      channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
+      channel: { volume: 0.0, pan: 0.5, channelCount: 1 },
       params: {
         amp: 0.387, // 0.387: 0.1 | 1.0 | 1.5
         freq: 86.0, // 86.0: 72.0 | 80.0 | 100.0
@@ -92,7 +92,7 @@ const sketch = (p) => {
       effects: [],
     },
     mt: {
-      channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
+      channel: { volume: 0.0, pan: 0.1, channelCount: 1 },
       params: {
         amp: 0.387, // 0.387: 0.1 | 1.0 | 1.5
         freq: 105.0, // 105.0: 78.0 | 120.0 | 132.0
@@ -100,7 +100,7 @@ const sketch = (p) => {
       effects: [],
     },
     ht: {
-      channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
+      channel: { volume: 0.0, pan: -0.3, channelCount: 1 },
       params: {
         amp: 0.387, // 0.387: 0.1 | 1.0 | 1.5
         freq: 156.75, // 156.75: 115.5 | 165.0 | 198.0
@@ -153,7 +153,7 @@ const sketch = (p) => {
       effects: [],
     },
     cb: {
-      channel: { volume: -6.0, pan: 0.0, channelCount: 1 },
+      channel: { volume: -4.0, pan: 0.0, channelCount: 1 },
       params: {
         amp: 0.122, // 0.122: 0.05 | 1.0 | 1.0 (0.3?)
       },
@@ -176,7 +176,7 @@ const sketch = (p) => {
       effects: [],
     },
     cy: {
-      channel: { volume: 0.0, pan: -0.4, channelCount: 1 },
+      channel: { volume: 4.0, pan: -0.4, channelCount: 1 },
       params: {
         decay: 1.414, // 1.414: 0.5 | 2.0 | 4.0
         amp: 10.488, // 10.488: 0.5 | 20.0 | 22.0
@@ -191,28 +191,37 @@ const sketch = (p) => {
       decodeSeq(0x9000_9000_9000_9000n),
       decodeSeq(0x9000_9000_9000_9001n),
       decodeSeq(0x9000_9000_9000_9000n),
-      decodeSeq(0x9000_9000_9000_9050n),
+      decodeSeq(0x9000_9000_9000_9070n),
     ],
     sn: [
+      decodeSeq(0x0000_9000_0000_9002n),
       decodeSeq(0x0000_9000_0000_9000n),
-      decodeSeq(0x0000_9000_0001_9000n),
-      decodeSeq(0x0000_9002_0000_9000n),
+      decodeSeq(0x0000_9003_0000_9000n),
       decodeSeq(0x0100_9000_0100_9000n),
     ],
     cp: [
-      decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
+      decodeSeq(0x0000_9000_0090_0800n), // prettier-ignore
     ],
     cr: [
       decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
     ],
     lt: [
-      decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
+      decodeSeq(0x0000_0000_0000_0000n),
+      decodeSeq(0x0000_0000_0000_0000n),
+      decodeSeq(0x0000_0000_0000_0000n),
+      decodeSeq(0x0000_0000_0000_0800n),
     ],
     mt: [
-      decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
+      decodeSeq(0x0000_0000_0000_0000n),
+      decodeSeq(0x0000_0000_0000_0000n),
+      decodeSeq(0x0000_0000_0000_0000n),
+      decodeSeq(0x0000_0000_0080_0000n),
     ],
     ht: [
-      decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
+      decodeSeq(0x0000_0000_0000_0000n),
+      decodeSeq(0x0000_0000_0000_0000n),
+      decodeSeq(0x0000_0000_0000_0000n),
+      decodeSeq(0x0000_0000_0800_0000n),
     ],
     lc: [
       decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
@@ -224,17 +233,18 @@ const sketch = (p) => {
       decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
     ],
     rs: [
-      decodeSeq(0x0000_9000_0000_9000n), // prettier-ignore
+      decodeSeq(0x0000_9080_0000_9000n),
+      decodeSeq(0x0000_9080_0008_9000n),
     ],
     cl: [
-      decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
+      decodeSeq(0x0000_8000_9000_0000n),
+      decodeSeq(0x9000_0080_9000_8000n),
     ],
     ma: [
-      decodeSeq(0x0660_0000_0660_0000n),
-      // decodeSeq(0x0005_0620_0000_0000n),
+      decodeSeq(0x0660_0000_0660_0000n), // prettier-ignore
     ],
     cb: [
-      decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
+      decodeSeq(0x9009_0000_0000_0000n), // prettier-ignore
     ],
     ch: [
       decodeSeq(0x0080_0080_0070_0090n),
@@ -252,10 +262,6 @@ const sketch = (p) => {
       decodeSeq(0x9000_0000_0000_0000n),
       null,
       null,
-      null,
-      null,
-      null,
-      null,
       null, // prettier-ignore
     ],
   };
@@ -271,7 +277,7 @@ const sketch = (p) => {
     lc: true,
     mc: true,
     hc: true,
-    // rs: true,
+    rs: true,
     cl: true,
     ma: true,
     cb: true,
@@ -281,13 +287,12 @@ const sketch = (p) => {
   };
 
   const seqHumanizes = {
-    // bd: 0.5,
     ma: 0.005,
     ch: 0.004,
-    // oh: 0.5,
   };
 
   const drumKit = new DrumKit(instrumentOptions, toneCtx);
+  // const drumKit = new DrumKit({}, toneCtx);
 
   const seqStore = createSequenceStore(drumKit.instrumentStore);
   // events set
@@ -315,11 +320,9 @@ const sketch = (p) => {
     .chain(
       ...[
         //
-        new Tone.Volume(-6),
-        // new Tone.Limiter(-6),
-        // // new Tone.Gain(1.55),
-        new Tone.Limiter(-6),
-        new Tone.Volume(6),
+        // new Tone.Volume(2),
+        // new Tone.Limiter(-8),
+        // new Tone.Volume(4),
       ].filter((n) => n),
       drumKitVol,
     )
