@@ -10,7 +10,7 @@ import {
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 110;
+const BPM = 130;
 
 const sketch = (p) => {
   // --- Sketch
@@ -27,14 +27,20 @@ const sketch = (p) => {
   Tone.setContext(p5Ctx, true);
   const toneCtx = Tone.getContext();
 
+  const whichStart = (name) => {
+    console.log(`${name}: ${toneCtx.state}`);
+    transport?.start();
+  };
+
   toneCtx.on('statechange', (state) => {
-    console.log(state); // "running" など
+    console.log(`statechange: ${state}`); // "running" など
   });
   /* Starting Audio */
   document.addEventListener(
     'pointerup',
     async () => {
       await Tone.start();
+
       transport?.start();
     },
     {
@@ -359,7 +365,6 @@ const sketch = (p) => {
     cnvs = p.createCanvas(w, h);
 
     emitter.emit('startOnceCallSeqs');
-    // transport.start();
 
     tapIndicator.setup();
     spectrumAnalyzer.targetNodes(masterVol);
