@@ -375,7 +375,7 @@ const sketch = (p) => {
 
   p.draw = () => {
     // put drawing code here
-    p.background(8);
+    p.background(80);
     spectrumAnalyzer.drawGraph();
   };
 

@@ -126,12 +126,8 @@ export default class SpectrumAnalyzer {
   // wip: マージン設定方法要検討
   ratio = 0.96;
 
-  nowFill = { fill: [0, 255, 255, 64] };
-  nowStroke = { stroke: [0, 255, 255, 192] };
-  oldStroke = { stroke: [255, 0, 255, 192] };
-
   theme;
-  #darkTheme = {
+  #baseTheme = {
     nowSpctrm: {
       fill: [0, 255, 255, 64],
       stroke: [0, 255, 255, 192],
@@ -150,6 +146,28 @@ export default class SpectrumAnalyzer {
       },
     },
     textColor: 25,
+  };
+
+  #darkTheme = {
+    nowSpctrm: {
+      fill: [0, 255, 255, 8],
+      stroke: [0, 255, 255, 192],
+    },
+    oldSpctrm: { stroke: [255, 0, 255, 192] },
+    gridLine: {
+      color: {
+        main: 144,
+        sub: 128,
+        base: 128,
+      },
+      weight: {
+        main: 0.6,
+        sub: 0.4,
+        base: 0.2,
+        top: 0.8,
+      },
+    },
+    textColor: 120,
   };
 
   constructor(mainInstance, isDark = false, fftSize = 1024) {
@@ -241,13 +259,16 @@ export default class SpectrumAnalyzer {
 
       return [x, y];
     });
-    
-    const {nowSpctrm, oldSpctrm} = this.theme;
 
-    this.#drawSpectrumMap(xyList, nowSpctrm);
+    const { nowSpctrm, oldSpctrm } = this.theme;
+    // this.#drawSpectrumMap(xyList, this.nowFill);
+    // this.#drawSpectrumMap(xyList, nowSpctrm);
+    this.#drawSpectrumMap(xyList, { fill: nowSpctrm.fill });
     this.#xyListOld?.length &&
-      this.#drawSpectrumMap(this.#xyListOld, this.oldStroke);
-    this.#drawSpectrumMap(xyList, this.nowStroke);
+      this.#drawSpectrumMap(this.#xyListOld, {
+        stroke: oldSpctrm.stroke,
+      });
+    this.#drawSpectrumMap(xyList, { stroke: nowSpctrm.stroke });
 
     this.#xyListOld = xyList;
     this.#p.image(this.#spectrumLayer, ...this.#grid.position);
@@ -406,10 +427,7 @@ export default class SpectrumAnalyzer {
     const minimumFreq =
       Math.floor(this.#minFreq / 10 ** digits) * 10 ** digits;
 
-    const majorColor = 100;
-    const minorColor = 50;
-    const baseColor = 25;
-    const textColor = 25;
+    const { gridLine } = this.theme;
 
     this.#labels.layer.textFont('monospace');
     this.#labels.layer.textSize(8);
@@ -417,7 +435,7 @@ export default class SpectrumAnalyzer {
       this.#p.CENTER,
       this.#p.BOTTOM,
     );
-    this.#labels.layer.fill(textColor);
+    this.#labels.layer.fill(this.theme.textColor);
 
     // x: hz
     decades.forEach((decade, idx) => {
@@ -439,9 +457,13 @@ export default class SpectrumAnalyzer {
 
         if (tick % 2 === 0 || isMajor) {
           this.#grid.layer.stroke(
-            isMajor ? majorColor : minorColor,
+            isMajor ? gridLine.color.main : gridLine.color.sub,
           );
-          this.#grid.layer.strokeWeight(isMajor ? 1 : 0.8);
+          this.#grid.layer.strokeWeight(
+            isMajor
+              ? gridLine.weight.main
+              : gridLine.weight.sub,
+          );
 
           const ty = isMajor
             ? this.#labels.size.height - yDistance / 2
@@ -450,8 +472,8 @@ export default class SpectrumAnalyzer {
             freq >= 1000 ? `${freq / 1000}k` : `${freq}`;
           this.#labels.layer.text(textLabel, x + xDistance, ty);
         } else {
-          this.#grid.layer.stroke(baseColor);
-          this.#grid.layer.strokeWeight(0.4);
+          this.#grid.layer.stroke(gridLine.color.base);
+          this.#grid.layer.strokeWeight(gridLine.weight.base);
         }
 
         this.#grid.layer.line(x, 0, x, this.#grid.size.height);
@@ -482,9 +504,15 @@ export default class SpectrumAnalyzer {
       );
       const isMajor = db % 12 === 0;
 
-      this.#grid.layer.stroke(isMajor ? 100 : 50);
+      this.#grid.layer.stroke(
+        isMajor ? gridLine.color.main : gridLine.color.sub,
+      );
       this.#grid.layer.strokeWeight(
-        db === 0 ? 2 : isMajor ? 1 : 0.8,
+        db === 0
+          ? gridLine.weight.top
+          : isMajor
+          ? gridLine.weight.main
+          : gridLine.weight.sub,
       );
       this.#grid.layer.line(0, y, this.#grid.size.width, y);
       this.#labels.layer.text(
