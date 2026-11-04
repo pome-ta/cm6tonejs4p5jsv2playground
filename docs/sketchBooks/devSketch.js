@@ -10,7 +10,7 @@ import {
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 130;
+const BPM = 90;
 
 const sketch = (p) => {
   // --- Sketch
@@ -375,7 +375,7 @@ const sketch = (p) => {
 
   p.draw = () => {
     // put drawing code here
-    p.background(80);
+    p.background(8);
     spectrumAnalyzer.drawGraph();
   };
 

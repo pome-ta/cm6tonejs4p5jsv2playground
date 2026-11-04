@@ -130,17 +130,26 @@ export default class SpectrumAnalyzer {
   nowStroke = { stroke: [0, 255, 255, 192] };
   oldStroke = { stroke: [255, 0, 255, 192] };
 
+  theme;
   #darkTheme = {
-    nowFill: { fill: [0, 255, 255, 64] },
-    nowStroke: { stroke: [0, 255, 255, 192] },
-    oldStroke: { stroke: [255, 0, 255, 192] },
-    majorColor: 100,
-    minorColor: 50,
-    baseColor: 25,
+    nowSpctrm: {
+      fill: [0, 255, 255, 64],
+      stroke: [0, 255, 255, 192],
+    },
+    oldSpctrm: { stroke: [255, 0, 255, 192] },
+    gridLine: {
+      color: {
+        main: 100,
+        sub: 50,
+        base: 25,
+      },
+      weight: {
+        main: 1.0,
+        sub: 0.8,
+        base: 0.4,
+      },
+    },
     textColor: 25,
-    majorStrokeWeight: 1,
-    minorStrokeWeight: 1,
-    baseStrokeWeight: 1,
   };
 
   constructor(mainInstance, isDark = false, fftSize = 1024) {
@@ -159,6 +168,7 @@ export default class SpectrumAnalyzer {
     this.#labels = null;
     this.#grid = null;
     this.#spectrumLayer = null;
+    this.theme = this.#darkTheme;
   }
 
   targetNodes(...nodes) {
@@ -231,8 +241,10 @@ export default class SpectrumAnalyzer {
 
       return [x, y];
     });
+    
+    const {nowSpctrm, oldSpctrm} = this.theme;
 
-    this.#drawSpectrumMap(xyList, this.nowFill);
+    this.#drawSpectrumMap(xyList, nowSpctrm);
     this.#xyListOld?.length &&
       this.#drawSpectrumMap(this.#xyListOld, this.oldStroke);
     this.#drawSpectrumMap(xyList, this.nowStroke);
