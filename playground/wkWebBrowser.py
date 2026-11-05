@@ -1,4 +1,4 @@
-IS_SERVER = False  # note: server or local `index.html`
+IS_SERVER = True  # note: server or local `index.html`
 
 _TOP_DIR_NAME = 'cm6tonejs4p5jsv2playground'
 _MODULES_DIR_NAME = 'pystaRubiconModules'
