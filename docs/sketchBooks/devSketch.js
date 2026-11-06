@@ -10,7 +10,7 @@ import {
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 90;
+const BPM = 115;
 
 const sketch = (p) => {
   // --- Sketch
@@ -60,7 +60,7 @@ const sketch = (p) => {
       params: {
         decay: 24.0, // 58.0: 6.0 | 30.0 | 110.0
         amp: 1.449, // 1.449: 1.0 | 2.0 | 2.1
-        tone: 52.0, // 50.0: 50.0 | 56.0 | 70.0
+        tone: 50.0, // 50.0: 50.0 | 56.0 | 70.0
       },
       effects: [],
     },
@@ -304,9 +304,9 @@ const sketch = (p) => {
     .chain(
       ...[
         //
-        // new Tone.Volume(2),
-        // new Tone.Limiter(-8),
-        // new Tone.Volume(4),
+        // new Tone.Volume(-2),
+        new Tone.Limiter(-8),
+        new Tone.Volume(4),
       ].filter((n) => n),
       drumKitVol,
     )
