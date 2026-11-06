@@ -60,7 +60,7 @@ const sketch = (p) => {
       params: {
         decay: 24.0, // 58.0: 6.0 | 30.0 | 110.0
         amp: 1.449, // 1.449: 1.0 | 2.0 | 2.1
-        tone: 50.0, // 50.0: 50.0 | 56.0 | 70.0
+        tone: 52.0, // 50.0: 50.0 | 56.0 | 70.0
       },
       effects: [],
     },
@@ -68,7 +68,7 @@ const sketch = (p) => {
       channel: { volume: 2.0, pan: -0.1, channelCount: 1 },
       params: {
         amp: 1.118, // 1.118: 0.5 | 2.0 | 2.5
-        tone: 300.9, // 300.9: 210.8 | 340.0 | 391.0
+        tone: 210.9, // 300.9: 210.8 | 340.0 | 391.0
         tone2: 167.265, // 167.265: 117.18 | 189.0 | 217.35
         snappy: 0.226, // 0.226: 0.002 | 0.3 | 0.45
         amp2: 0.775, // 0.775: 0.6 | 1.0 | 1.0
@@ -194,16 +194,10 @@ const sketch = (p) => {
 
   const seqEvents = {
     bd: [
-      decodeSeq(0x9000_9000_9000_9000n),
-      decodeSeq(0x9000_9000_9000_9001n),
-      decodeSeq(0x9000_9000_9000_9000n),
-      decodeSeq(0x9000_9000_9000_9070n),
+      decodeSeq(0x9000_9000_9000_9000n), // prettier-ignore
     ],
     sn: [
-      decodeSeq(0x0000_9000_0000_9002n),
-      decodeSeq(0x0000_9000_0000_9000n),
-      decodeSeq(0x0000_9003_0000_9000n),
-      decodeSeq(0x0100_9000_0100_9000n),
+      decodeSeq(0x0000_9000_0000_9000n), // prettier-ignore
     ],
     cp: [
       decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
@@ -236,16 +230,16 @@ const sketch = (p) => {
       decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
     ],
     ma: [
-      decodeSeq(0x0660_0000_0660_0000n), // prettier-ignore
+      decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
     ],
     cb: [
-      decodeSeq(0x9009_0000_0000_0000n), // prettier-ignore
+      decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
     ],
     ch: [
-      decodeSeq(0x0080_0080_0070_0090n),
+      decodeSeq(0x0080_0080_0070_0090n), // prettier-ignore
     ],
     oh: [
-      decodeSeq(0x0800_0800_0800_0800n),
+      decodeSeq(0x0000_0000_0000_0000n), // prettier-ignore
     ],
     cy: [
       decodeSeq(0x9000_0000_0000_0000n),
@@ -359,7 +353,7 @@ const sketch = (p) => {
 
   p.draw = () => {
     // put drawing code here
-    p.background(80);
+    p.background(32);
     spectrumAnalyzer.drawGraph();
   };
 
