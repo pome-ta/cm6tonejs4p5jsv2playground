@@ -54,6 +54,14 @@ const sketch = (p) => {
   const emitter = new Tone.Emitter();
 
   // --- drumKit
+  const bdComp = new Tone.Compressor({
+    threshold: -24, // -100-0 : -24
+    ratio: 8, // 1-20 : 12
+    attack: 1e-1,
+    release: 1e-1,
+    knee: 8, // 0-40 : 30
+  });
+
   const instrumentOptions = {
     bd: {
       channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
@@ -62,7 +70,7 @@ const sketch = (p) => {
         amp: 1.449, // 1.449: 1.0 | 2.0 | 2.1
         tone: 50.0, // 50.0: 50.0 | 56.0 | 70.0
       },
-      effects: [],
+      effects: [bdComp],
     },
     sn: {
       channel: { volume: 2.0, pan: -0.1, channelCount: 1 },
@@ -70,7 +78,7 @@ const sketch = (p) => {
         amp: 1.118, // 1.118: 0.5 | 2.0 | 2.5
         tone: 210.9, // 300.9: 210.8 | 340.0 | 391.0
         tone2: 167.265, // 167.265: 117.18 | 189.0 | 217.35
-        snappy: 0.226, // 0.226: 0.002 | 0.3 | 0.45
+        snappy: 0.1226, // 0.226: 0.002 | 0.3 | 0.45
         amp2: 0.775, // 0.775: 0.6 | 1.0 | 1.0
       },
       effects: [],
@@ -194,7 +202,10 @@ const sketch = (p) => {
 
   const seqEvents = {
     bd: [
-      decodeSeq(0x9000_9000_9000_9000n), // prettier-ignore
+      decodeSeq(0x9000_9000_9000_9000n),
+      decodeSeq(0x9000_9000_9000_9002n), 
+      decodeSeq(0x9000_9000_9000_9000n),
+      decodeSeq(0x9000_9000_9000_9060n),
     ],
     sn: [
       decodeSeq(0x0000_9000_0000_9000n), // prettier-ignore
