@@ -10,7 +10,7 @@ import {
 import TapIndicator from 'modules/TapIndicator.js';
 import SpectrumAnalyzer from 'modules/SpectrumAnalyzer.js';
 
-const BPM = 115;
+const BPM = 90;
 
 const sketch = (p) => {
   // --- Sketch
@@ -55,18 +55,18 @@ const sketch = (p) => {
 
   // --- drumKit
   const bdComp = new Tone.Compressor({
-    threshold: -24, // -100-0 : -24
+    threshold: -12, // -100-0 : -24
     ratio: 8, // 1-20 : 12
     attack: 1e-1,
     release: 1e-1,
-    knee: 8, // 0-40 : 30
+    knee: 18, // 0-40 : 30
   });
 
   const instrumentOptions = {
     bd: {
       channel: { volume: 0.0, pan: 0.0, channelCount: 1 },
       params: {
-        decay: 24.0, // 58.0: 6.0 | 30.0 | 110.0
+        decay: 16.0, // 58.0: 6.0 | 30.0 | 110.0
         amp: 1.449, // 1.449: 1.0 | 2.0 | 2.1
         tone: 50.0, // 50.0: 50.0 | 56.0 | 70.0
       },
@@ -316,7 +316,7 @@ const sketch = (p) => {
       ...[
         //
         // new Tone.Volume(-2),
-        new Tone.Limiter(-8),
+        new Tone.Limiter(-16),
         new Tone.Volume(4),
       ].filter((n) => n),
       drumKitVol,
